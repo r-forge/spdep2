@@ -173,6 +173,22 @@ system.time(for (i in 1:1000) optimize(do_LL, interval=c(-1, 1), env=res, interp
 
 system.time(for (i in 1:1000) optimize(do_LL, interval=c(-1, 1), env=res, interp=FALSE, maximum=TRUE, tol=.Machine$double.eps^0.5))
 
+
+data(house)
+listw <- nb2listw(LO_nb)
+form <- formula(log(price) ~ age + I(age^2) + I(age^3) + log(lotsize) +
+   rooms + log(TLA) + beds + syear)
+res <- ml_sse_setup(form, house, listw, verbose=FALSE)
+
+optimize(do_LL, interval=c(-1, 1), env=res, interp=TRUE, maximum=TRUE, tol=.Machine$double.eps^0.5)
+
+optimize(do_LL, interval=c(-1, 1), env=res, interp=FALSE, maximum=TRUE, tol=.Machine$double.eps^0.5)
+
+system.time(for (i in 1:10) optimize(do_LL, interval=c(-1, 1), env=res, interp=TRUE, maximum=TRUE, tol=.Machine$double.eps^0.5))
+
+system.time(for (i in 1:10) optimize(do_LL, interval=c(-1, 1), env=res, interp=FALSE, maximum=TRUE, tol=.Machine$double.eps^0.5))
+
+
 library(spdep)
 data(columbus)
 listw <- nb2listw(col.gal.nb)
