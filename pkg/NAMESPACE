@@ -5,4 +5,4 @@ import(spdep)
 
 export(get_trT, lndetcheb_in, mcdet_prep, mcdet_in)
 
-export(ml_sse_setup, do_LL)
+export(ml_env_setup, do_LL, sse_fn, J_fn)

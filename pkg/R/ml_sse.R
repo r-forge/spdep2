@@ -1,4 +1,4 @@
-ml_sse_setup <- function(formula, data, listw, verbose=TRUE) {
+ml_env_setup <- function(formula, data, listw, verbose=TRUE) {
     if (!is.logical(verbose)) verbose=FALSE
     mt <- terms(formula, data=data)
     mf <- lm(formula=formula, data = data, method = "model.frame")
@@ -34,13 +34,13 @@ ml_sse_setup <- function(formula, data, listw, verbose=TRUE) {
     env
 }
 
-do_LL <- function(val, env, interp=FALSE) {
+do_LL <- function(val, env, interp=c(FALSE, FALSE)) {
     n <- get("n", envir=env)
     verbose <- get("verbose", envir=env)
-    if (interp) SSE <- ml_sse(env, val)
+    if (interp[1]) SSE <- sse_fn(env, val)
     else SSE <- .Call("R_ml_sse_env", env, val, PACKAGE="spdep2")
     s2 <- SSE/n
-    if (interp) Jacobian <- J_fn(env, val)
+    if (interp[2]) Jacobian <- J_fn(env, val)
     else Jacobian <- .Call("R_ml_Jac_env", env, val, PACKAGE="spdep2")
     loglik <- Jacobian - ((n/2) * log(2 * pi)) -
         (n/2) * log(s2) - (1/(2 * (s2))) * SSE
@@ -49,9 +49,9 @@ do_LL <- function(val, env, interp=FALSE) {
     loglik
 }
 
-ml_sse <- function(sse_env, alpha) {
-    yl <- get("y", envir=sse_env) - alpha * get("wy", envir=sse_env)
-    xl <- get("x", envir=sse_env) - alpha * get("WX", envir=sse_env)
+sse_fn <- function(env, lambda) {
+    yl <- get("y", envir=env) - lambda * get("wy", envir=env)
+    xl <- get("x", envir=env) - lambda * get("WX", envir=env)
     xlQR <- qr(xl)
     xl.q <- qr.Q(xlQR)
     xl.q.yl <- crossprod(xl.q, yl)
