@@ -1,0 +1,13 @@
+Package: spdep2
+Version: 0.1-1
+Date: 2009-02-08
+Title: Spatial regression with sparse matrices
+Author: Roger Bivand <Roger.Bivand@nhh.no>
+Maintainer: Roger Bivand <Roger.Bivand@nhh.no>
+Depends: R(>= 2.8.0), spdep (>= 0.4-34), Matrix (>= 0.999375-18)
+LinkingTo: Matrix
+Description: Spatial regression with sparse matrices (spdep2) is a package
+ to complement existing model fitting functions in spdep, using more
+ appropriate underlying numerical methods.
+License: GPL (>= 2)
+

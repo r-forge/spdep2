@@ -1,0 +1,8 @@
+useDynLib(spdep2, .registration=TRUE)
+
+import(Matrix)
+import(spdep)
+
+export(get_trT, lndetcheb_in, mcdet_prep, mcdet_in)
+
+export(ml_sse_setup, do_LL)
