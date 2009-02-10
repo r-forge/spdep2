@@ -43,10 +43,14 @@ listw <- nb2listw(LO_nb)
 form <- formula(log(price) ~ age + I(age^2) + I(age^3) + log(lotsize) +
    rooms + log(TLA) + beds + syear)
 system.time(res <- ml_env_setup(form, house, listw, verbose=TRUE))
-system.time(optimize(do_LL, interval=c(-1, 1), env=res, interp=c(TRUE, TRUE), maximum=TRUE, tol=.Machine$double.eps^0.5))
-system.time(optimize(do_LL, interval=c(-1, 1), env=res, interp=c(FALSE, TRUE), maximum=TRUE, tol=.Machine$double.eps^0.5))
-system.time(optimize(do_LL, interval=c(-1, 1), env=res, interp=c(TRUE, FALSE), maximum=TRUE, tol=.Machine$double.eps^0.5))
-system.time(optimize(do_LL, interval=c(-1, 1), env=res, interp=c(FALSE, FALSE), maximum=TRUE, tol=.Machine$double.eps^0.5))
+system.time(optimize(do_LL, interval=c(-1, 1), env=res,
+ interp=c(TRUE, TRUE), maximum=TRUE, tol=.Machine$double.eps^0.5))
+system.time(optimize(do_LL, interval=c(-1, 1), env=res,
+ interp=c(FALSE, TRUE), maximum=TRUE, tol=.Machine$double.eps^0.5))
+system.time(optimize(do_LL, interval=c(-1, 1), env=res,
+ interp=c(TRUE, FALSE), maximum=TRUE, tol=.Machine$double.eps^0.5))
+system.time(optimize(do_LL, interval=c(-1, 1), env=res,
+ interp=c(FALSE, FALSE), maximum=TRUE, tol=.Machine$double.eps^0.5))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

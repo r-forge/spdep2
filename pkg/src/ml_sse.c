@@ -2,18 +2,33 @@
 
 static int c__1 = 1;
 
+
 SEXP R_ml_sse_env(SEXP env, SEXP lambda) {
 
-  SEXP res, y, x, wy, WX;
-  int i, j, k, n, p, pc=0;
+  SEXP res;
+  double sse, coef;
+  int pc=0;
+
+  coef = NUMERIC_POINTER(lambda)[0];
+
+  sse = ml_sse_env(env, coef);
+
+  PROTECT(res=NEW_NUMERIC(1)); pc++;
+  NUMERIC_POINTER(res)[0] = sse;
+  UNPROTECT(pc);
+
+  return(res);
+}
+
+double ml_sse_env(SEXP env, double coef) {
+  SEXP y, x, wy, WX;
+  int i, j, k, n, p;
   double *yl, *xlq, *xlqyl, *qy;
-  double tol=1e-7, coef, cyl, cxlqyl, sse;
+  double tol=1e-7, cyl, cxlqyl, sse;
   int *jpvt;
   double *work, *qraux;
   char *trans = "T";
   double one = 1.0, zero = 0.0;
-
-  coef = NUMERIC_POINTER(lambda)[0];
 
   n = INTEGER_POINTER(findVarInFrame(env, install("n")))[0];
   y = findVarInFrame(env, install("y"));
@@ -51,24 +66,39 @@ SEXP R_ml_sse_env(SEXP env, SEXP lambda) {
 
   sse = cyl - cxlqyl;
 
-  PROTECT(res=NEW_NUMERIC(1)); pc++;
-  NUMERIC_POINTER(res)[0] = sse;
-  UNPROTECT(pc);
+  return(sse);
 
-  return(res);
 }
+
 
 #include <R_ext/Rdynload.h>
 #include "Matrix.h"
 
 SEXP R_ml_Jac_env(SEXP env, SEXP lambda) {
-  SEXP res, dWd, ndWd, C1p, C1n;
-  int n, pc=0;
-  double a, b, mult, nmult, jac, coef;
+
+  SEXP res;
+  double jac, coef;
+  int pc=0;
+
+  coef = NUMERIC_POINTER(lambda)[0];
+
+  jac = ml_Jac_env(env, coef);
+
+  PROTECT(res=NEW_NUMERIC(1)); pc++;
+  NUMERIC_POINTER(res)[0] = jac;
+  UNPROTECT(pc);
+
+  return(res);
+}
+
+double ml_Jac_env(SEXP env, double coef) {
+  SEXP dWd, ndWd, C1p, C1n;
+  int n;
+  double a, b, mult, nmult, jac;
+
   n = INTEGER_POINTER(findVarInFrame(env, install("n")))[0];
   a = NUMERIC_POINTER(findVarInFrame(env, install("a")))[0];
   b = NUMERIC_POINTER(findVarInFrame(env, install("b")))[0];
-  coef = NUMERIC_POINTER(lambda)[0];
   
   dWd = findVarInFrame(env, install("dWd"));
   ndWd = findVarInFrame(env, install("ndWd"));
@@ -84,38 +114,28 @@ SEXP R_ml_Jac_env(SEXP env, SEXP lambda) {
       AS_CHM_SP(dWd), nmult));
   else jac = 0;
 
-  PROTECT(res=NEW_NUMERIC(1)); pc++;
-  NUMERIC_POINTER(res)[0] = jac;
-  UNPROTECT(pc);
+  return(jac);
 
-  return(res);
 }
 
-
-/* double f_esar_ll(double alpha, SEXP env) {
-  double loglik, s2;
-  int n, pc=0;
+double f_esar_ll(double alpha, SEXP env) {
+  double loglik, s2, SSE, Jacobian;
+  int n;
   int verbose;
-  SEXP coef, SSE, Jacobian, R_fcall, fn, nil;
-
-  PROTECT(coef = NEW_NUMERIC(1)); pc++;
-  NUMERIC_POINTER(coef)[0] = alpha;  
 
   n = INTEGER_POINTER(findVarInFrame(env, install("n")))[0];
   verbose = LOGICAL_POINTER(findVarInFrame(env, install("verbose")))[0];
 
-  SSE = R_ml_sse_env(env, coef);
-  s2 = NUMERIC_POINTER(SSE)[0]/n;
+  SSE = ml_sse_env(env, alpha);
+  s2 = SSE/n;
 
-  PROTECT(Jacobian = NEW_NUMERIC(1)); pc++;
-  Jacobian = R_ml_Jac_env(env, coef);
-  loglik = (NUMERIC_POINTER(Jacobian)[0] - ((n/2) * log(2 * PI)) -
-    (n/2) * log(s2) - (1/(2 * (s2))) * NUMERIC_POINTER(SSE)[0]);
+  Jacobian = ml_Jac_env(env, alpha);
 
-  if (!verbose) Rprintf("LL: %f, coef: %f, SSE: %f Jacobian: %f\n",
-    loglik, alpha, NUMERIC_POINTER(SSE)[0], Jacobian);
+  loglik = (Jacobian - ((n/2) * log(2 * PI)) -
+    (n/2) * log(s2) - (1/(2 * (s2))) * SSE);
 
-  UNPROTECT(pc);
+  if (verbose) Rprintf("coef: %9.6f, SSE: %9.3f, Jacobian: %9.3f, LL: %10.3f\n",
+    alpha, SSE, Jacobian, loglik);
   
   return -loglik;
 }
@@ -146,15 +166,8 @@ SEXP do_LL(SEXP env, SEXP interval, SEXP tol) {
   UNPROTECT(pc);
 
   return(res);
-} */
+}
 
-/*
-   I = Brent_fmin(double ax, double bx, double (*f)(double, void *),
-		  void *info, double tol);
-   I = Brent_fmin(0.0, 1.0, (double (*)(double, void*)) fcn_mlphylo_invar,
-		  infptr, 1.e-9);
-
-*/
 
 /*
 
