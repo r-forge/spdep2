@@ -43,7 +43,7 @@ do_LL <- function(val, env, interp=c(FALSE, FALSE)) {
     if (interp[2]) Jacobian <- J_fn(env, val)
     else Jacobian <- .Call("R_ml_Jac_env", env, val, PACKAGE="spdep2")
     loglik <- Jacobian - ((n/2) * log(2 * pi)) -
-        (n/2) * log(s2) - (1/(2 * (s2))) * SSE
+        ((n/2) * log(s2)) - (1/(2 * (s2))) * SSE
     if (verbose) cat("val:", val, "SSE:", SSE, "Jacobian:", Jacobian,
     "LL:", loglik, "\n")
     loglik

@@ -51,6 +51,8 @@ system.time(optimize(do_LL, interval=c(-1, 1), env=res,
  interp=c(TRUE, FALSE), maximum=TRUE, tol=.Machine$double.eps^0.5))
 system.time(optimize(do_LL, interval=c(-1, 1), env=res,
  interp=c(FALSE, FALSE), maximum=TRUE, tol=.Machine$double.eps^0.5))
+system.time(.Call("do_LL", res, as.double(c(-1, 1)), .Machine$double.eps^0.5,
+ PACKAGE="spdep2"))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

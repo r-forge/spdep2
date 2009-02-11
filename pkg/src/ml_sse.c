@@ -1,26 +1,32 @@
 #include "spdep2.h"
 
+/** */
 static int c__1 = 1;
 
+/** */
+typedef struct {
+  int n, p, verbose;
+  SEXP y, x, wy, WX;
+  double *yl, *xlq, *xlqyl, *qy;
+  int *jpvt;
+  double *work, *qraux;
+  double a, b;
+  CHM_FR C1p, C1n;
+  CHM_SP dWd, ndWd;
+} Jac_SSE_info;
 
-SEXP R_ml_sse_env(SEXP env, SEXP lambda) {
 
-  SEXP res;
-  double sse, coef;
-  int pc=0;
-
-  coef = NUMERIC_POINTER(lambda)[0];
-
-  sse = ml_sse_env(env, coef);
-
-  PROTECT(res=NEW_NUMERIC(1)); pc++;
-  NUMERIC_POINTER(res)[0] = sse;
-  UNPROTECT(pc);
-
-  return(res);
-}
-
-double ml_sse_env(SEXP env, double coef) {
+/**
+ * Calculate the sum of squared errors term for spatial regression
+ * using an environment to hold data
+ *
+ * @param env pointer to an SEXP environment
+ * @param coef current value of coefficient being optimzed
+ * 
+ * @return double, value of SSE for current coef
+ *
+ */
+static double ml_sse_env(SEXP env, double coef) {
   SEXP y, x, wy, WX;
   int i, j, k, n, p;
   double *yl, *xlq, *xlqyl, *qy;
@@ -71,27 +77,91 @@ double ml_sse_env(SEXP env, double coef) {
 }
 
 
-#include <R_ext/Rdynload.h>
-#include "Matrix.h"
+/**
+ * Calculate the sum of squared errors term for spatial regression
+ * using a structure to hold data
+ *
+ * @param INFO pointer to a Jac_SSE_info structure 
+ * @param coef current value of coefficient being optimzed
+ * 
+ * @return double, value of SSE for current coef
+ * 
+ */
+static double ml_sse_info(Jac_SSE_info *INFO, double coef) {
+  int i, j, k;
+  double tol=1e-7, cyl, cxlqyl, sse;
+  char *trans = "T";
+  double one = 1.0, zero = 0.0;
 
-SEXP R_ml_Jac_env(SEXP env, SEXP lambda) {
+  for (i=0; i<INFO->n; i++)
+    INFO->yl[i] = NUMERIC_POINTER(INFO->y)[i] - 
+      coef * NUMERIC_POINTER(INFO->wy)[i];
+  for (i=0; i<INFO->n*INFO->p; i++) 
+    INFO->xlq[i] = NUMERIC_POINTER(INFO->x)[i] - 
+      coef * NUMERIC_POINTER(INFO->WX)[i];
+
+  F77_CALL(dqrdc2)(INFO->xlq, &INFO->n, &INFO->n, &INFO->p, &tol, &k,
+    INFO->qraux, INFO->jpvt, INFO->work);
+  if (INFO->p != k) warning("Q looses full rank");
+
+  for (i=0; i<INFO->n*k; i++) INFO->qy[i] = 0.0;
+  for (i=0; i<k; i++) INFO->qy[(i +(INFO->n*i))] = 1.0;
+
+  F77_CALL(dqrqy)(INFO->xlq, &INFO->n, &k, INFO->qraux, INFO->qy, &k,
+    INFO->qy);
+
+  F77_CALL(dgemv)(trans, &INFO->n, &k, &one, INFO->qy, &INFO->n, INFO->yl,
+    &c__1, &zero, INFO->xlqyl, &c__1);
+
+  cyl = F77_CALL(ddot)(&INFO->n, INFO->yl, &c__1, INFO->yl, &c__1);
+
+  cxlqyl = F77_CALL(ddot)(&k, INFO->xlqyl, &c__1, INFO->xlqyl, &c__1);
+
+  sse = cyl - cxlqyl;
+
+  return(sse);
+}
+
+
+/**
+ * SEXP wrapper for the SSE term for spatial regression
+ * using an environment to hold data
+ *
+ * @param env pointer to a SEXP environment
+ * @param lambda pointer to a SEXP numeric coefficient value
+ * 
+ * @return pointer to a SEXP numeric SSE value
+ *
+ */
+SEXP R_ml_sse_env(SEXP env, SEXP lambda) {
 
   SEXP res;
-  double jac, coef;
+  double sse, coef;
   int pc=0;
 
   coef = NUMERIC_POINTER(lambda)[0];
 
-  jac = ml_Jac_env(env, coef);
+  sse = ml_sse_env(env, coef);
 
   PROTECT(res=NEW_NUMERIC(1)); pc++;
-  NUMERIC_POINTER(res)[0] = jac;
+  NUMERIC_POINTER(res)[0] = sse;
   UNPROTECT(pc);
 
   return(res);
 }
 
-double ml_Jac_env(SEXP env, double coef) {
+
+/**
+ * Calculate the Jacobian term for spatial regression
+ * using an environment to hold data
+ *
+ * @param env pointer to a SEXP environment
+ * @param coef current value of coefficient being optimzed
+ * 
+ * @return double, value of the Jacobian for current coef
+ * 
+ */
+static double ml_Jac_env(SEXP env, double coef) {
   SEXP dWd, ndWd, C1p, C1n;
   int n;
   double a, b, mult, nmult, jac;
@@ -118,41 +188,148 @@ double ml_Jac_env(SEXP env, double coef) {
 
 }
 
-double f_esar_ll(double alpha, SEXP env) {
+/**
+ * Calculate the Jacobian term for spatial regression
+ * using a structure to hold data
+ *
+ * @param INFO pointer to a Jac_SSE_info structure 
+ * @param coef current value of coefficient being optimzed
+ * 
+ * @return double, value of the Jacobian for current coef
+ * 
+ */
+static double ml_Jac_info(Jac_SSE_info *INFO, double coef) {
+  double mult, nmult, jac;
+  
+  mult = 1/coef;
+  nmult = 1/(-coef);
+  if (coef > INFO->b) jac = INFO->n * log(coef) +
+    M_chm_factor_ldetL2(M_chm_factor_update(INFO->C1p,
+      INFO->ndWd, mult));
+  else if (coef < INFO->a) jac = INFO->n * log(-(coef)) +
+    M_chm_factor_ldetL2(M_chm_factor_update(INFO->C1n,
+      INFO->dWd, nmult));
+  else jac = 0;
+
+  return(jac);
+
+}
+
+
+/**
+ * SEXP wrapper for the Jacobian term for spatial regression
+ * using an environment to hold data
+ *
+ * @param env pointer to a SEXP environment
+ * @param lambda pointer to a SEXP numeric coefficient value
+ * 
+ * @return pointer to a SEXP numeric Jacobian value
+ * 
+ */
+SEXP R_ml_Jac_env(SEXP env, SEXP lambda) {
+
+  SEXP res;
+  double jac, coef;
+  int pc=0;
+
+  coef = NUMERIC_POINTER(lambda)[0];
+
+  jac = ml_Jac_env(env, coef);
+
+  PROTECT(res=NEW_NUMERIC(1)); pc++;
+  NUMERIC_POINTER(res)[0] = jac;
+  UNPROTECT(pc);
+
+  return(res);
+}
+
+
+/**
+ * Calculate the log likelihood term for spatial regression
+ * using a structure to hold data
+ *
+ * @param alpha current value of coefficient being optimzed
+ * @param INFO pointer to a Jac_SSE_info structure
+ * 
+ * @return double, value of the log likelihood for current coef
+ *
+ */
+static double f_esar_ll(double alpha, Jac_SSE_info *INFO) {
   double loglik, s2, SSE, Jacobian;
-  int n;
-  int verbose;
 
-  n = INTEGER_POINTER(findVarInFrame(env, install("n")))[0];
-  verbose = LOGICAL_POINTER(findVarInFrame(env, install("verbose")))[0];
+  SSE = ml_sse_info(INFO, alpha);
+  s2 = SSE/INFO->n;
 
-  SSE = ml_sse_env(env, alpha);
-  s2 = SSE/n;
+  Jacobian = ml_Jac_info(INFO, alpha); 
+  if (!R_FINITE(Jacobian)) {
+	    warning("NA/Inf replaced by maximum positive value");
+	    return(DBL_MAX);
+  } 
 
-  Jacobian = ml_Jac_env(env, alpha);
+  loglik = (Jacobian - ((INFO->n/2) * log(2 * PI)) -
+    ((INFO->n/2) * log(s2)) - (1/(2 * (s2))) * SSE);
 
-  loglik = (Jacobian - ((n/2) * log(2 * PI)) -
-    (n/2) * log(s2) - (1/(2 * (s2))) * SSE);
-
-  if (verbose) Rprintf("coef: %9.6f, SSE: %9.3f, Jacobian: %9.3f, LL: %10.3f\n",
+  if (INFO->verbose)
+    Rprintf("val: %9.6f, SSE: %9.3f, Jacobian: %9.3f, LL: %10.3f\n",
     alpha, SSE, Jacobian, loglik);
   
   return -loglik;
 }
 
+
+/**
+ * SEXP function to run Brent_fmin, first populating a Jac_SSE_info
+ * structure from a SEXP environment to pass to the objective
+ * function f_esar_ll
+ *
+ * @param env pointer to a SEXP environment
+ * @param interval SEXP numeric vector with min and max interval bounds
+ * @param tol SEXP numeric tolerance for stopping fmin
+ * 
+ * @return SEXP list of maximum and objective values
+ *
+ */
 SEXP do_LL(SEXP env, SEXP interval, SEXP tol) {
   double low, up, toler;
   double max, obj;
   SEXP res, resnames;
   int pc=0;
+  Jac_SSE_info INFO, *infptr;
+
+  INFO.verbose = LOGICAL_POINTER(findVarInFrame(env, install("verbose")))[0];
+
+  INFO.n = INTEGER_POINTER(findVarInFrame(env, install("n")))[0];
+  INFO.y = findVarInFrame(env, install("y"));
+  INFO.x = findVarInFrame(env, install("x"));
+  INFO.p = length(INFO.x) / INFO.n;
+  INFO.wy = findVarInFrame(env, install("wy"));
+  INFO.WX = findVarInFrame(env, install("WX"));
+
+  INFO.yl = (double *) R_alloc(INFO.n, sizeof(double));
+  INFO.xlq = (double *) R_alloc(INFO.n*INFO.p, sizeof(double));
+  INFO.qy = (double *) R_alloc(INFO.n*INFO.p, sizeof(double));
+  INFO.xlqyl = (double *) R_alloc(INFO.p, sizeof(double));
+  INFO.jpvt = (int *) R_alloc(INFO.p, sizeof(int));
+  INFO.work = (double *) R_alloc(INFO.p*2, sizeof(double));
+  INFO.qraux = (double *) R_alloc(INFO.p, sizeof(double));
+
+  INFO.a = NUMERIC_POINTER(findVarInFrame(env, install("a")))[0];
+  INFO.b = NUMERIC_POINTER(findVarInFrame(env, install("b")))[0];
+  INFO.dWd = AS_CHM_SP(findVarInFrame(env, install("dWd")));
+  INFO.ndWd = AS_CHM_SP(findVarInFrame(env, install("ndWd")));
+  INFO.C1p = AS_CHM_FR(findVarInFrame(env, install("C1p")));
+  INFO.C1n = AS_CHM_FR(findVarInFrame(env, install("C1n")));
+
+  infptr = &INFO;
 
   low = NUMERIC_POINTER(interval)[0];
   up = NUMERIC_POINTER(interval)[1];
   toler = NUMERIC_POINTER(tol)[0];
+  
  
   max = Brent_fmin(low, up, (double (*)(double, void*)) f_esar_ll,
-    env, toler);
-  obj = f_esar_ll(max, env);
+    infptr, toler);
+  obj = f_esar_ll(max, infptr);
 
   PROTECT(res = NEW_LIST(2)); pc++;
   PROTECT(resnames = NEW_CHARACTER(2)); pc++;
@@ -169,75 +346,4 @@ SEXP do_LL(SEXP env, SEXP interval, SEXP tol) {
 }
 
 
-/*
 
-library(spdep2)
-data(columbus)
-listw <- nb2listw(col.gal.nb)
-res <- ml_sse_setup(CRIME ~ HOVAL + INC, columbus, listw, verbose=TRUE)
-
-optimize(do_LL, interval=c(-1, 1), env=res, interp=TRUE, maximum=TRUE, tol=.Machine$double.eps^0.5)
-
-optimize(do_LL, interval=c(-1, 1), env=res, interp=FALSE, maximum=TRUE, tol=.Machine$double.eps^0.5)
-
-res <- ml_sse_setup(CRIME ~ HOVAL + INC, columbus, listw, verbose=FALSE)
-
-system.time(for (i in 1:1000) optimize(do_LL, interval=c(-1, 1), env=res, interp=TRUE, maximum=TRUE, tol=.Machine$double.eps^0.5))
-
-system.time(for (i in 1:1000) optimize(do_LL, interval=c(-1, 1), env=res, interp=FALSE, maximum=TRUE, tol=.Machine$double.eps^0.5))
-
-
-data(house)
-listw <- nb2listw(LO_nb)
-form <- formula(log(price) ~ age + I(age^2) + I(age^3) + log(lotsize) +
-   rooms + log(TLA) + beds + syear)
-res <- ml_sse_setup(form, house, listw, verbose=FALSE)
-
-optimize(do_LL, interval=c(-1, 1), env=res, interp=TRUE, maximum=TRUE, tol=.Machine$double.eps^0.5)
-
-optimize(do_LL, interval=c(-1, 1), env=res, interp=FALSE, maximum=TRUE, tol=.Machine$double.eps^0.5)
-
-system.time(for (i in 1:10) optimize(do_LL, interval=c(-1, 1), env=res, interp=TRUE, maximum=TRUE, tol=.Machine$double.eps^0.5))
-
-system.time(for (i in 1:10) optimize(do_LL, interval=c(-1, 1), env=res, interp=FALSE, maximum=TRUE, tol=.Machine$double.eps^0.5))
-
-
-library(spdep)
-data(columbus)
-listw <- nb2listw(col.gal.nb)
-#W <- as(as_dgRMatrix_listw(listw), "CsparseMatrix")
-source("../R/ml_sse.R")
-res <- ml_sse_setup(CRIME ~ HOVAL + INC, columbus, listw)
-
-dyn.load("ml_sse.so")
-
-optimize(do_LL, interval=c(-1, 1), env=res, interp=FALSE, maximum=TRUE)
-
-.Call("do_LL", res, c(-1, 1), 1e-9)
-
-ml_sse(0.5, res)
-dyn.load("ml_sse.so")
-.Call("R_ml_sse_env", res, 0.5)
-
-library(spdep)
-source("../R/ml_sse.R")
-dyn.load("ml_sse.so")
-load("../data/house.RData")
-
-listw <- nb2listw(LO_nb)
-W <- as(as_dgRMatrix_listw(listw), "CsparseMatrix")
-form <- formula(log(price) ~ age + I(age^2) + I(age^3) + log(lotsize) +
-   rooms + log(TLA) + beds + syear)
-res <- ml_sse_setup(form, house, listw)
-ml_sse(0.5, res)
-.Call("R_ml_sse_env", res, 0.5)
-
-system.time(for (i in 1:100) ml_sse(0.5, res))
-system.time(for (i in 1:100) .Call("R_ml_sse_env", res, 0.5))
-
-rho <- seq(-0.9, 0.99, 0.01)
-system.time(interp <- sapply(rho, function(x) ml_sse(x, res)))
-system.time(compil <- sapply(rho, function(x) .Call("R_ml_sse_env", res, x)))
-all.equal(interp, compil)
-
-*/
