@@ -56,7 +56,16 @@ system.time(.Call("do_LL", res, as.double(c(-1, 1)), .Machine$double.eps^0.5,
 example(NY_data)
 form <- formula(Z ~ PEXPOSURE + PCTAGE65P + PCTOWNHOME)
 system.time(res <- ml_env_setup(form, nydata, listw_NY, verbose=TRUE, similar=FALSE, imult=6))
-
+system.time(optimize(do_LL, interval=c(-1, 1), env=res,
+ interp=c(FALSE, FALSE), maximum=TRUE, tol=.Machine$double.eps^0.5))
+system.time(.Call("do_LL", res, as.double(c(-1, 1)), .Machine$double.eps^0.5,
+ PACKAGE="spdep2"))
+system.time(res <- ml_env_setup(form, nydata, listw_NY, weights=POP8, verbose=TRUE, similar=FALSE, imult=6))
+system.time(optimize(do_LL, interval=c(-1, 1), env=res,
+ interp=c(TRUE, TRUE), maximum=TRUE, tol=.Machine$double.eps^0.5))
+system.time(res <- ml_env_setup(form, nydata, listw_NY, verbose=TRUE, similar=FALSE, imult=6, CAR=TRUE))
+system.time(optimize(do_LL, interval=c(-1, 1), env=res,
+ interp=c(TRUE, TRUE), maximum=TRUE, tol=.Machine$double.eps^0.5))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
