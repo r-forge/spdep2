@@ -1,4 +1,5 @@
-ml_env_setup <- function(formula, data, listw, verbose=TRUE) {
+ml_env_setup <- function(formula, data, listw, verbose=TRUE,
+  similar=TRUE, imult=2) {
     if (!is.logical(verbose)) verbose=FALSE
     mt <- terms(formula, data=data)
     mf <- lm(formula=formula, data = data, method = "model.frame")
@@ -16,12 +17,12 @@ ml_env_setup <- function(formula, data, listw, verbose=TRUE) {
     assign("wy", wy, envir=env)
     assign("WX", WX, envir=env)
     I <- .symDiagonal(n)
-    slw <- similar.listw(listw)
-    dsT <- as_dsTMatrix_listw(slw)
+    if (similar) listw <- similar.listw(listw)
+    dsT <- as_dsTMatrix_listw(listw)
     dWd <- as(dsT, "dsCMatrix")
     ndWd <- -dWd
-    C1p <- Cholesky(ndWd, Imult = 2)
-    C1n <- Cholesky(dWd, Imult = 2)
+    C1p <- Cholesky(ndWd, Imult = imult)
+    C1n <- Cholesky(dWd, Imult = imult)
     a <- 0 - .Machine$double.eps
     b <- 0 + .Machine$double.eps
     assign("a", a, envir=env)
