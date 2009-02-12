@@ -100,7 +100,10 @@ sse_fn_car <- function(env, lambda) {
     b <- get("b", envir=env)
     y <- get("y", envir=env)
     x <- get("x", envir=env)
-    Z <- ifelse(lambda > b, update(get("C1p", envir=env), get("ndWd", envir=env), 1/lambda), ifelse(lambda < a, update(get("C1n", envir=env), get("dWd", envir=env), 1/(-lambda)), .symDiagonal(n)))
+    if (lambda > b) Z <- as(update(get("C1p", envir=env), get("ndWd", envir=env), 1/lambda), "sparseMatrix")
+    else (lambda < a) Z <- as(update(get("C1n", envir=env), get("dWd", envir=env), 1/(-lambda)), "sparseMatrix")
+    else Z <- .symDiagonal(n)
+#    Z <- ifelse(lambda > b, update(get("C1p", envir=env), get("ndWd", envir=env), 1/lambda), ifelse(lambda < a, update(get("C1n", envir=env), get("dWd", envir=env), 1/(-lambda)), .symDiagonal(n)))
     yl <- Z %*% y
     xl <- Z %*% x
     xlQR <- qr(xl)
