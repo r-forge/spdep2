@@ -1,18 +1,15 @@
 \name{ml_env_setup}
 \alias{ml_env_setup}
 \alias{do_LL}
-\alias{sse_fn}
-\alias{J_fn}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{Error SAR computation testbed functions}
 \description{
   These functions are to permit the testing of different components of maximum likelihood estimation for spatial regression models using \pkg{Matrix} class objects and methods at the R and C interface levels.
 }
 \usage{
-ml_env_setup(formula, data, listw, verbose = TRUE)
+ml_env_setup(formula, data, listw, weights, na.action=na.fail, verbose = TRUE,
+  similar=TRUE, imult=2, CAR=FALSE, zero.policy=FALSE)
 do_LL(val, env, interp=c(FALSE, FALSE))
-sse_fn(env, lambda)
-J_fn(env, lambda)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -20,8 +17,14 @@ J_fn(env, lambda)
 of model specification are given for \code{lm()}}
   \item{data}{an optional data frame (or data frame like object) containing the variables in the model. By default the variables are taken from the environment which the function is called}
   \item{listw}{a \code{listw} object created for example by \code{nb2listw}}
+  \item{weights}{}
+  \item{na.action}{}
   \item{verbose}{default=FALSE; if TRUE, reports function values during optimization.}
-  \item{lambda,val}{single spatial autocorrelation coefficient}
+  \item{similar}{}
+  \item{imult}{}
+  \item{CAR}{}
+  \item{zero.policy}{}
+  \item{val}{single spatial autocorrelation coefficient}
   \item{env}{an environment object as returned by \code{ml_env_setup}}
   \item{interp}{default \code{c(FALSE, FALSE)}, if the first value is TRUE, \code{sse_fn} is used instead of compiled code, if the second, \code{J_fn} is used instead of compiled code}
 }
@@ -58,13 +61,16 @@ form <- formula(Z ~ PEXPOSURE + PCTAGE65P + PCTOWNHOME)
 system.time(res <- ml_env_setup(form, nydata, listw_NY, verbose=TRUE, similar=FALSE, imult=6))
 system.time(optimize(do_LL, interval=c(-1, 1), env=res,
  interp=c(FALSE, FALSE), maximum=TRUE, tol=.Machine$double.eps^0.5))
-system.time(.Call("do_LL", res, as.double(c(-1, 1)), .Machine$double.eps^0.5,
+system.time(.Call("do_LL", res, as.double(c(-0.3029200, 0.1549552)), .Machine$double.eps^0.5,
  PACKAGE="spdep2"))
 system.time(res <- ml_env_setup(form, nydata, listw_NY, weights=POP8, verbose=TRUE, similar=FALSE, imult=6))
 system.time(optimize(do_LL, interval=c(-1, 1), env=res,
  interp=c(TRUE, TRUE), maximum=TRUE, tol=.Machine$double.eps^0.5))
 system.time(res <- ml_env_setup(form, nydata, listw_NY, verbose=TRUE, similar=FALSE, imult=6, CAR=TRUE))
-system.time(optimize(do_LL, interval=c(-1, 1), env=res,
+system.time(optimize(do_LL, interval=c(-0.3029200, 0.1549552), env=res,
+ interp=c(TRUE, TRUE), maximum=TRUE, tol=.Machine$double.eps^0.5))
+system.time(res <- ml_env_setup(form, nydata, listw_NY, weights=POP8, verbose=TRUE, similar=FALSE, imult=6, CAR=TRUE))
+system.time(optimize(do_LL, interval=c(-0.3029200, 0.1549552), env=res,
  interp=c(TRUE, TRUE), maximum=TRUE, tol=.Machine$double.eps^0.5))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

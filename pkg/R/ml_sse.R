@@ -1,5 +1,6 @@
 ml_env_setup <- function(formula, data, listw, weights,
-    na.action=na.fail, verbose=TRUE, similar=TRUE, imult=2, CAR=FALSE) {
+    na.action=na.fail, verbose=TRUE, similar=TRUE, imult=2, CAR=FALSE,
+    zero.policy=FALSE) {
     if (!is.logical(verbose)) verbose=FALSE
     mf <- match.call(expand.dots = FALSE)
     m <- match(c("formula", "data", "weights", "na.action"), names(mf), 0)
@@ -31,12 +32,23 @@ ml_env_setup <- function(formula, data, listw, weights,
     sum_lw <- sum(log(weights))
 
     W <- as(as_dgRMatrix_listw(listw), "CsparseMatrix")
-    wy <- as.matrix(W %*% y) * sw
-    y <- y * sw
-    WX <- as.matrix(W %*% x) * sw
-    x <- x * sw
+    if (CAR) {
+        W <- as(W, "symmetricMatrix")
+        wy <- NULL
+        WX <- NULL
+    } else if (isTRUE(all.equal(sum_lw, 0.0))){
+        wy <- as.matrix(W %*% y)
+        WX <- as.matrix(W %*% x)
+    } else {
+        wy <- as.matrix(W %*% y) * sw
+        y <- y * sw
+        WX <- as.matrix(W %*% x) * sw
+        x <- x * sw
+    }
     env <- new.env(parent=globalenv())
     assign("n", n, envir=env)
+    assign("weights", weights, envir=env)
+    assign("W", W, envir=env)
     assign("sum_lw", sum_lw, envir=env)
     assign("dcar", dcar, envir=env)
     assign("verbose", verbose, envir=env)
@@ -44,7 +56,6 @@ ml_env_setup <- function(formula, data, listw, weights,
     assign("x", x, envir=env)
     assign("wy", wy, envir=env)
     assign("WX", WX, envir=env)
-    I <- .symDiagonal(n)
     if (similar) listw <- similar.listw(listw)
     dsT <- as_dsTMatrix_listw(listw)
     dWd <- as(dsT, "dsCMatrix")
@@ -69,7 +80,8 @@ do_LL <- function(val, env, interp=c(FALSE, FALSE)) {
     dcar <- get("dcar", envir=env)
     verbose <- get("verbose", envir=env)
     if (dcar < 1.0) {
-      SSE <- sse_fn_car(env, val)
+      if (isTRUE(all.equal(sum_lw, 0.0))) SSE <- sse_fn_car(env, val)
+      else SSE <- sse_fn_carw(env, val)
     } else {
       if (interp[1]) SSE <- sse_fn(env, val)
       else SSE <- .Call("R_ml_sse_env", env, val, PACKAGE="spdep2")
@@ -96,20 +108,29 @@ sse_fn <- function(env, lambda) {
 
 sse_fn_car <- function(env, lambda) {
     n <- get("n", envir=env)
-    a <- get("a", envir=env)
-    b <- get("b", envir=env)
     y <- get("y", envir=env)
     x <- get("x", envir=env)
-    if (lambda > b) Z <- as(update(get("C1p", envir=env), get("ndWd", envir=env), 1/lambda), "sparseMatrix")
-    else (lambda < a) Z <- as(update(get("C1n", envir=env), get("dWd", envir=env), 1/(-lambda)), "sparseMatrix")
-    else Z <- .symDiagonal(n)
-#    Z <- ifelse(lambda > b, update(get("C1p", envir=env), get("ndWd", envir=env), 1/lambda), ifelse(lambda < a, update(get("C1n", envir=env), get("dWd", envir=env), 1/(-lambda)), .symDiagonal(n)))
-    yl <- Z %*% y
-    xl <- Z %*% x
+    I <- .symDiagonal(n)
+    Z <- chol((I - lambda * get("W", envir=env)))
+    yl <- as.matrix(Z %*% y)
+    xl <- as.matrix(Z %*% x)
     xlQR <- qr(xl)
     xl.q <- qr.Q(xlQR)
     xl.q.yl <- crossprod(xl.q, yl)
     SSE <- crossprod(yl) - crossprod(xl.q.yl)
+    SSE
+}
+
+sse_fn_carw <- function(env, lambda) {
+    n <- get("n", envir=env)
+    y <- get("y", envir=env)
+    x <- get("x", envir=env)
+    I <- .symDiagonal(n)
+    sw <- .symDiagonal(n, x=get("weights", envir=env))
+    Z <- (I - lambda * get("W", envir=env)) %*% sw
+    imat <- base:::solve(crossprod(x, as.matrix(Z %*% x)))
+    residuals <- y - (x %*% crossprod(imat, crossprod(x, as.matrix(Z %*% y))))
+    SSE <- c(crossprod(residuals, as.matrix(Z %*% residuals)))
     SSE
 }
 
