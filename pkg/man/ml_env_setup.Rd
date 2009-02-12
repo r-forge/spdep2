@@ -1,6 +1,8 @@
 \name{ml_env_setup}
 \alias{ml_env_setup}
 \alias{do_LL}
+\alias{sse_fn}
+\alias{J_fn}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{Error SAR computation testbed functions}
 \description{
@@ -8,8 +10,10 @@
 }
 \usage{
 ml_env_setup(formula, data, listw, weights, na.action=na.fail, verbose = TRUE,
-  similar=TRUE, imult=2, CAR=FALSE, zero.policy=FALSE)
+  CAR=FALSE, zero.policy=FALSE)
 do_LL(val, env, interp=c(FALSE, FALSE))
+J_fn(env, lambda)
+sse_fn(env, lambda)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -17,14 +21,12 @@ do_LL(val, env, interp=c(FALSE, FALSE))
 of model specification are given for \code{lm()}}
   \item{data}{an optional data frame (or data frame like object) containing the variables in the model. By default the variables are taken from the environment which the function is called}
   \item{listw}{a \code{listw} object created for example by \code{nb2listw}}
-  \item{weights}{}
-  \item{na.action}{}
+  \item{weights}{an optional vector of weights to be used in the fitting process, the fitting procedure for CAR is suspect.}
+  \item{na.action}{a function (default \code{na.fail}), can also be \code{na.omit} or \code{na.exclude} with consequences for residuals and fitted values - in these cases the weights list will be subsetted to remove NAs in the data. Note that only weights lists created without using the glist argument to \code{nb2listw} may be subsetted.}
   \item{verbose}{default=FALSE; if TRUE, reports function values during optimization.}
-  \item{similar}{}
-  \item{imult}{}
-  \item{CAR}{}
-  \item{zero.policy}{}
-  \item{val}{single spatial autocorrelation coefficient}
+  \item{CAR}{default FALSE for SAR, TRUE for CAR}
+  \item{zero.policy}{Include list of no-neighbour observations in output if TRUE --- otherwise zero.policy is handled within the listw argument}
+  \item{val,lambda}{single spatial autocorrelation coefficient}
   \item{env}{an environment object as returned by \code{ml_env_setup}}
   \item{interp}{default \code{c(FALSE, FALSE)}, if the first value is TRUE, \code{sse_fn} is used instead of compiled code, if the second, \code{J_fn} is used instead of compiled code}
 }
@@ -58,18 +60,18 @@ system.time(.Call("do_LL", res, as.double(c(-1, 1)), .Machine$double.eps^0.5,
  PACKAGE="spdep2"))
 example(NY_data)
 form <- formula(Z ~ PEXPOSURE + PCTAGE65P + PCTOWNHOME)
-system.time(res <- ml_env_setup(form, nydata, listw_NY, verbose=TRUE, similar=FALSE, imult=6))
+system.time(res <- ml_env_setup(form, nydata, listw_NY, verbose=TRUE))
 system.time(optimize(do_LL, interval=c(-1, 1), env=res,
  interp=c(FALSE, FALSE), maximum=TRUE, tol=.Machine$double.eps^0.5))
 system.time(.Call("do_LL", res, as.double(c(-0.3029200, 0.1549552)), .Machine$double.eps^0.5,
  PACKAGE="spdep2"))
-system.time(res <- ml_env_setup(form, nydata, listw_NY, weights=POP8, verbose=TRUE, similar=FALSE, imult=6))
+system.time(res <- ml_env_setup(form, nydata, listw_NY, weights=POP8, verbose=TRUE))
 system.time(optimize(do_LL, interval=c(-1, 1), env=res,
  interp=c(TRUE, TRUE), maximum=TRUE, tol=.Machine$double.eps^0.5))
-system.time(res <- ml_env_setup(form, nydata, listw_NY, verbose=TRUE, similar=FALSE, imult=6, CAR=TRUE))
+system.time(res <- ml_env_setup(form, nydata, listw_NY, verbose=TRUE, CAR=TRUE))
 system.time(optimize(do_LL, interval=c(-0.3029200, 0.1549552), env=res,
  interp=c(TRUE, TRUE), maximum=TRUE, tol=.Machine$double.eps^0.5))
-system.time(res <- ml_env_setup(form, nydata, listw_NY, weights=POP8, verbose=TRUE, similar=FALSE, imult=6, CAR=TRUE))
+system.time(res <- ml_env_setup(form, nydata, listw_NY, weights=POP8, verbose=TRUE, CAR=TRUE))
 system.time(optimize(do_LL, interval=c(-0.3029200, 0.1549552), env=res,
  interp=c(TRUE, TRUE), maximum=TRUE, tol=.Machine$double.eps^0.5))
 }

@@ -1,6 +1,7 @@
 ml_env_setup <- function(formula, data, listw, weights,
-    na.action=na.fail, verbose=TRUE, similar=TRUE, imult=2, CAR=FALSE,
-    zero.policy=FALSE) {
+    na.action=na.fail, verbose=TRUE, CAR=FALSE, zero.policy=FALSE) {
+    if (!inherits(listw, "listw")) 
+        stop("No neighbourhood list")
     if (!is.logical(verbose)) verbose=FALSE
     mf <- match.call(expand.dots = FALSE)
     m <- match(c("formula", "data", "weights", "na.action"), names(mf), 0)
@@ -56,9 +57,26 @@ ml_env_setup <- function(formula, data, listw, weights,
     assign("x", x, envir=env)
     assign("wy", wy, envir=env)
     assign("WX", WX, envir=env)
-    if (similar) listw <- similar.listw(listw)
+
+    can.sim <- as.logical(NA)
+    if (listw$style %in% c("W", "S")) 
+	can.sim <- spdep:::can.be.simmed(listw)
+    if (listw$style %in% c("W", "S") && !can.sim)
+        stop("Matrix method requires symmetric weights")
+    if (listw$style %in% c("B", "C") && 
+        !(is.symmetric.glist(listw$neighbours, listw$weights)))
+	    stop("Matrix method requires symmetric weights")
+    if (listw$style == "U") stop("U style not permitted, use C")
+
+    if (listw$style %in% c("W", "S") & can.sim)
+        listw <- similar.listw(listw)
     dsT <- as_dsTMatrix_listw(listw)
     dWd <- as(dsT, "dsCMatrix")
+    imult <- 2
+    if (listw$style == "B") {
+        imult <- ceiling((2/3)*max(apply(dWd, 1, sum)))
+	interval <- c(-0.5, +0.25)
+    } else interval <- c(-2, +1)
     ndWd <- -dWd
     C1p <- Cholesky(ndWd, Imult = imult)
     C1n <- Cholesky(dWd, Imult = imult)
@@ -70,6 +88,7 @@ ml_env_setup <- function(formula, data, listw, weights,
     assign("ndWd", ndWd, envir=env)
     assign("C1p", C1p, envir=env)
     assign("C1n", C1n, envir=env)
+    assign("interval", interval, envir=env)
 
     env
 }
