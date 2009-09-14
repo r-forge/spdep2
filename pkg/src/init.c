@@ -3,7 +3,7 @@
 static R_CallMethodDef CallEntries[] = {
     {"R_ml_sse_env", (DL_FUNC) &R_ml_sse_env, 2},
     {"R_ml_Jac_env", (DL_FUNC) &R_ml_Jac_env, 2},
-    {"do_LL", (DL_FUNC) &do_LL, 3},
+    {"do_LLa", (DL_FUNC) &do_LLa, 3},
     {NULL, NULL, 0}
 };
 

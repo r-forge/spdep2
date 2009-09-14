@@ -11,7 +11,7 @@
 \usage{
 ml_env_setup(formula, data, listw, weights, na.action=na.fail, verbose = TRUE,
   CAR=FALSE, zero.policy=FALSE)
-do_LL(val, env, interp=c(FALSE, FALSE))
+do_LL(val, env, interp=c(FALSE, FALSE), carCh = FALSE)
 J_fn(env, lambda)
 sse_fn(env, lambda)
 }
@@ -29,6 +29,7 @@ of model specification are given for \code{lm()}}
   \item{val,lambda}{single spatial autocorrelation coefficient}
   \item{env}{an environment object as returned by \code{ml_env_setup}}
   \item{interp}{default \code{c(FALSE, FALSE)}, ignored if CAR is TRUE, because no compiled versions are available; for SAR models if the first value is TRUE, \code{sse_fn} is used instead of compiled code, if the second, \code{J_fn} is used instead of compiled code}
+  \item{carCh}{}
 }
 \details{
 \code{ml_env_setup} populates an environment with the objects needed for compting the sum of squared errors and Jacobian terms in an error SAR model.
@@ -56,15 +57,14 @@ system.time(optimize(do_LL, interval=c(-1, 1), env=res,
  interp=c(TRUE, FALSE), maximum=TRUE, tol=.Machine$double.eps^0.5))
 system.time(optimize(do_LL, interval=c(-1, 1), env=res,
  interp=c(FALSE, FALSE), maximum=TRUE, tol=.Machine$double.eps^0.5))
-system.time(.Call("do_LL", res, as.double(c(-1, 1)), .Machine$double.eps^0.5,
+system.time(.Call("do_LLa", res, as.double(c(-1, 1)), .Machine$double.eps^0.5,
  PACKAGE="spdep2"))
 example(NY_data)
 form <- formula(Z ~ PEXPOSURE + PCTAGE65P + PCTOWNHOME)
 system.time(res <- ml_env_setup(form, nydata, listw_NY, verbose=TRUE))
-system.time(optimize(do_LL, interval=c(-1, 1), env=res,
+system.time(optimize(do_LL, interval=c(-0.3029200, 0.1549552), env=res,
  interp=c(FALSE, FALSE), maximum=TRUE, tol=.Machine$double.eps^0.5))
-system.time(.Call("do_LL", res, as.double(c(-0.3029200, 0.1549552)), .Machine$double.eps^0.5,
- PACKAGE="spdep2"))
+system.time(.Call("do_LLa", res, as.double(c(-0.3029200, 0.1549552)), .Machine$double.eps^0.5,  PACKAGE="spdep2"))
 system.time(res <- ml_env_setup(form, nydata, listw_NY, weights=POP8, verbose=TRUE))
 system.time(optimize(do_LL, interval=c(-1, 1), env=res,
  interp=c(TRUE, TRUE), maximum=TRUE, tol=.Machine$double.eps^0.5))

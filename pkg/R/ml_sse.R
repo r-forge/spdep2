@@ -93,13 +93,16 @@ ml_env_setup <- function(formula, data, listw, weights,
     env
 }
 
-do_LL <- function(val, env, interp=c(FALSE, FALSE)) {
+do_LL <- function(val, env, interp=c(FALSE, FALSE), carCh=FALSE) {
     n <- get("n", envir=env)
     sum_lw <- get("sum_lw", envir=env)
     dcar <- get("dcar", envir=env)
     verbose <- get("verbose", envir=env)
     if (dcar < 1.0) {
-      if (isTRUE(all.equal(sum_lw, 0.0))) SSE <- sse_fn_car(env, val)
+      if (isTRUE(all.equal(sum_lw, 0.0))) {
+        if (carCh) SSE <- sse_fn_carCh(env, val)
+        else SSE <- sse_fn_car(env, val)
+      }
       else SSE <- sse_fn_carw(env, val)
     } else {
       if (interp[1]) SSE <- sse_fn(env, val)
@@ -139,6 +142,27 @@ sse_fn_car <- function(env, lambda) {
     SSE <- crossprod(yl) - crossprod(xl.q.yl)
     SSE
 }
+
+sse_fn_carCh <- function(env, lambda) {
+    n <- get("n", envir=env)
+    y <- get("y", envir=env)
+    x <- get("x", envir=env)
+#    I <- .symDiagonal(n)
+    if (lambda > get("b", envir=env)) Z <- as(update(get("C1p", envir=env),
+            get("ndWd", envir=env), 1/lambda), "sparseMatrix")
+    else if (lambda < get("a", envir=env)) Z <- as(update(get("C1n", envir=env),
+            get("dWd", envir=env), 1/(-lambda)), "sparseMatrix")
+    else Z <- .symDiagonal(n)
+#    Z <- chol((I - lambda * get("W", envir=env)))
+    yl <- as.matrix(Z %*% y)
+    xl <- as.matrix(Z %*% x)
+    xlQR <- qr(xl)
+    xl.q <- qr.Q(xlQR)
+    xl.q.yl <- crossprod(xl.q, yl)
+    SSE <- crossprod(yl) - crossprod(xl.q.yl)
+    SSE
+}
+
 
 sse_fn_carw <- function(env, lambda) {
     n <- get("n", envir=env)

@@ -12,7 +12,7 @@
 
 SEXP R_ml_sse_env(SEXP env, SEXP lambda);
 SEXP R_ml_Jac_env(SEXP env, SEXP lambda);
-SEXP do_LL(SEXP env, SEXP interval, SEXP tol);
+SEXP do_LLa(SEXP env, SEXP interval, SEXP tol);
 
 #endif /* SPDEP2_H */
 

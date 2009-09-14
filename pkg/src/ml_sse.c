@@ -289,7 +289,7 @@ static double f_esar_ll(double alpha, Jac_SSE_info *INFO) {
  * @return SEXP list of maximum and objective values
  *
  */
-SEXP do_LL(SEXP env, SEXP interval, SEXP tol) {
+SEXP do_LLa(SEXP env, SEXP interval, SEXP tol) {
   double low, up, toler;
   double max, obj;
   SEXP res, resnames;
