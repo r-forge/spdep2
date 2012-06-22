@@ -57,7 +57,7 @@ draw_rho <-function(detval,epe0,eped,epe0d,n,k,rho,a1,a2){
 	nrho = length(detval[,1])
 	iota = matrix(rep(1,nrho),nrho,1);
 
-	z = epe0%*%iota - 2*detval[,1]%*%epe0d + detval[,1]*detval[,1]%*%eped;
+	z = epe0[1,1]*iota - 2*detval[,1]*epe0d[1,1] + detval[,1]*detval[,1]*eped[1,1];
 	den = detval[,2] - nmk*log(z)
 	bprior = dbeta(detval[,1],a1,a2)#VIRGILIO: Changed this
 	den = den + log(bprior)
@@ -69,7 +69,8 @@ draw_rho <-function(detval,epe0,eped,epe0d,n,k,rho,a1,a2){
 	x = exp(den)
 
 	## trapezoid rule
-	isum = sum((y[2:n,1] + y[1:n-1,1])*(x[2:n,1] - x[1:n-1,1])/2)
+	#isum = sum((y[2:n,1] + y[1:n-1,1])*(x[2:n,1] - x[1:n-1,1])/2)
+	isum = sum((y[2:n] + y[1:(n-1)])*(x[2:n] - x[1:(n-1)])/2)#VIRGILIO:FIXED
 	z = abs(x/isum)
 	den = cumsum(z)
 
@@ -372,7 +373,7 @@ rho_marginal<- function(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,logdetx=0,a1,a2){
 	bprior = dbeta(detval[,1],a1,a2)#VIRGILIO: Changed this
 	C = log(bprior) + lgamma(nmk) - nmk*log(2*pi)-0.5*logdetx
 	iota = matrix(rep(1,n),n,1)
-	z = epe0*iota - 2*detval[,1]*epe0d + detval[,1]*detval[,1]*eped
+	z = epe0[1,1]*iota - 2*detval[,1]*epe0d[1,1] + detval[,1]*detval[,1]*eped[,1]
 	den =  detval[,2] - nmk*log(z)
 	##den = real(den)
 	out = C + den;
