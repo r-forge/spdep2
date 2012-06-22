@@ -1,7 +1,9 @@
 #
 #Some tests
 #
+library(Matrix)
 
+source("vgr_parse.r")
 source("vgr_utils.R")
 
 #Define adjacency matrix
@@ -29,4 +31,33 @@ lndetmctest<-sapply(Wdetmc$rho, function(rho){log(det(diag(3)-rho*W))})
 
 sum((Wdetmc$lndet - lndetmctest)^2)
 plot( Wdetmc$lndet, lndetmctest); abline(0,1)
+
+
+#Test for far_g
+source("vgr_far_g.r")
+
+prior<-prior_parse(NULL)
+prior$ldetflag<-0
+prior$rmin<-0
+prior$rmax<-0.99#If this is set to 1 then problem when interpolating log-det's
+
+y<-matrix(rnorm(3), ncol=1)
+y<-solve(diag(3)-.8*W)%*%y
+
+
+#Heteroc.  model
+prior$novi_flag<-0
+results<-far_g(y, W, 1000, 0, prior)
+plot(results$pdraw, type="l", main="rho")
+
+#Homoc. model
+prior$novi_flag<-1
+results1<-far_g(y, W, 1000, 0, prior)
+plot(results1$pdraw, type="l", main="rho")
+
+
+
+
+
+
 
