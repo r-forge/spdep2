@@ -73,7 +73,7 @@ y<-solve(diag(nrow(W))-0.4*W)%*%y
 
 #Heteroc.  model
 prior$novi_flag<-0
-results<-far_g(y, W, 1000, 0, prior)
+results<-far_g(y, W, 1500, 500, prior)
 plot(results$pdraw, type="l", main="rho")
 summary(results$pdraw)
 
@@ -81,7 +81,12 @@ summary(results$pdraw)
 
 #Homoc. model
 prior$novi_flag<-1
-results1<-far_g(y, W, 1000, 0, prior)
+results1<-far_g(y, W, 1500, 500, prior)
 plot(results1$pdraw, type="l", main="rho")
 summary(results1$pdraw)
+
+#spautolom
+spautolm(y~1, data=data.frame(y=y), listw=nb2listw(boston.soi))
+
+
 
