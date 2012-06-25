@@ -205,18 +205,18 @@ return(out)
 #the exact values of hte log-det
 lndetmc <- function(order,iter,wsw,rmin=0,rmax=1){
 
-	n=nrow(wsw);#VIRGILIO:Fixed this ,##ABHIRUP: Changed this.
+	n=nrow(wsw)
 
 	# Exact moments from 1 to oexact
-	td=c(0,sum(sum(wsw^2))/2)  ## full in R??
-	oexact=length(td)
+	td=matrix(c(0,sum(sum(wsw^2))/2), ncol=1)
+	oexact=nrow(td)
 
 	o=order
 	### Stochastic moments
 
-	mavmomi=matrix(rep(0,o*iter),o,iter)
+	mavmomi=matrix(0,o,iter)
 	for (j in 1:iter){ 
-		u=rnorm(n)
+		u=matrix(rnorm(n), ncol=1)
 		v=u
 		utu=t(u)%*%u
 		for (i in 1:o){
@@ -225,11 +225,11 @@ lndetmc <- function(order,iter,wsw,rmin=0,rmax=1){
 		}
 	}
 
-	#mavmomi[1:oexact,]=td[,rep(1,iter)] # ABHIRUP: is this allright?? dimentions doesn't match...
+	mavmomi[1:oexact,]=td[,rep(1,iter)] #FIXED.
 
 	###averages across iterations
 	#avmomi=t(mean(t(mavmomi)))
-	avmomi=matrix(apply(mavmomi,2,mean), ncol=1)#Virgilio: Fixed this
+	avmomi=matrix(apply(mavmomi,1,mean), ncol=1)#Virgilio: Re-Fixed this
 
 
 
@@ -253,11 +253,11 @@ lndetmc <- function(order,iter,wsw,rmin=0,rmax=1){
 
 	##%standard error computations
 	srvs=t(alomat%*%mavmomi)
-	sderr=t(sqrt((mean(srvs*srvs)-mean(srvs)^2)/iter))
+	sderr=sqrt((apply(srvs*srvs, 2, mean)-apply(srvs, 2, mean)^2)/iter)
 
 	##%lower bound computation
-	eps<-.Machine$double.eps#VIRGILIO: Is this right. FIXME!!
-	fbound=t((n*alpha^(o+1))/((o+1)*(1-alpha+eps)))#VIRGILIO: Fixed this
+	eps<-.Machine$double.eps#VIRGILIO: Is this right. YES, it is. FIXED!
+	fbound=(n*alpha^(o+1))/((o+1)*(1-alpha+eps))#VIRGILIO: Fixed this
 
 	##%confidendence limits, with lower biased downward (more conservative)
 	low95=(lndetmat-1.96*sderr-fbound)
