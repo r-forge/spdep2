@@ -26,12 +26,15 @@ sum((Wdetfull$lndet - lndetfulltest)^2)
 plot( Wdetfull$lndet, lndetfulltest); abline(0,1)
 
 #Test for lndetmc
-Wdetmc<-lndetmc(10, 10, W)
+Wdetmc<-lndetmc(40, 20, W)
 lndetmctest<-sapply(Wdetmc$rho, function(rho){log(det(diag(3)-rho*W))})
 
 sum((Wdetmc$lndet - lndetmctest)^2)
-plot( Wdetmc$lndet, lndetmctest); abline(0,1)
-
+#plot( Wdetmc$lndet, lndetmctest, type="l"); abline(0,1)
+plot( Wdetmc$rho, lndetmctest, type="l");# abline(0,1)
+lines(Wdetmc$rho, Wdetmc$lndet, lty=1, col="red")
+lines(Wdetmc$rho, Wdetmc$lo95, lty=2);
+lines(Wdetmc$rho, Wdetmc$hi95, lty=2);
 
 #Test for far_g
 source("vgr_far_g.r")
