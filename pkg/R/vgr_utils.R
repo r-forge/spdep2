@@ -22,15 +22,17 @@ c_rho <- function(rho,y,sige,W,detval,vi,a1,a2){
 	i1 = max(i1)
 	i2 = max(i2)
 	index = round((i1+i2)/2)
-	if (length(index)==0)  index = 1
+	#if (length(index)==0)  index = 1
+	if (!is.finite(index)) index = 1 #Fixed this
 
 	detm = detval[index,2]
 
 	n = length(y)
 	e = (diag(rep(1,n)) - rho*W)%*%y 
 	ev = e*sqrt(vi)
-	epe = (t(ev)*ev)/(2*sige)
-	bprior = dbeta(detval[,1],a1,a2);#VIRGILIO: Changed this
+	epe = (t(ev)%*%ev)/(2*sige)
+	#bprior = dbeta(detval[,1],a1,a2);
+	bprior = dbeta(detval[index,1],a1,a2);#VIRGILIO: Changed this
 	epe = log(epe) + log(bprior);
 
 	cout =   detm - (n/2)*epe;
@@ -77,7 +79,9 @@ draw_rho <-function(detval,epe0,eped,epe0d,n,k,rho,a1,a2){
 	rnd = runif(1)*sum(z)
 	ind = which(den <= rnd)
 	idraw = max(ind)
-	if (idraw > 0 & idraw < nrho) rho = detval[idraw,1]
+	if (idraw > 0 & idraw < nrho) rho = detval[idraw,1]#FIXME: This sometimes fail...
+
+	return(rho)
 }	
 
 

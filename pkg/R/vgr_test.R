@@ -41,11 +41,13 @@ source("vgr_far_g.r")
 
 prior<-prior_parse(NULL)
 prior$ldetflag<-0
-prior$rmin<-0
+prior$rmin<-0.1
 prior$rmax<-0.99#If this is set to 1 then problem when interpolating log-det's
 
+prior$metflag<-0#M-H sampler
+
 y<-matrix(rnorm(3), ncol=1)
-y<-solve(diag(3)-.8*W)%*%y
+y<-solve(diag(3)-0.9*W)%*%y
 
 
 #Heteroc.  model
@@ -60,7 +62,26 @@ plot(results1$pdraw, type="l", main="rho")
 
 
 
+#Bigger example
+library(spdep)
+data(boston)
+
+W<-nb2mat(boston.soi)
+y<-matrix(rnorm(nrow(W)), ncol=1)
+y<-solve(diag(nrow(W))-0.4*W)%*%y
+
+
+#Heteroc.  model
+prior$novi_flag<-0
+results<-far_g(y, W, 1000, 0, prior)
+plot(results$pdraw, type="l", main="rho")
+summary(results$pdraw)
 
 
 
+#Homoc. model
+prior$novi_flag<-1
+results1<-far_g(y, W, 1000, 0, prior)
+plot(results1$pdraw, type="l", main="rho")
+summary(results1$pdraw)
 
