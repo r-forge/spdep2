@@ -4,7 +4,7 @@
 #
 #prior: list of values
 #model: Model. One of "sar", "far", etc.
-prior_parse <-function(prior, model){
+prior_parse <-function(prior, model,k){
 
 if(model=='far'){
     #% set defaults
