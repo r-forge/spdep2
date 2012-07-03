@@ -53,7 +53,7 @@ summary(results$pdraw)
 
 #Homoc. model
 prior$novi_flag<-1
-results1<-far_g(y, W, 1500, 500, prior)
+results1<-sar_g(y, x, W, 150, 50, prior)
 plot(results1$pdraw, type="l", main="rho")
 summary(results1$pdraw)
 
