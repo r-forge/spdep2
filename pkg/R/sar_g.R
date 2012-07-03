@@ -18,22 +18,24 @@ attach(temp)
 ##check for intercept
 n=length(y)
 if(sum(x[,1])!=n){
-	tst=sum(x)
+	tst=apply(x, 2, sum)
 	ind=which(tst==n)
 	if(length(ind)>0){
 		print("sar_g: intercept term must be in first column of the x-matrix")
 	}
 	if(length(ind)==0){
-	cflag=0
-	p=ncol(x)
+		cflag=0
+		p=ncol(x)
+		}
 	}
-	if(sum(x[,1]==n)){
+	#if(sum(x[,1]==n)){
+	else {
 	cflag=1
 	p=ncol(x)-1
 	}	
+
 	results$cflag=cflag
 	results$p=p
-	}
 	
 out_temp = set_eigs(eflag,W,rmin,rmax,n)
 rmin=out_temp$rmin
@@ -146,7 +148,7 @@ ntrs=length(trs);
 trbig=t(trs);
                  
         if (cflag == 1){
-        bdraws = bsave[,2:length(bsave)];
+        bdraws = as.matrix(bsave[,2:ncol(bsave)]);
         }
 	if(cflag == 0){
         bdraws = bsave;
@@ -160,7 +162,7 @@ trbig=t(trs);
         direct = array(0,c(ndraw-nomit,p,ntrs));	## 3D matrix in R
         indirect = array(0,c(ndraw-nomit,p,ntrs));
         
-for (i in 1:ndraw-nomit){
+for (i in 1:(ndraw-nomit)){
     rmat = pdraws[i,1]^ree;
     for (j in 1:p){
             beta = bdraws[i,j];
@@ -173,7 +175,7 @@ for (i in 1:ndraw-nomit){
 
 
 ##% compute posterior means and log marginal likelihood for return arguments
-bmean = mean(bsave);
+bmean = apply(bsave, 2, mean);
 beta = t(bmean);
 rho = mean(psave);
 sige = mean(ssave);
@@ -199,23 +201,24 @@ epe0d = t(ed)%*%e0;
   if (inform_flag == 0){
    mlike = rho_marginal(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,logdetx,a1,a2);}
   if(inform_flag == 1){
-   mlike = sar_marginal2(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,logdetx,a1,a2,c,TI,xs,ys,sige,W);
+#   mlike = sar_marginal2(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,a1,a2,c_beta,TI,xs,ys,sige,W);
+   mlike = sar_marginal2(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,a1,a2,c_beta,TI,xs,ys,sige);#VIRGILIO: W is not needed
   }
- yhat = solve((diag(nobs) - rho*W),(x*as.numeric(beta)));
+ yhat = solve((diag(nobs) - rho*W),(x%*%t(beta)));
  ####ERROR!! : dim(yhat)=dim(x) but yhat should be similar to y.
-# e = y - yhat; 
+ e = y - yhat; 
 
 ####% compute R-squared
-#epe = t(e)%*%e;
-#sige = epe/(n-k);
-#results$sigma = sige;
-#ym = y - mean(y);
-#rsqr1 = epe;
-#rsqr2 = t(ym)%*%ym;
-#results$rsqr = 1- rsqr1/rsqr2; ##% r-squared
-#rsqr1 = rsqr1/(nobs-nvar);
-#rsqr2 = rsqr2/(nobs-1.0);
-#results$rbar = 1 - (rsqr1/rsqr2); ###% rbar-squared
+epe = t(e)%*%e;
+sige = epe/(n-k);
+results$sigma = sige;
+ym = y - mean(y);
+rsqr1 = epe;
+rsqr2 = t(ym)%*%ym;
+results$rsqr = 1- rsqr1/rsqr2; ##% r-squared
+rsqr1 = rsqr1/(nobs-nvar);
+rsqr2 = rsqr2/(nobs-1.0);
+results$rbar = 1 - (rsqr1/rsqr2); ###% rbar-squared
 
 
 results$meth  = 'sar_g';
@@ -233,7 +236,7 @@ results$sdraw = ssave;
 results$mlike = mlike;
 results$vmean = vmean;
 results$yhat  = yhat;
-#results$resid = e;
+results$resid = e;
 results$bmean = c_beta;
 results$bstd  = sqrt(diag(T));
 results$ndraw = ndraw;

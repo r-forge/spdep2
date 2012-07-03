@@ -26,3 +26,35 @@ source('sar_g.R')
 results=sar_g(y,x,W,ndraw,nomit,prior)
 plot(results$pdraw)
 
+
+
+#Bigger example
+library(spdep)
+data(boston)
+
+W<-nb2mat(boston.soi)
+n<-nrow(W)
+x<-cbind(rep(1, n), rnorm(n))
+
+
+y<-x[,1]+10*x[,2]
+y<-matrix(y+rnorm(n), ncol=1)
+y<-solve(diag(nrow(W))-0.4*W)%*%y
+
+
+#Heteroc.  model
+prior<-prior_parse(NULL, k=2)
+prior$novi_flag<-0
+results<-sar_g(y, x, W, 150, 50, prior)
+plot(results$pdraw, type="l", main="rho")
+summary(results$pdraw)
+
+
+
+#Homoc. model
+prior$novi_flag<-1
+results1<-far_g(y, W, 1500, 500, prior)
+plot(results1$pdraw, type="l", main="rho")
+summary(results1$pdraw)
+
+

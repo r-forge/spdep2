@@ -386,27 +386,28 @@ rho_marginal<- function(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,logdetx=0,a1,a2){
 
 }
 
-sar_marginal2 <- function(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,a1,a2,c,TI,xs,ys,sige,W){
-n = length(detval)
+#sar_marginal2 <- function(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,a1,a2,c,TI,xs,ys,sige,W){
+sar_marginal2 <- function(detval,e0,ed,epe0,eped,epe0d,nobs,nvar, a1,a2,c_beta,TI,xs,ys,sige){#VIRGILIO: W is not needed
+n = nrow(detval)
 nmk = (nobs-nvar)/2
 bprior = dbeta(detval[,1],a1,a2)
 C = log(bprior) + lgamma(nmk) - nmk*log(2*pi)
 iota = matrix(rep(1,n),n,1)
-z = epe0*iota - 2*detval[,1]*epe0d + detval[,1]*detval[,1]*eped
+z = as.numeric(epe0)*iota - 2*detval[,1]*epe0d + detval[,1]*detval[,1]*eped
 Q1 = matrix(rep(0,n),n,1);
 Q2 = matrix(rep(0,n),n,1);
-xpxi = inv(t(xs)%*%xs);
-sTI = sige%*%TI;
-xpxis = inv(t(xs)%*%xs + sTI);
+xpxi = solve(t(xs)%*%xs);
+sTI = sige*TI;
+xpxis = solve(t(xs)%*%xs + sTI);
 logdetx = log(det(xpxis));
 C = C - 0.5*logdetx;
           for (i in 1:n){
            rho = detval[i,1];
            D = diag(nobs) - rho*W;	#speye
            bhat = xpxi%*%(t(xs)%*%D%*%ys);
-           beta = xpxis%*%(t(xs)%*%D%*%ys + sTI%*%c); 
-           Q1(i,1) = t(c - beta)%*%sTI%*%(c - beta);
-           Q2(i,1) = t(bhat - beta)%*%(t(xs)%*%xs)%*%(bhat - beta);
+           beta = xpxis%*%(t(xs)%*%D%*%ys + sTI%*%c_beta); 
+           Q1[i,1] = t(c_beta - beta)%*%sTI%*%(c_beta - beta);
+           Q2[i,1] = t(bhat - beta)%*%(t(xs)%*%xs)%*%(bhat - beta);
           }
 
 den = C + detval[,2] - nmk*log(z + Q1 + Q2);
