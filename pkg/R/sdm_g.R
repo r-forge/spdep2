@@ -1,73 +1,86 @@
-## just to test sar_g with out function encapsulations
-sar_g <- function(y,x,W,ndraw,nomit,prior){
+#sdm_g.R
+# list of external functions : draw_rho,sdm_parse,sdm_eigs,sdm_lndet,
+#sdm_marginal,sdm_marginal2
+#
 
-n=dim(y)[1]
-junk = dim(y)[2]
-n1=dim(x)[1]
-k=dim(x)[2]
-n2=dim(W)[1]
-n4=dim(W)[2]
+#sdm_g <- function(y,x,W,ndraw,nomit,prior){
+##############################################
+# ommitted: checking if the user handled the intercept term okay
+results <- list()
+n = dim(y)[1];
 
-results <-list()
-
-results$nobs  = n;
-results$nvar  = k;
-results$y = y; 
-temp=prior_parse(prior,k)
-attach(temp)
-##check for intercept
-n=length(y)
 if(sum(x[,1])!=n){
 	tst=apply(x, 2, sum)
 	ind=which(tst==n)
 	if(length(ind)>0){
-		print("sar_g: intercept term must be in first column of the x-matrix")
+		print("sdm_g: intercept term must be in first column of the x-matrix")
 	}
 	if(length(ind)==0){
+		xsdm=cbind(x,W%*%x)
 		cflag=0
 		p=ncol(x)
 		}
 	}
 	#if(sum(x[,1]==n)){
-	else {
+	 if(sum(x[,1]==n)){
+	xsdm=cbind(x,W%*%x[,2:ncol(W%*%x)])
 	cflag=1
 	p=ncol(x)-1
 	}	
 
-	results$cflag=cflag
-	results$p=p
-	
-out_temp = set_eigs(eflag,W,rmin,rmax,n)
-rmin=out_temp$rmin
-rmax=out_temp$rmax
-detval = set_lndet(ldetflag, W, rmin, rmax, detval, order, iter)
+nobs=dim(xsdm)[1]
+k=dim(xsdm)[2]
+
+results$nobs  = n;
+results$nvar  = k;
+results$y = y; 
+# ommitted: check no of parameters input
+
+temp=prior_parse(prior,k) 
+attach(temp)
+
+#ommitted:  check if the user handled the intercept term okay
+#comment: some parameters are ommitted too
+
+n1=dim(W)[1]
+n2=dim(W)[2]
+
 results$order = order;
 results$iter = iter;
-#storage for draws
-bsave = matrix(rep(0,(ndraw-nomit)*k),ndraw-nomit,k)
-if (mm !=0) rsave = matrix(rep(0,ndraw-nomit),ndraw-nomit,1)
-psave = matrix(rep(0,ndraw-nomit),ndraw-nomit,1)
-ssave = matrix(rep(0,ndraw-nomit),ndraw-nomit,1)
-vmean= matrix(rep(0,n),n,1)
 
-#% ====== initializations
-#% compute this stuff once to save time
+out_temp = set_eigs(eflag,W,rmin,rmax,n);
+rmin=out_temp$rmin
+rmax=out_temp$rmax
+
+detval = set_lndet(ldetflag,W,rmin,rmax,detval,order,iter);
+
+bsave = matrix(rep(0,(ndraw-nomit)*k),ndraw-nomit,k);
+if (mm!= 0){
+		rsave = matrix(rep(0,(ndraw-nomit)),ndraw-nomit,1)
+		}
+psave = matrix(rep(0,(ndraw-nomit)),ndraw-nomit,1)
+ssave = matrix(rep(0,(ndraw-nomit)),ndraw-nomit,1)
+vmean = matrix(rep(0,n),n,1)
+acc_rate = matrix(rep(0,ndraw),ndraw,1)
+
+ntrs = 101;
+
+#comment: initialisations
 
 TI = solve(T);
-TIc = TI%*%c_beta;
+TIc = TI%*%c_beta; ##name changed from c to c_beta for less ambiguity
+iter = 1;
 
-In = matrix(rep(1,n),n,1);
+In = matrix(rep(1,n),n,1);  ##name changed in to In
 V = In;
 vi = In;
 Wy = W%*%y;
+x = xsdm;
 
+#commment: homosc. and heteroc. cases are handled in a single loop
 
-
-#hwait = waitbar(0,'sar: MCMC sampling ...');
-
-#t0 = clock;                  
 iter = 1;
-          while (iter <= ndraw){ #% start sampling;
+	while (iter <= ndraw){ #% start sampling;
                   
           #% update beta   
           xs = matmul(sqrt(V),x); ## code for matmul in support functions
@@ -124,10 +137,7 @@ iter = 1;
                     
 iter = iter + 1; 
     
-}   ##% end of sampling loop
-
-
-##% pre-calculate traces for the x-impacts calculations
+}
 uiter=50;
 maxorderu=100;
 nobs = n;
@@ -139,29 +149,28 @@ for (jjj in 1:maxorderu){
     tracew[jjj]=mean(mean(rv*wjjju));
     
 }
-
 traces=tracew;
 traces[1]=0;
 traces[2]=sum(sum(t(W)*W))/nobs;
 trs=matrix(c(1,traces));
 ntrs=length(trs);
 trbig=t(trs);
-                 
-        if (cflag == 1){
-        bdraws = as.matrix(bsave[,2:ncol(bsave)]);
-        }
-	if(cflag == 0){
-        bdraws = bsave;
-        }
-        pdraws = psave;
+trbig2=matrix(c(trbig[1,2:ncol(trbig)],trbig[1,ncol(trbig)]))
+trmat=rbind(trbig,trbig2)
 
-        ree = 0:(ntrs-1);
+if (cflag == 1){
+		bdraws = as.matrix(bsave[,2:ncol(bsave)]);
+}
+if(cflag == 0){
+		bdraws = bsave;
+}
+pdraws = psave;
+ree = 0:(ntrs-1);
+rmat = matrix(rep(0,ntrs),1,ntrs);####three dimentional matrix in R??
+total = array(0,c(ndraw-nomit,p,ntrs)) ;
+direct = array(0,c(ndraw-nomit,p,ntrs));	## 3D matrix in R
+indirect = array(0,c(ndraw-nomit,p,ntrs));
 
-        rmat = matrix(rep(0,ntrs),1,ntrs);####three dimentional matrix in R??
-        total = array(0,c(ndraw-nomit,p,ntrs)) ;
-        direct = array(0,c(ndraw-nomit,p,ntrs));	## 3D matrix in R
-        indirect = array(0,c(ndraw-nomit,p,ntrs));
-        
 for (i in 1:(ndraw-nomit)){
     rmat = pdraws[i,1]^ree;
     for (j in 1:p){
@@ -173,17 +182,16 @@ for (i in 1:(ndraw-nomit)){
 
 }
 
-
-##% compute posterior means and log marginal likelihood for return arguments
 bmean = apply(bsave, 2, mean);
 beta = t(bmean);
 rho = mean(psave);
 sige = mean(ssave);
 vmean = vmean/(ndraw-nomit);
 V = In/vmean;
-
-
 results$sige = sige;
+
+### calculate log marginal likelihood
+
 nobs=dim(x)[1]
 nvar=dim(x)[2]
 xs = matmul(x,sqrt(V));
@@ -197,18 +205,19 @@ ed = Wys - xs%*%bd;
 epe0 = t(e0)%*%e0;
 eped = t(ed)%*%ed;
 epe0d = t(ed)%*%e0;
- logdetx = log(det(t(xs)%*%xs + sige*TI));
+logdetx = log(det(t(xs)%*%xs + sige*TI));
   if (inform_flag == 0){
-   mlike = rho_marginal(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,logdetx,a1,a2);}
+		mlike = rho_marginal(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,logdetx,a1,a2);}
   if(inform_flag == 1){
 #   mlike = sar_marginal2(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,a1,a2,c_beta,TI,xs,ys,sige,W);
-   mlike = rho_marginal2(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,a1,a2,c_beta,TI,xs,ys,sige);#VIRGILIO: W is not needed
+		mlike = rho_marginal2(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,a1,a2,c_beta,TI,xs,ys,sige);#VIRGILIO: W is not needed
   }
- yhat = solve((diag(nobs) - rho*W),(x%*%t(beta)));
- ####ERROR!! : dim(yhat)=dim(x) but yhat should be similar to y.
- e = y - yhat; 
+  
+yhat = solve((diag(nobs) - rho*W),(x%*%t(beta)));
+e = y - yhat; 
 
-####% compute R-squared
+## compute R squared
+
 epe = t(e)%*%e;
 sige = epe/(n-k);
 results$sigma = sige;
@@ -219,7 +228,6 @@ results$rsqr = 1- rsqr1/rsqr2; ##% r-squared
 rsqr1 = rsqr1/(nobs-nvar);
 rsqr2 = rsqr2/(nobs-1.0);
 results$rbar = 1 - (rsqr1/rsqr2); ###% rbar-squared
-
 
 results$meth  = 'sar_g';
 results$total = total;
@@ -263,6 +271,17 @@ results$r     = rval;
 results$rdraw = 0;
 }
 return(results)
-}#### end of sar_g
+#}
+
+
+
+
+
+
+
+
+
+
+
 
 

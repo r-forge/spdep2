@@ -387,7 +387,7 @@ rho_marginal<- function(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,logdetx=0,a1,a2){
 }
 
 #sar_marginal2 <- function(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,a1,a2,c,TI,xs,ys,sige,W){
-sar_marginal2 <- function(detval,e0,ed,epe0,eped,epe0d,nobs,nvar, a1,a2,c_beta,TI,xs,ys,sige){#VIRGILIO: W is not needed
+rho_marginal2 <- function(detval,e0,ed,epe0,eped,epe0d,nobs,nvar, a1,a2,c_beta,TI,xs,ys,sige){#VIRGILIO: W is not needed
 n = nrow(detval)
 nmk = (nobs-nvar)/2
 bprior = dbeta(detval[,1],a1,a2)
