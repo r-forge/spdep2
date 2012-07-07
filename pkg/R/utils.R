@@ -422,7 +422,7 @@ ry = dim(y)[1];
 cy = dim(y)[2];
 
 if((cx == cy) & (rx == ry)){
-  out = x.*y
+  out = x*y
 }
 if ((cx == cy) & (rx == 1)){
 	out = y*matrix(rep(x,ry),ry,cy)
@@ -461,3 +461,197 @@ out=matrix(rchisq(nrow*ncol,df=v),nrow,ncol)
 }
 return(out)
 }
+
+sem_marginal<-function(detval,y,x,Wy,Wx,nobs,nvar,a1,a2)
+{
+	nmk=(nobs-nvar)/2
+	nrho=length(detval[,1])
+	iota=matrix(rep(1,nrho),nrho,1)
+	rvec=detval[,1]
+	epe=matrix(rep(0,nrho),nrho,1)
+	
+	rgrid=as.matrix(seq((detval[1,1]+0.001),(detval[length(detval[,1]),1]-0.001),0.1))
+	#rgrid=t(rgrid)
+	epetmp=matrix(rep(0,length(rgrid)),length(rgrid),1)
+	detxtmp=matrix(rep(0,length(rgrid)),length(rgrid),1)
+	
+	for(i in 1:length(rgrid))
+	{
+		xs=x-rgrid[i,1]*Wx
+		ys=y-rgrid[i,1]*Wy
+		bs=solve((t(xs)%*%xs),t(xs)%*%ys)
+		e=ys-xs%*%bs
+		epetmp[i,1]=t(e)%*%e
+		detxtmp[i,1]=det(t(xs)%*%xs)
+	}
+	
+	tt=rvec
+	epe=(spline(x=rgrid,y=epetmp,xout=rvec))$y
+	detx=(spline(x=rgrid,y=detxtmp,xout=rvec))$y
+	bprior=dbeta(detval[,1],a1,a2)
+	C=log(bprior)+log(gamma(nmk))-nmk*log(2*pi)
+	den=detval[,2]-0.5*log(detx)-nmk*log(epe)
+	out=den+C
+	
+	return(out)
+	
+}
+
+sem_marginal2<-function(detval,y,x,Wy,Wx,nobs,nvar,a1,a2,c,TI,sige)
+{
+	nmk=(nobs-nvar)/2
+	nrho=length(detval[,1])
+	iota=matrix(rep(1,nrho),nrho,1)
+	rvec=detval[,1]
+	epe=matrix(rep(0,nrho),nrho,1)
+	rgrid=seq((detval[1,1]+0.001),(detval[dim(detval[1]),1]-0.001),0.1)
+	rgrid=t(rgrid)
+	epetmp=matrix(rep(0,length(rgrid)),length(rgrid),1)
+	detxtmp=matrix(rep(0,length(rgrid)),length(rgrid),1)
+	Q1=matrix(rep(0,length(rgrid)),length(rgrid),1)
+	Q2=matrix(rep(0,length(rgrid)),length(rgrid),1)
+	sTI=sige*TI
+	for(i in 1:length(rgrid))
+	{
+		xs=x-rgrid[i,1]*Wx
+		ys=y-rgrid[i,1]*Wy
+		bs=solve((t(xs)%*%xs),t(xs)%*%ys)
+		beta=solve((t(xs)%*%xs+sTI),(t(xs)%*%ys+sTI%*%c))
+		e=ys-xs%*%bs
+		epetmp[i,1]=t(e)%*%e
+		detxtmp[i,1]=det(t(xs)%*%xs)
+		Q1[i,1]=t(c-beta)%*%sTI%*%(c-beta)
+		Q2[i,1]=t(bs-beta)%*%(t(xs)%*%xs)%*%(c-beta)
+	}
+	
+	tt=rvec
+	epe=(spline(x=rgrid,y=epetmp,xout=rvec))$y
+	detx=(spline(x=rgrid,y=detxtmp,xout=rvec))$y
+	Q1=(spline(x=rgrid,y=Q1,xout=rvec))$y
+	Q2=(spline(x=rgrid,y=Q2,xout=rvec))$y
+	bprior=dbeta(detval[,1],a1,a2)
+	C=log(bprior)+log(gamma(nmk))-nmk*log(2*pi)
+	den=detval[,2]-0.5*log(detx)-nmk*log(epe+Q1+Q1)
+	out=den+C
+	
+	return(out)
+}
+
+c_rho_sem <- function(rho,y,sige,W,detval,vi,a1,a2){
+
+	gsize = detval[2,1] - detval[1,1]
+	# Note these are actually log detvalues
+	i1 = which(detval[,1] <= rho + gsize)
+	i2 = which(detval[,1] <= rho - gsize)
+	i1 = max(i1)
+	i2 = max(i2)
+	index = round((i1+i2)/2)
+	#if (length(index)==0)  index = 1
+	if (!is.finite(index)) index = 1 #Fixed this
+
+	detm = detval[index,2]
+	n=dim(index)[1]
+	k=dim(index)[2]
+	nmk=(n-k)/2
+	z=diag(n)-rho*W
+	xs=z%*%x
+	ys=z%*%y
+	
+	detx=0.5*log(det(t(xs)%*%xs))
+	n=length(y)
+	e=ys-xs%*%b
+	ev=e*sqrt(vi)
+	epe=nmk%*%log(t(ev)%*%ev)
+	cout=detm-detx-epe
+	
+	return(cout)
+
+}
+
+draw_rho_sem<-function(detval,y,x,Wy,Wx,V,n,k,rmin,rmax,rho)	
+{
+	nmk=(n-k)/2
+	nrho=length(detval[,1])
+	rgrid=seq(rmin+0.01,rmax-0.01,0.01)
+	ng=length(rgrid)
+	iota=matrix(rep(1,nrho),nrho,1)
+	rvec=detval[,1]
+	epet=matrix(rep(0,ng),ng,1)
+	detxt=matrix(rep(0,ng),ng,1)
+	for(i in 1:ng)
+	{
+		xs=x-rgrid[i]*Wx
+		xs=matmul(xs,sqrt(V))
+		ys=y-rgrid[i]*Wy
+		ys=ys*sqrt(V)
+		bs=solve((t(xs)%*%xs),(t(xs)%*%ys))
+		e=ys-xs%*%bs
+		epet[i,1]=t(e)%*%e
+		detxt[i,1]=det(t(xs)%*%xs)
+	}
+	epe=(spline(x=rgrid,y=epet,xout=detval[,1]))$y
+	detx=(spline(x=rgrid,y=epet,xout=detval[,1]))$y
+	
+	den=detval[,2]-0.5*log(detx)-nmk*log(epe)
+	adj=max(den)
+	den=den-adj
+	den=exp(den)
+	
+	n=length(den)
+	y=detval[,1]
+	x=den
+	
+	isum=sum((y[2:n]+y[1:(n-1)])*(x[2:n]-x[1:(n-1)])/2)
+	z=x/isum
+	den=cumsum(z)
+	#den=apply(z,2,cumsum)
+	
+	rnd=runif(1)*sum(z)
+	ind=which(den<=rnd)
+	idraw=max(ind)
+	if((idraw>0) & (idraw<nrho))
+	{
+		rho=detval[idraw,1]
+	}
+	return(rho)
+}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+
+
+
+
+
+
+
+

@@ -22,7 +22,7 @@ x<-matrix(rnorm(6),ncol=2)
 #prior$novi_flag<-0
 ndraw=1000
 nomit=0
-source('sdm_g.R')
+source('sdm_g.R') ##removed function brackets for debugging.
 #results=sdm_g(y,x,W,ndraw,nomit,prior)
 #plot(results$pdraw)
 
