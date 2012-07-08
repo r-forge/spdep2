@@ -16,45 +16,47 @@ prior = NULL
 #prior$metflag<-0#M-H sampler
 
 y<-matrix(rnorm(3), ncol=1)
-y<-solve(diag(3)-0.9*W)%*%y
-x<-matrix(rnorm(6),ncol=2)
+x<-cbind(rep(1,3), matrix(rnorm(6),ncol=2))
+y<-solve(diag(3)-0.9*W)%*%(y+cbind(x, W%*%x[,-1])%*%matrix(c(0,5,10,5,0), ncol=1))
 
 #prior$novi_flag<-0
 ndraw=1000
 nomit=0
+
+prior<-parse()
 source('sdm_g.R') ##removed function brackets for debugging.
-#results=sdm_g(y,x,W,ndraw,nomit,prior)
-#plot(results$pdraw)
+results=sdm_g(y,x,W,ndraw,nomit,prior)
+plot(results$pdraw)
 
 
 
 ##Bigger example
-#library(spdep)
-#data(boston)
+library(spdep)
+data(boston)
 
-#W<-nb2mat(boston.soi)
-#n<-nrow(W)
-#x<-cbind(rep(1, n), rnorm(n))
-
-
-#y<-x[,1]+10*x[,2]
-#y<-matrix(y+rnorm(n), ncol=1)
-#y<-solve(diag(nrow(W))-0.4*W)%*%y
+W<-nb2mat(boston.soi)
+n<-nrow(W)
+x<-cbind(rep(1, n), rnorm(n))
 
 
-##Heteroc.  model
-#prior<-prior_parse(NULL, k=2)
-#prior$novi_flag<-0
-#results<-sar_g(y, x, W, 150, 50, prior)
-#plot(results$pdraw, type="l", main="rho")
-#summary(results$pdraw)
+y<-cbind(x, W%*%x[,-1])%*%matrix(c(0,5,10), ncol=1)
+y<-matrix(y+rnorm(n), ncol=1)
+y<-solve(diag(nrow(W))-0.4*W)%*%y
+
+
+#Heteroc.  model
+prior<-prior_parse(NULL, k=1)
+prior$novi_flag<-0
+results<-sdm_g(y, x, W, 150, 50, prior)
+plot(results$pdraw, type="l", main="rho")
+summary(results$pdraw)
 
 
 
 ##Homoc. model
-#prior$novi_flag<-1
-#results1<-sar_g(y, x, W, 150, 50, prior)
-#plot(results1$pdraw, type="l", main="rho")
-#summary(results1$pdraw)
+prior$novi_flag<-1
+results1<-sar_g(y, x, W, 150, 50, prior)
+plot(results1$pdraw, type="l", main="rho")
+summary(results1$pdraw)
 
 

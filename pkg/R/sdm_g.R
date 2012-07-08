@@ -3,7 +3,7 @@
 #sdm_marginal,sdm_marginal2
 #
 
-#sdm_g <- function(y,x,W,ndraw,nomit,prior){
+sdm_g <- function(y,x,W,ndraw,nomit,prior){
 ##############################################
 # ommitted: checking if the user handled the intercept term okay
 results <- list()
@@ -13,7 +13,7 @@ if(sum(x[,1])!=n){
 	tst=apply(x, 2, sum)
 	ind=which(tst==n)
 	if(length(ind)>0){
-		print("sdm_g: intercept term must be in first column of the x-matrix")
+		error("sdm_g: intercept term must be in first column of the x-matrix")
 	}
 	if(length(ind)==0){
 		xsdm=cbind(x,W%*%x)
@@ -22,7 +22,7 @@ if(sum(x[,1])!=n){
 		}
 	}
 	#if(sum(x[,1]==n)){
-	 if(sum(x[,1]==n)){
+	 if(sum(x[,1])==n){
 	xsdm=cbind(x,W%*%x[,2:ncol(W%*%x)])
 	cflag=1
 	p=ncol(x)-1
@@ -81,7 +81,7 @@ x = xsdm;
 
 iter = 1;
 	while (iter <= ndraw){ #% start sampling;
-                  
+
           #% update beta   
           xs = matmul(sqrt(V),x); ## code for matmul in support functions
           ys = sqrt(V)*y;
@@ -156,7 +156,7 @@ trs=matrix(c(1,traces));
 ntrs=length(trs);
 trbig=t(trs);
 trbig2=matrix(c(trbig[1,2:ncol(trbig)],trbig[1,ncol(trbig)]))
-trmat=rbind(trbig,trbig2)
+trmat=rbind(trbig,t(trbig2))
 
 if (cflag == 1){
 		bdraws = as.matrix(bsave[,2:ncol(bsave)]);
@@ -271,7 +271,7 @@ results$r     = rval;
 results$rdraw = 0;
 }
 return(results)
-#}
+}
 
 
 
