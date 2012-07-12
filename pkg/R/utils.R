@@ -618,8 +618,68 @@ draw_rho_sem<-function(detval,y,x,Wy,Wx,V,n,k,rmin,rmax,rho)
 	
 	
 	
+c_lambda_sac <- function(rho,lambda,y,x,b,sige,W1,W2,detval,P,a1,a2)
+{
+	gsize = detval[2,1] - detval[1,1]
+	# Note these are actually log detvalues
+	i1 = which(detval[,1] <= lambda + gsize)
+	i2 = which(detval[,1] <= lambda - gsize)
+	i1 = max(i1)
+	i2 = max(i2)
+	index = round((i1+i2)/2)
+	#if (length(index)==0)  index = 1
+	if (!is.finite(index)) index = 1 #Fixed this
+
+	detm = detval[index,2]
+
+	n=dim(x)[1]
+	k=dim(x)[2]
+	nmk=(n-k)/2
+	B=diag(n)-lambda*W2
+	A=diag(n)-rho*W1
+	Bx=B%*%x
 	
+	b=solve((t(Bx)%*%Bx),(t(Bx)%*%B%*%A%*%y))
 	
+	e=B%*%(A%*%y-x%*%b)
+	ev=sqrt(P)*e
+	epe=(t(ev)%*%ev)/(2*sige)
+	cout=detm-epe
+	
+	return(cout)
+	}
+
+c_rho_sac <- function(rho,lambda,y,x,b,sige,W1,W2,detval,P,a1,a2)	
+{
+	gsize = detval[2,1] - detval[1,1]
+	# Note these are actually log detvalues
+	i1 = which(detval[,1] <= rho + gsize)
+	i2 = which(detval[,1] <= rho - gsize)
+	i1 = max(i1)
+	i2 = max(i2)
+	index = round((i1+i2)/2)
+	#if (length(index)==0)  index = 1
+	if (!is.finite(index)) index = 1 #Fixed this
+
+	detm = detval[index,2]
+
+	n=dim(x)[1]
+	k=dim(x)[2]
+	nmk=(n-k)/2
+	B=diag(n)-lambda*W2
+	A=diag(n)-rho*W1
+	Bx=B%*%x
+	
+	b=solve((t(Bx)%*%Bx),(t(Bx)%*%B%*%A%*%y))
+	
+	e=B%*%(A%*%y-x%*%b)
+	ev=sqrt(P)*e
+	epe=(t(ev)%*%ev)/(2*sige)
+	cout=detm-epe
+	
+	return(cout)
+	}
+
 	
 	
 	
