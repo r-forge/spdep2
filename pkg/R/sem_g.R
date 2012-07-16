@@ -29,10 +29,14 @@ ssave=matrix(rep(0,(ndraw-nomit)),ndraw-nomit,1)
 psave=matrix(rep(0,(ndraw-nomit)),ndraw-nomit,1)
 vmean=matrix(rep(1,n),n,1)
 yhat=matrix(rep(1,n),n,1)
+
 acc_rate=matrix(rep(0,ndraw),ndraw,1)
-if(mm!=0)	rsave=matrix(rep(1,ndraw-nomit),ndraw-nomit,1)
+
+if(mm!=0)	
+	rsave=matrix(rep(1,ndraw-nomit),ndraw-nomit,1)
 
 out_temp = set_eigs(eflag,W,rmin,rmax,n);
+
 rmin=out_temp$rmin
 rmax=out_temp$rmax
 
@@ -43,7 +47,7 @@ detval = set_lndet(ldetflag,W,rmin,rmax,detval,order,iter);
 TI = solve(T);
 TIc = TI%*%c_beta; ##name changed from c to c_beta for less ambiguity
 iter = 1;
-In = matrix(rep(1,n),n,1);  ##name changed in to In
+#In = matrix(rep(1,n),n,1);  ##name changed in to In
 V = In;
 Wy=W%*%y
 Wx=W%*%x
@@ -53,6 +57,9 @@ V=vi
 #commment: homosc. and heteroc. cases are handled in a single loop
 
 iter = 1;
+acc=0;
+
+
 while (iter <= ndraw){ #% start sampling;
 			  
 	#% update beta   
@@ -78,10 +85,11 @@ while (iter <= ndraw){ #% start sampling;
 	
 	#update vi when novi_flag==0
 	if(novi_flag==0){
-		ev = y - rho*Wy - x%*%bhat; 
+		#ev = y - rho*Wy - x%*%bhat; 
+		ev = ys - xs%*%bhat; 
 		#chiv = chis_rnd(n,rval+1);  
 		chiv = matrix(rchisq(n,rval+1),n,1); 
-		vi = ((ev*ev/as.numeric(sige)) + In%*%rval)/chiv; 
+		vi = ((ev*ev/as.numeric(sige)) + In*rval)/chiv; 
 		V = In/vi; 
 					
 		#% update rval
@@ -99,8 +107,10 @@ while (iter <= ndraw){ #% start sampling;
 		rho2 = rho + cc*rnorm(1);
 		while(acceptp==0)
 		{
-			if((rho2>rmin)&(rho2<rmax))	accept=1
-			else rho2=rho+cc*rorm(1)
+			if((rho2>rmin)&(rho2<rmax))	
+				accept=1
+			else 
+				rho2=rho+cc*rorm(1)
 		}
 		rhoy = c_rho_sem(rho2,y,x,bhat,sige,W,detval,V,a1,a2);
 		ru = runif(1);
@@ -185,7 +195,7 @@ results$pdraw = psave;
 results$sdraw = ssave;
 results$vmean = vmean;
 results$yhat  = yhat;
-results$bmean = c;
+results$bmean = c_beta;
 results$bstd  = sqrt(diag(T));
 results$rsqr  = rsqr;
 results$rbar = 1 - (rsqr1/rsqr2); #% rbar-squared
@@ -211,41 +221,11 @@ if(mm!=0)
 	results$m=mm
 	results$k=kk
 	}
-if(mm==0)
+else
 	{
 	results$r=rval
 	results$rdraw=0
 	}
 return(results)
 }	
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
