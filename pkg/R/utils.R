@@ -680,12 +680,93 @@ c_rho_sac <- function(rho,lambda,y,x,b,sige,W1,W2,detval,P,a1,a2)
 	return(cout)
 	}
 
+matdiv <- function(x,y){
+rx=dim(x)[1]
+cx=dim(x)[2]
+
+ry=dim(y)[1]
+ry=dim(y)[2]
+
+if((cx == cy) & (rx == ry)){
+  out = x/y
+}
+if ((cx == cy) & (rx == 1)){
+	out = y/matrix(rep(x,ry),ry,cy)
+}
+if ((cx == cy) & (ry == 1)){
+	out = x/matrix(rep(y,rx),rx,cx)
+}
+if ((rx == ry) & (cx == 1)){
+	out = y/matrix(rep(x,cy),ry,cy)
+}
+if ((rx == ry) & (cy == 1)){
+	out = x/matrix(rep(x,cx),rx,cx)
+}
+return(out)
+}
 	
+tnorm_rnd <-function(n,amu,sigma,a,b,la,lb,d,kstep){
+niter=10
+z=matrix(0,n,1)
+dinv=solve(d)
+anu=d%*%amu
+tau=d%*%sigma%*%t(d)
+tauinv=solve(tau)
+a1=a-anu
+b1=b-anu
+c=matrix(0,n,n)
+h=matrix(0,n,1)
+for(i in 1:n){
+	aa=tauinv[i,i]
+	h[i,1]=1/sqrt(aa)
+	for(j in 1:n){
+		c[i,j]=-tauinv[i,j]/aa
+		}
+	}
+for(initer in 1:niter){
+	for(i1 in 1:n){
+		i=kstep[i1,1]
+		aa=0
+		}
+	for(j in 1:n){
+		if(i != j)	aa=aa+c[i,j]*z[j,1]	
+		}
+		
+	if(la[i,1]==1)	t1=normrt_rnd(0,1,(b1[i,1]-aa)/h[i,1])
+	if(lb[i,1]==1)	t1=normlt_rnd(0,1,(a1[i,1]-aa)/h[i,1])
+	if(la[i,1]!=1&lb[i,1]!=1)	t1=normt_rnd(0,1,(a1[i,1]-aa)/h[i,1],(b1[i,1]-aa)/h[i,1])
+	z[i,1]=aa+h[i,1]*t1
+	}
+xdraw=dinv%*%z
+for(i in 1:n){
+	xdraw[i,1]=xdraw[i,1]+amu[i,1]
+	}
+xdraw		
+}	
 	
+normrt_rnd <-function(mu,sigma2,right){
+nobs=length(mu)
+left=-999*martix(1,nobs,1)
+result=normt_rnd(mu,sigma2,left,right)
+return(result)
+}
+
+normlt_rnd <- function(mu,sigma2,left){
+nobs=length(mu)
+right=-999*martix(1,nobs,1)
+result=normt_rnd(mu,sigma2,left,right)
+return(result)
+}	
 	
-	
-	
-	
+normt_rnd <-function(mu,sigma2,left,right){
+
+std=sqrt(sigma2)
+lowerProb=pnorm((left-mu)/std)
+upperProb=pnorm((right-mu)/std)
+u=runif(size(mu),lowerProb,upperProb) ##??
+result=mu+qnorm(u)*std
+return(result)
+}	
 	
 	
 	
