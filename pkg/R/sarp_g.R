@@ -31,14 +31,16 @@ if(sum(x[,1])!=n){
 		p=ncol(x)
 		}
 	}
-	#if(sum(x[,1]==n)){
-	else {
+	if(sum(x[,1]==n)){
+	#else {
 	cflag=1
 	p=ncol(x)-1
 	}	
 
 	results$cflag=cflag
 	results$p=p
+results$order=order
+results$iter=iter
 
 out_temp = set_eigs(eflag,W,rmin,rmax,n)
 rmin=out_temp$rmin
@@ -48,12 +50,12 @@ detval = set_lndet(ldetflag, W, rmin, rmax, detval, order, iter)
 iiter=50
 o=100
 
-diag_ests=matrix(rep(0,n),n,0)
+diag_ests=matrix(0,n,o)
 
 for(iii in 1:iiter){
 	u=matrix(rnorm(n),n,1)
 	umat=u[,rep(1,o)]
-	wumat=matrix(rep(0,n*o),n,o)
+	wumat=matrix(0,n,o)
 	wu=u
 	wumat[,1]=wu
 	for(ii in 2:o){
@@ -61,28 +63,28 @@ for(iii in 1:iiter){
 		wumat[,ii]=wu
 		}
 	diag_estimates_iii=umat*wumat
-	diag_ests=diag_estimates_iii	
+	diag_ests=diag_ests+diag_estimates_iii	
 	}
 estimated_diags=diag_ests/iiter
 
-bsave = matrix(rep(0,(ndraw-nomit)*k),ndraw-nomit,k)
-psave = matrix(rep(0,(ndraw-nomit)),ndraw-nomit,1)	
-ymean= matrix(rep(0,n),n,1)
-acc_rate= matrix(rep(0,ndraw),ndraw,1)
+bsave = matrix(0,ndraw-nomit,k)
+psave = matrix(0,ndraw-nomit,1)	
+ymean= matrix(0,n,1)
+acc_rate= matrix(0,ndraw,1)
 
-total=matrix(rep(0,(ndraw-nomit)*p),ndraw-nomit,p)
-total_obs=matrix(rep(0,n*p),n,p)
-direct=matrix(rep(0,(ndraw-nomit)*p),ndraw-nomit,p)
-indirect=matrix(rep(0,(ndraw-nomit)*p),ndraw-nomit,p)
+total=matrix(0,ndraw-nomit,p)
+total_obs=matrix(0,n,p)
+direct=matrix(0,ndraw-nomit,p)
+indirect=matrix(0,ndraw-nomit,p)
 
-avg_total=matrix(rep(0,p),p,1)
-avg_direct=matrix(rep(0,p),p,1)]
-avg_indirect=matrix(rep(0,p),p,1)
+avg_total=matrix(0,p,1)
+avg_direct=matrix(0,p,1)
+avg_indirect=matrix(0,p,1)
 
 TI = solve(T);
 TIc = TI%*%c_beta;
 
-In = matrix(rep(1,n),n,1);
+In = matrix(1,n,1);
 
 Wy=W%*%y
 Wadd=W+t(W)
@@ -95,7 +97,7 @@ xpy=t(x)%*%y
 Wy=W%*%y
 xpWy=t(x)%*%Wy
 
-indl=which(yin==0)
+ind1=which(yin==0)
 nobs0=length(ind1)
 ind2=which(yin==1)
 nobs1=length(ind2)
@@ -103,25 +105,25 @@ nobs1=length(ind2)
 while(iter <= ndraw){
 	AI=solve(xpx+as.numeric(sige)*TI)
 	ys=y-rho*Wy
-	b = t(xs)%*%yss + as.numeric(sige)*TIc;
-	b0 = solve((t(xs)%*%xs + as.numeric(sige)*TI),b);
+	b = t(x)%*%ys + as.numeric(sige)*TIc;
+	b0 = AI%*%b
 	bhat = norm_rnd(as.numeric(sige)*AI) + b0;  
-	xb = xs%*%bhat; 
+	xb = x%*%bhat; 
 	
-	b0 = solve((t(xs)%*%xs + as.numeric(sige)*TI ),(t(xs)%*%ys + as.numeric(sige)*TIc));
-	bd = solve((t(xs)%*%xs + as.numeric(sige)*TI),(t(xs)%*%Wys + as.numeric(sige)*TIc));
-	e0 = ys - xs%*%b0;
-	ed = Wys - xs%*%bd;
+	b0 = solve((t(x)%*%x),(t(x)%*%y));
+	bd = solve((t(x)%*%x),(t(x)%*%Wy));
+	e0 = y - x%*%b0;
+	ed = Wy - x%*%bd;
 	epe0 = t(e0)%*%e0;
 	eped = t(ed)%*%ed;
 	epe0d = t(ed)%*%e0;
 	rho = draw_rho(detval,epe0,eped,epe0d,n,k,rho,a1,a2)
 	
-	hh= diag(n)-rho%*%W
+	hh= diag(n)-rho*W
 	mu=solve(hh,xb)
 	tauinv=diag(n)-rho*Wadd+rho*rho*WtW
 	
-	aa=diag(tauinv) ##??
+	aa=as.matrix(diag(tauinv)) 
 	h=matrix(1,n,1)/sqrt(aa)
 	cc=matdiv(-tauinv,aa) #matdiv
 	ctilde=cc-diag(diag(cc))
@@ -135,7 +137,7 @@ while(iter <= ndraw){
 			aa=ctilde[i,]%*%z
 			muuse=(-mu[i,1]-aa)/h[i,1]
 			if(yin[i,1]==0)	t1=normrt_rnd(0,1,muuse)
-			if(yin[i,1]==1)	t1=normrt_rnd(0,1,muuse)
+			else	t1=normlt_rnd(0,1,muuse)
 			z[i,1]=aa+h[i,1]*t1	
 			}
 		}
@@ -147,25 +149,26 @@ while(iter <= ndraw){
 		psave[iter-nomit,1]=rho
 		ymean=ymean+y
 		
-		rhovec=t(rho^c(0:(o-1)))
-		if(cflag==1)	beff=bhat[2:length(bhat),1] #?
+		rhovec=(rho^c(0:(o-1)))
+		if(cflag==1)	beff=bhat[2:dim(bhat)[1],1] #?
 		if(cflag==0)	beff=bhat
 		s=solve(hh,diag(n))
-		pdfz=stdn_pdf(mu)
-		for(kk=1:p){
-			avg_direct[kk,1]=t(pdfz)%*%estimated_diags%*%rhovec*beff[kk,1]/n
-			#dd=spdiags()	##spdiags ??
+		pdfz=dnorm(mu) 	#used dnorm in place of stdn_pdf
+		for(kk in 1:p){
+			avg_direct[kk,1]=t(pdfz)%*%(estimated_diags%*%rhovec*beff[kk,1]/n)
+			dd=spdiags(pdfz)$B	##spdiags ??
 			avg_total[kk,1]=mean(apply(dd%*%s*beff[kk,1],2,sum))
 			total_obs[,kk]=total_obs[,kk]+apply(dd%*%s*beff[kk,1],2,sum)
 			avg_indirect[kk,1]=avg_total[kk,1]-avg_direct[kk,1]
 			}
 		total[iter-nomit,]=t(avg_total)
-		direct[iter-nomit,]t(avg_direct)
+		direct[iter-nomit,]=t(avg_direct)
 		indirect[iter-nomit,]=t(avg_indirect)	
 		}
 	
 	iter=iter+1
 	}
+total_obs=total_obs/(ndraw-nomit)	
 beta = apply(bsave,2,mean)
 rho=mean(psave)
 ymean=ymean/(ndraw-nomit)

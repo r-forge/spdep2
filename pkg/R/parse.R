@@ -26,6 +26,7 @@ if(is.null(prior)){
 	    cc = 0.2,
 	    novi_flag = 0,#% do vi-estimates
 	    metflag = 0, #% use integration instead of M-H sampling for rho
+	    nsample=1,
 	    #for sar
 	    c_beta=matrix(rep(0,k),k,1), #c is changed to c_beta for c() is a fun.
 	    T=diag(k)*1e+12,
@@ -61,6 +62,7 @@ else {
 		if(length(prior$cc1)!=1) prior$cc1=0.2
 		if(length(prior$cc2)!=1) prior$cc2=0.2
 		if(length(prior$metflag)!=1) prior$metflag=0
+		if(length(prior$nsample)!=1) prior$nsample=1
 		if(length(prior$m)!=1) prior$mm=1
 		if(length(prior$k)!=1) prior$kk=1
 		if(is.null(prior$beta)){ 

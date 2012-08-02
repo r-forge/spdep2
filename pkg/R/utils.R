@@ -685,7 +685,7 @@ rx=dim(x)[1]
 cx=dim(x)[2]
 
 ry=dim(y)[1]
-ry=dim(y)[2]
+cy=dim(y)[2]
 
 if((cx == cy) & (rx == ry)){
   out = x/y
@@ -746,14 +746,14 @@ xdraw
 	
 normrt_rnd <-function(mu,sigma2,right){
 nobs=length(mu)
-left=-999*martix(1,nobs,1)
+left=-999*matrix(1,nobs,1)
 result=normt_rnd(mu,sigma2,left,right)
 return(result)
 }
 
 normlt_rnd <- function(mu,sigma2,left){
 nobs=length(mu)
-right=-999*martix(1,nobs,1)
+right=-999*matrix(1,nobs,1)
 result=normt_rnd(mu,sigma2,left,right)
 return(result)
 }	
@@ -763,11 +763,56 @@ normt_rnd <-function(mu,sigma2,left,right){
 std=sqrt(sigma2)
 lowerProb=pnorm((left-mu)/std)
 upperProb=pnorm((right-mu)/std)
-u=runif(size(mu),lowerProb,upperProb) ##??
+u=runif(length(mu),lowerProb,upperProb) ##??
 result=mu+qnorm(u)*std
 return(result)
 }	
 	
+###############spdiags################
+	
+## it works only for square matrices 
+## it could work with sparse matrices but it spits a tedious warning 
+## it is definitely inefficient compared to the original matlab code 
+
+## choose below different matrices to test the function. 
+# r = c(2,3,5,5); c = c(2,1,4,5) 
+# A = sparseMatrix(r, c) 
+# A = replicate(1000, rnorm(1000) ) 
+# A = rbind(c(1,2,3),c(2,3,4),c(3,4,5)) 
+
+spdiags = function(A){ 
+
+     # Find all nonzero diagonals 
+     i = rep(seq(1, nrow(A),1),nrow(A)); 
+     j = sort(i); 
+     d = sort(j-i); 
+
+       # d = d(find(diff([-inf; d]))); ## from Matlab ... 
+       # d = c(d[which(diff(d) == 1)], d[length(d)] ) ## this emulate above but needs to stick in last element 
+
+     d = unique(d); ##this should work just fine and it is simpler 
+     p = length(d); ##the nr. col of the new matrix 
+     m = nrow(A); n = ncol(A); 
+
+     B = matrix(0, nrow = min(c(m,n)), ncol = p); 
+
+   for (k in 1:p){ 
+      # print(k) 
+      cl = vector(); 
+
+       if (m >= n){ 
+          i = max(1, 1+d[k]):min(n, m+d[k]); 
+       } else { i = max(1, 1-d[k]):min(m,n-d[k]); } 
+
+       system.time( 
+       if (length(i) != 0){ 
+          B[i,k] = A[ col(A) == row (A) - d[k]] 
+       } ) 
+} 
+
+return (list( B = B, d = d) ) 
+
+} 
 	
 	
 	
