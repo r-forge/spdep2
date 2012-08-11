@@ -40,7 +40,10 @@ if(is.null(prior)){
 	    cc1=0.2,
 	    cc2=0.2,
 	    #for sem
-	    mlog=1	    
+	    mlog=1,	    
+	    #for sart
+	    cflag=0,
+	    vflag=0.0
     )
     return(prior)
 	}
@@ -62,6 +65,7 @@ else {
 		if(length(prior$cc1)!=1) prior$cc1=0.2
 		if(length(prior$cc2)!=1) prior$cc2=0.2
 		if(length(prior$metflag)!=1) prior$metflag=0
+		if(length(prior$limit)!=1) prior$vflag=0.0
 		if(length(prior$nsample)!=1) prior$nsample=1
 		if(length(prior$m)!=1) prior$mm=1
 		if(length(prior$k)!=1) prior$kk=1

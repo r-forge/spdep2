@@ -53,7 +53,7 @@ c_rho <- function(rho,y,sige,W,detval,vi,a1,a2){
 #a1, a2 parameters for beta prior on rho
 
 
-draw_rho <-function(detval,epe0,eped,epe0d,n,k,rho,a1,a2){
+draw_rho <-function(detval,epe0,eped,epe0d,n,k,rho,a1=1.01,a2=1.01){
 
 	nmk = (n-k)/2
 	nrho = length(detval[,1])
@@ -814,7 +814,29 @@ return (list( B = B, d = d) )
 
 } 
 	
+c_sar <-function(rho,y,xb,sige,W,detval,c_beta,T){
+gsize = detval[2,1] - detval[1,1]
+	# Note these are actually log detvalues
+	i1 = which(detval[,1] <= rho + gsize)
+	i2 = which(detval[,1] <= rho - gsize)
+	i1 = max(i1)
+	i2 = max(i2)
+	index = round((i1+i2)/2)
+	#if (length(index)==0)  index = 1
+	if (!is.finite(index)) index = 1 #Fixed this
+
+	detm = detval[index,2]
+
+	z=diag(n)-rho*W
+	e=z%*%y-xb
+	n=length(y)
+	T=T*sige
+	z=(diag(n)-rho*W)%*%e
+	epe=((t(z)%*%z)/2*sige)+0.5*((rho-c_beta)^2)/T
 	
+	cout=detm-epe
+	cout
+}	
 	
 	
 	
