@@ -537,7 +537,7 @@ sem_marginal2<-function(detval,y,x,Wy,Wx,nobs,nvar,a1,a2,c,TI,sige)
 	return(out)
 }
 
-c_rho_sem <- function(rho,y,sige,W,detval,vi,a1,a2){
+c_rho_sem <- function(rho,y,x,b,sige,W,detval,vi,a1,a2){
 
 	gsize = detval[2,1] - detval[1,1]
 	# Note these are actually log detvalues
@@ -550,19 +550,26 @@ c_rho_sem <- function(rho,y,sige,W,detval,vi,a1,a2){
 	if (!is.finite(index)) index = 1 #Fixed this
 
 	detm = detval[index,2]
-	n=dim(index)[1]
-	k=dim(index)[2]
-	nmk=(n-k)/2
-	z=diag(n)-rho*W
-	xs=z%*%x
-	ys=z%*%y
+#	n=dim(index)[1]
+#	k=dim(index)[2]
+#	nmk=(n-k)/2
+#	z=diag(n)-rho*W
+#	xs=z%*%x
+#	ys=z%*%y
 	
-	detx=0.5*log(det(t(xs)%*%xs))
-	n=length(y)
-	e=ys-xs%*%b
-	ev=e*sqrt(vi)
-	epe=nmk%*%log(t(ev)%*%ev)
-	cout=detm-detx-epe
+#	detx=0.5*log(det(t(xs)%*%xs))
+#	n=length(y)
+#	e=ys-xs%*%b
+#	ev=e*sqrt(vi)
+#	epe=nmk%*%log(t(ev)%*%ev)
+#	cout=detm-detx-epe
+
+n=length(y)
+z=diag(n)-rho*W
+e=z%*%y-z%*%x%*%b
+ev=e*sqrt(vi)
+epe=(t(ev)%*%ev)/(2*sige)
+cout=detm-epe
 	
 	return(cout)
 

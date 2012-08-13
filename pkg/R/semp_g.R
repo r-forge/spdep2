@@ -1,4 +1,4 @@
-#semp_g <- function(y,x,W,ndraw,nomit,prior)
+semp_g <- function(y,x,W,ndraw,nomit,prior){
 
 n=dim(y)[1]
 junk=dim(y)[2]
@@ -31,14 +31,14 @@ acc_rate=matrix(0,ndraw,1)
 TI=solve(T)
 TIc=TI%*%c_beta
 iter=1
-in=matrix(1,n,1)
+In=matrix(1,n,1)
 Wy=W%*%y
 Wx=W%*%x
 
 zipv=which(yin==0)
 zipo=which(yin==1)
 nzip=length(zipv)
-W2diag=spdiags(t(W)%*%W,0) ##spdiags()
+W2diag=	diag(t(W)%*%W)			##spdiags(t(W)%*%W,0) ##spdiags()
 
 iter=1
 acc=0
@@ -52,7 +52,7 @@ while(iter <= ndraw){
 	bhat=norm_rnd(as.numeric(sige)*AI)+b0
 	
 	nu1=n+2*nu
-	e=ys-xs*bhat
+	e=ys-xs%*%bhat
 	d1=2*d0+t(e)%*%e
 	chi=chis_rnd(1,nu1)
 	sige=d1/chi
@@ -61,7 +61,7 @@ while(iter <= ndraw){
 	ymu=y-mu
 	dsig=matrix(1,n,1)-rho*rho*W2diag
 	yvar=matrix(1,n,1)/dsig
-	A=(1/sige)*(diag(n)-rho*W)%*%ymu
+	A=(1/as.numeric(sige))*(diag(n)-rho*W)%*%ymu
 	B=t(diag(n)-rho*W)%*%A
 	Cy=ymu-yvar*B
 	ym=mu+Cy
@@ -74,7 +74,15 @@ while(iter <= ndraw){
 	Wy=W%*%y
 	
 	xb=x%*%bhat
-	rhox=c_rho_sem(rho2,y,x,bhat,sige,W,detval,ones(n,1),a1,a2)
+	rhox=c_rho_sem(rho,y,x,bhat,sige,W,detval,matrix(1,n,1),a1,a2)
+	accept=0
+	rho2=rho+cc*rnorm(1)
+	while(accept==0){
+		if((rho2>rmin)&(rho2<rmax))	accept=1
+		else	rho2=rho+cc*rnorm(1)
+		}
+		
+	rhoy=c_rho_sem(rho2,y,x,bhat,sige,W,detval,matrix(1,n,1),a1,a2)
 	ru=runif(1)
 	if((rhoy-rhox) > exp(1))	p=1
 	else {
@@ -100,14 +108,14 @@ while(iter <= ndraw){
 ymean=ymean/(ndraw-nomit)
 Wy=W%*%ymean
 bmean=apply(bsave,2,mean)
-bmean=t(bmean)
+#bmean=t(bmean)
 rho=apply(psave,2,mean)
 
 nobs=dim(x)[1]
 nvar=dim(x)[2]
 
-if(inform_flag==0)	mlike=sem_marginal(detval,ys,xs,Wys,Wxs,nobs,nvar,a1,a2)
-else mlike=sem_marginal2(detval,ys,xs,Wys,Wxs,nobs,nvar,a1,a2,c,TI,sige)
+if(inform_flag==0)	mlike=sem_marginal(detval,ymean,x,Wy,Wx,nobs,nvar,a1,a2)
+if(inform_flag !=0) mlike=sem_marginal2(detval,ymean,x,Wy,Wx,nobs,nvar,a1,a2,c,TI,sige)
 
 yhat=x%*%bmean
 yprob=pnorm(yhat)
@@ -155,6 +163,8 @@ results$novi = novi_flag;
 results$lndet = detval;
 results$priorb = inform_flag;
 
+results
+}
 
 
 
