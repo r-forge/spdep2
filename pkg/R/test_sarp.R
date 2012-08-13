@@ -11,8 +11,8 @@ y<-matrix(rnorm(3), ncol=1)
 y<-solve(diag(3)-0.9*W)%*%y
 x<-matrix(rnorm(6),ncol=2)
 
-ndraw=1
-nomit=0
+ndraw=100
+nomit=20
 source('sarp_g.R')
 #results=sar_g(y,x,W,ndraw,nomit,prior)
 #plot(results$pdraw)

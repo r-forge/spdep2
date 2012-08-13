@@ -156,7 +156,7 @@ while(iter <= ndraw){
 		pdfz=dnorm(mu) 	#used dnorm in place of stdn_pdf
 		for(kk in 1:p){
 			avg_direct[kk,1]=t(pdfz)%*%(estimated_diags%*%rhovec*beff[kk,1]/n)
-			dd=spdiags(pdfz)$B	##spdiags ??
+			dd=diag(pdfz)	##spdiags ??
 			avg_total[kk,1]=mean(apply(dd%*%s*beff[kk,1],2,sum))
 			total_obs[,kk]=total_obs[,kk]+apply(dd%*%s*beff[kk,1],2,sum)
 			avg_indirect[kk,1]=avg_total[kk,1]-avg_direct[kk,1]
@@ -217,7 +217,7 @@ results$lndet = detval;
 results$priorb = inform_flag;
 results$mlike = mlike;
 
-
+#}
 
 
 
