@@ -16,6 +16,8 @@ function results = sar(y,x,W,info)
 %       info.lflag = 0 for full lndet computation (default = 1, fastest)
 %                  = 1 for MC lndet approximation (fast for very large problems)
 %                  = 2 for Spline lndet approximation (medium speed)
+%                  = 3 uses ppval; for full lndet computation
+%                  = 4 uses ppval; MC lndet approximation
 %       info.order = order to use with info.lflag = 1 option (default = 50)
 %       info.iter  = iterations to use with info.lflag = 1 option (default = 30)  
 %       info.lndet = a matrix returned by sar, sar_g, sarp_g, etc.
@@ -356,7 +358,7 @@ results.lndet = detval;
 
 
 
-function llike = f_sar(rho,detval,epe0,eped,epe0d,n)
+%function llike = f_sar(rho,detval,epe0,eped,epe0d,n)
 % PURPOSE: evaluates concentrated log-likelihood for the 
 %  spatial autoregressive model using sparse matrix algorithms
 % ---------------------------------------------------
@@ -390,31 +392,32 @@ function llike = f_sar(rho,detval,epe0,eped,epe0d,n)
 % Toledo, OH 43606
 % jlesage@spatial-econometrics.com
 
-if nargin == 6
-gsize = detval(2,1) - detval(1,1);
+%if nargin == 6
+%gsize = detval(2,1) - detval(1,1);
 % Note these are actually log detvalues
-i1 = find(detval(:,1) <= rho + gsize);
-i2 = find(detval(:,1) <= rho - gsize);
-i1 = max(i1);
-i2 = max(i2);
-index = round((i1+i2)/2);
-if isempty(index)
-index = 1;
-end;
+%i1 = find(detval(:,1) <= rho + gsize);
+%i2 = find(detval(:,1) <= rho - gsize);
+%i1 = max(i1);
+%i2 = max(i2);
+%index = round((i1+i2)/2);
+%if isempty(index)
+%index = 1;
+%end;
+%fprintf(1, 'in sar.m/f_sar\n') % /* RSB */
 
-detm = detval(index,2); 
+%detm = detval(index,2); 
 
-z = epe0 - 2*rho*epe0d + rho*rho*eped;
+%z = epe0 - 2*rho*epe0d + rho*rho*eped;
 
-llike = (n/2)*log(z) - detm;
+%llike = (n/2)*log(z) - detm;
 
-else
+%else
 
-error('f_sar: Wrong # of input arguments');
+%error('f_sar: Wrong # of input arguments');
 
-end;
+%end;
 
-function llike = f2_sar(parm,y,x,W,detval)
+%function llike = f2_sar(parm,y,x,W,detval)
 % PURPOSE: evaluates log-likelihood -- given ML estimates
 %  spatial autoregressive model using sparse matrix algorithms
 % ---------------------------------------------------
@@ -442,27 +445,28 @@ function llike = f2_sar(parm,y,x,W,detval)
 % Toledo, OH 43606
 % jlesage@spatial.econometrics.com
 
-n = length(y); 
-k = length(parm);
-b = parm(1:k-2,1);
-rho = parm(k-1,1);
-sige = parm(k,1);
+%n = length(y); 
+%k = length(parm);
+%b = parm(1:k-2,1);
+%rho = parm(k-1,1);
+%sige = parm(k,1);
 
-gsize = detval(2,1) - detval(1,1);
-i1 = find(detval(:,1) <= rho + gsize);
-i2 = find(detval(:,1) <= rho - gsize);
-i1 = max(i1);
-i2 = max(i2);
-index = round((i1+i2)/2);
-if isempty(index)
-index = 1;
-end;
-detm = detval(index,2);
+%gsize = detval(2,1) - detval(1,1);
+%i1 = find(detval(:,1) <= rho + gsize);
+%i2 = find(detval(:,1) <= rho - gsize);
+%i1 = max(i1);
+%i2 = max(i2);
+%index = round((i1+i2)/2);
+%if isempty(index)
+%index = 1;
+%end;
+%fprintf(1, 'in sar.m/f2_sar\n') % /* RSB */
+%detm = detval(index,2);
 
-e = y-x*b-rho*sparse(W)*y;
-epe = e'*e;
-tmp2 = 1/(2*sige);
-llike = -(n/2)*log(pi) - (n/2)*log(sige) + detm - tmp2*epe;
+%e = y-x*b-rho*sparse(W)*y;
+%epe = e'*e;
+%tmp2 = 1/(2*sige);
+%llike = -(n/2)*log(pi) - (n/2)*log(sige) + detm - tmp2*epe;
 
 
 function [rmin,rmax,convg,maxit,detval,ldetflag,eflag,order,iter,options,ndraw] = sar_parse(info)
@@ -519,6 +523,10 @@ if nf > 0
         ldetflag = 1; % use Pace-Barry approximation
         elseif tst == 2,
         ldetflag = 2; % use spline interpolation approximation
+        elseif tst == 3,  % /* RSB */ 
+        ldetflag = 3; % use ppval, compute full lndet, no approximation
+        elseif tst == 4,
+        ldetflag = 4; % use ppval, use Pace-Barry approximation
         else
         error('sar: unrecognizable lflag value on input');
         end;

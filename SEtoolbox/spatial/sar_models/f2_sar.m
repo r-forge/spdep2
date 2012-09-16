@@ -42,7 +42,7 @@ if isempty(index)
 index = 1;
 end;
 detm = detval(index,2);
-
+fprintf(1, 'in f2_sar.m/f2_sar\n') % /* RSB */
 e = y-x*b-rho*sparse(W)*y;
 epe = e'*e;
 tmp2 = 1/(2*sige);

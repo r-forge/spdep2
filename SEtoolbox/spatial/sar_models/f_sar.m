@@ -31,7 +31,7 @@ function llike = f_sar(rho,detval,epe0,eped,epe0d,n)
 % Department of Economics
 % Toledo, OH 43606
 % jlesage@spatial-econometrics.com
-
+%  all(size(detval) == [1 1])
 if nargin == 6
 gsize = detval(2,1) - detval(1,1);
 % Note these are actually log detvalues
@@ -43,6 +43,7 @@ index = round((i1+i2)/2);
 if isempty(index)
 index = 1;
 end;
+fprintf(1, 'in f_sar.m/f_sar\n') % /* RSB */
 
 detm = detval(index,2); 
 
