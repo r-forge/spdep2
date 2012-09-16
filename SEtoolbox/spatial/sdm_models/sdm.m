@@ -174,17 +174,29 @@ t0 = clock;
 
 % step 1) do regressions
 % step 2) maximize concentrated likelihood function;
+if isoctave()
+% /* RSB */
+    options = [0];
+    [prho,liktmp] = fminbnd('f_sar',rmin,rmax,options,detval,epe0,eped,epe0d,n);
+else
     options = optimset('fminbnd');
     
     [prho,liktmp,exitflag,output] = fminbnd('f_sdm',rmin,rmax,options,detval,epe0,eped,epe0d,n);
+end;
    
 time4 = etime(clock,t0);
 results.time4 = time4;
 
+% /* RSB */
+if isoctave()
+    results.iter = -1;
+else
 if exitflag == 0
 fprintf(1,'\n sdm: convergence not obtained in %4d iterations \n',output.iterations);
 end;
 results.iter = output.iterations;
+end;
+% /* RSB */
 
 % step 3) find b,sige maximum likelihood estimates
 results.beta = b0 - prho*bd; 

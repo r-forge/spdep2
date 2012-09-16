@@ -122,8 +122,14 @@ rmax = 0.99;
     results.p = p;
     
 
+if isoctave()
+% /* RSB */
+    options = [0 1e-3 0 0 0 0];
+else
 % default options
 options = optimset('fminsearch');
+end;
+
 
 if nargin == 5
  if ~isstruct(info)
@@ -160,7 +166,12 @@ options.MaxIter = 500;
     end;
  end;
 elseif nargin == 4 % use default options
+if isoctave()
+% /* RSB */
+    options = [0 1e-6 0 0 0 0];
+else
 options = optimset('fminsearch');
+end;
 else
  error('Wrong # of arguments to sac'); 
 end; 
@@ -245,20 +256,32 @@ end;
 
 % find good starting values
 % using Kelejian and Prucha GMM estimation
-res0 = sac_gmm(y,x,W1,W2);
-parm = [res0.rho
-        res0.lam];
+%res0 = sac_gmm(y,x,W1,W2);
+%parm = [res0.rho
+%        res0.lam];
+
+%parm = [0
+%        0];
 
 timeo = clock;
+if isoctave()
+% /* RSB */
+grad = [0];
+%[pout] = fminsearch('f_sac',parm,options,grad,y,x,W1,W2,det1,det2);
+[pout,obj_value, convergence, iters] = bfgsmin('f_sac',{parm,y,x,W1,W2,det1,det2});
+fprintf(1, '\n sac: bfgsmin convergence %d \n', convergence);
+fprintf(1, '\n sac: bfgsmin iterations %d \n', iters);
+exitflag = 1;
+else
 [pout,like,exitflag,output]=fminsearch('f_sac',parm,options,y,x,W1,W2,det1,det2);
-time4 = etime(clock,timeo);
-results.time4 = time4;
 
 if exitflag == 0 
 fprintf(1,'\n sac: convergence not obtained in %4d iterations \n',output.iterations);
 end;
 results.iter = output.iterations;
-
+end
+time4 = etime(clock,timeo);
+results.time4 = time4;
 
 rho = pout(1,1);
 lam = pout(2,1);
