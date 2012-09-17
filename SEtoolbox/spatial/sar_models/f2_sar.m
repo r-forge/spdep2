@@ -35,6 +35,8 @@ sige = parm(k,1);
 
 if  all(size(detval) == [1 1]) % /* RSB */
   detm = ppval(detval, rho); % /* RSB */
+elseif all(size(detval) == [n 1]) % /* RSB */
+  detm = sum(log(ones(n,1) - rho .* detval)); % /* RSB */
 else % /* RSB */
   gsize = detval(2,1) - detval(1,1);
   i1 = find(detval(:,1) <= rho + gsize);
@@ -47,7 +49,7 @@ else % /* RSB */
   end;
   detm = detval(index,2);
 end; % /* RSB */
-fprintf(1, 'in f2_sar.m/f2_sar\n') % /* RSB */
+%fprintf(1, 'in f2_sar.m/f2_sar\n') % /* RSB */
 e = y-x*b-rho*sparse(W)*y;
 epe = e'*e;
 tmp2 = 1/(2*sige);

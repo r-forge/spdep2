@@ -33,3 +33,15 @@ prt(result0);
 result1 = sar(y,x,W); % default to Barry-Pace lndet approximation
 prt(result1);
 plt(result1);
+
+info.lflag = 3; % use full lndet ppval  % /* RSB */
+result3 = sar(y,x,W,info); % /* RSB */
+prt(result3); % /* RSB */
+
+info.lflag = 5; % use eigenvalues % /* RSB */
+result5 = sar(y,x,W,info); % /* RSB */
+prt(result5); % /* RSB */
+
+ % /* RSB */
+ % /* RSB */
+

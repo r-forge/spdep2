@@ -16,12 +16,14 @@ function results = sar(y,x,W,info)
 %       info.lflag = 0 for full lndet computation (default = 1, fastest)
 %                  = 1 for MC lndet approximation (fast for very large problems)
 %                  = 2 for Spline lndet approximation (medium speed)
-%                  = 3 uses ppval; for full lndet computation
-%                  = 4 uses ppval; MC lndet approximation
+%                  = 3 uses ppval; for full lndet computation /* RSB */
+%                  = 4 uses ppval; MC lndet approximation /* RSB */
+%                  = 5 computes and uses eigenvalues /* RSB */
 %       info.order = order to use with info.lflag = 1 option (default = 50)
 %       info.iter  = iterations to use with info.lflag = 1 option (default = 30)  
 %       info.lndet = a matrix returned by sar, sar_g, sarp_g, etc.
 %                    containing log-determinant information to save time
+%                    may also be nx1 vector of eigenvalues /* RSB */
 %       info.ndraw = 1,000 by default
 % ---------------------------------------------------
 %  RETURNS: a structure
@@ -509,12 +511,18 @@ if nf > 0
     elseif strcmp(fields{i},'maxit')
         options(14) = info.maxit;  
     elseif strcmp(fields{i},'lndet')
-    detval = info.lndet;
-    ldetflag = -1;
-    eflag = 0;
-    rmin = detval(1,1);
-    nr = length(detval);
-    rmax = detval(nr,1);
+        detval = info.lndet;
+        ldetflag = -1;
+        eflag = 0;
+	sdv = size(detval); % /* RSB */
+        if sdv(2) == 2 % /* RSB */
+          rmin = detval(1,1);
+          nr = length(detval);
+          rmax = detval(nr,1);
+        elseif sdv(2) == 1 % /* RSB */
+          rmin = min(detval(:,1)); % /* RSB */
+          rmax = max(detval(:,1)); % /* RSB */
+	end; % /* RSB */
     elseif strcmp(fields{i},'lflag')
         tst = info.lflag;
         if tst == 0,
@@ -524,9 +532,12 @@ if nf > 0
         elseif tst == 2,
         ldetflag = 2; % use spline interpolation approximation
         elseif tst == 3,  % /* RSB */ 
-        ldetflag = 3; % use ppval, compute full lndet, no approximation
-        elseif tst == 4,
-        ldetflag = 4; % use ppval, use Pace-Barry approximation
+        ldetflag = 3; % use ppval, compute full lndet, no approximation % /* RSB */
+        elseif tst == 4, % /* RSB */
+        ldetflag = 4; % use ppval, use Pace-Barry approximation % /* RSB */
+        elseif tst == 5, % /* RSB */
+        ldetflag = 5; % compute and use eigenvalues % /* RSB */
+        eflag = 1; % /* RSB */
         else
         error('sar: unrecognizable lflag value on input');
         end;
@@ -604,16 +615,20 @@ time1 = etime(clock,t0);
 tt=rmin:.001:rmax; % interpolate a finer grid
 outi = interp1(out.rho,out.lndet,tt','spline');
 detval = [tt' outi];
-elseif ldetflag == 3
-t0 = clock;    
-out = lndetfull(W,rmin,rmax);
-time1 = etime(clock,t0);
-detval = interp1(out.rho,out.lndet,'spline','pp');
-elseif ldetflag == 4
-t0 = clock;    
-out = lndetmc(order,iter,W,rmin,rmax);
-time1 = etime(clock,t0);
-detval = interp1(out.rho,out.lndet,'spline','pp');
+elseif ldetflag == 3 % /* RSB */
+  t0 = clock;    % /* RSB */ 
+  out = lndetfull(W,rmin,rmax); % /* RSB */
+  time1 = etime(clock,t0); % /* RSB */
+  detval = interp1(out.rho,out.lndet,'spline','pp'); % /* RSB */
+elseif ldetflag == 4 % /* RSB */
+  t0 = clock;     % /* RSB */
+  out = lndetmc(order,iter,W,rmin,rmax); % /* RSB */
+  time1 = etime(clock,t0); % /* RSB */
+  detval = interp1(out.rho,out.lndet,'spline','pp'); % /* RSB */
+elseif ldetflag == 5  % /* RSB */
+  t0 = clock;     % /* RSB */
+  detval = eig(full(W)); % /* RSB */
+  time1 = etime(clock,t0); % /* RSB */
 elseif ldetflag == -1 % the user fed down a detval matrix
     time1 = 0;
         % check to see if this is right
@@ -621,11 +636,17 @@ elseif ldetflag == -1 % the user fed down a detval matrix
             error('sar: wrong lndet input argument');
         end;
         [n1,n2] = size(detval);
-        if n2 ~= 2
-            error('sar: wrong sized lndet input argument');
+        if n2 > 2 % /* RSB */
+	    error('sar: wrong sized lndet input argument');
         elseif n1 == 1
             error('sar: wrong sized lndet input argument');
-        end;          
+        end;   
+        if n2 == 1 % /* RSB */
+	  sW = size(W); % /* RSB */
+	  if n1 ~= sW(1) % /* RSB */
+	   error('sar: wrong sized pre-computed eigenvalues'); % /* RSB */
+	  end; % /* RSB */
+	end; % /* RSB */
 end;
 
 

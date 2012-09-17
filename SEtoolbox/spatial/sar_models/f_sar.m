@@ -35,6 +35,8 @@ function llike = f_sar(rho,detval,epe0,eped,epe0d,n)
 if nargin == 6
   if  all(size(detval) == [1 1]) % /* RSB */
     detm = ppval(detval, rho); % /* RSB */
+  elseif all(size(detval) == [n 1]) % /* RSB */
+    detm = sum(log(ones(n,1) - rho .* detval)); % /* RSB */
   else % /* RSB */
     gsize = detval(2,1) - detval(1,1);
 % Note these are actually log detvalues
@@ -48,7 +50,7 @@ if nargin == 6
     end;
     detm = detval(index,2); 
   end; % /* RSB */
-  fprintf(1, 'in f_sar.m/f_sar\n') % /* RSB */
+%  fprintf(1, 'in f_sar.m/f_sar\n') % /* RSB */
 
   z = epe0 - 2*rho*epe0d + rho*rho*eped;
 
