@@ -10,6 +10,7 @@ function llike = f2_sar(parm,y,x,W,detval)
 %         W    = spatial weight matrix
 %         ldet = matrix with [rho log determinant] values
 %                computed in sar.m using one of Kelley Pace's routines  
+%                or a size [1 1] fitted spline model /* RSB */ 
 % ---------------------------------------------------
 %  RETURNS: a  scalar equal to minus the log-likelihood
 %           function value at the ML parameters
@@ -32,19 +33,23 @@ b = parm(1:k-2,1);
 rho = parm(k-1,1);
 sige = parm(k,1);
 
-gsize = detval(2,1) - detval(1,1);
-i1 = find(detval(:,1) <= rho + gsize);
-i2 = find(detval(:,1) <= rho - gsize);
-i1 = max(i1);
-i2 = max(i2);
-index = round((i1+i2)/2);
-if isempty(index)
-index = 1;
-end;
-detm = detval(index,2);
+if  all(size(detval) == [1 1]) % /* RSB */
+  detm = ppval(detval, rho); % /* RSB */
+else % /* RSB */
+  gsize = detval(2,1) - detval(1,1);
+  i1 = find(detval(:,1) <= rho + gsize);
+  i2 = find(detval(:,1) <= rho - gsize);
+  i1 = max(i1);
+  i2 = max(i2);
+  index = round((i1+i2)/2);
+  if isempty(index)
+    index = 1;
+  end;
+  detm = detval(index,2);
+end; % /* RSB */
 fprintf(1, 'in f2_sar.m/f2_sar\n') % /* RSB */
 e = y-x*b-rho*sparse(W)*y;
 epe = e'*e;
 tmp2 = 1/(2*sige);
-llike = -(n/2)*log(pi) - (n/2)*log(sige) + detm - tmp2*epe;
+llike = -(n/2)*log(2*pi) - (n/2)*log(sige) + detm - tmp2*epe; % /* RSB */
 

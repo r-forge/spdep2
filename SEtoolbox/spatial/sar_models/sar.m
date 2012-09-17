@@ -604,7 +604,16 @@ time1 = etime(clock,t0);
 tt=rmin:.001:rmax; % interpolate a finer grid
 outi = interp1(out.rho,out.lndet,tt','spline');
 detval = [tt' outi];
-
+elseif ldetflag == 3
+t0 = clock;    
+out = lndetfull(W,rmin,rmax);
+time1 = etime(clock,t0);
+detval = interp1(out.rho,out.lndet,'spline','pp');
+elseif ldetflag == 4
+t0 = clock;    
+out = lndetmc(order,iter,W,rmin,rmax);
+time1 = etime(clock,t0);
+detval = interp1(out.rho,out.lndet,'spline','pp');
 elseif ldetflag == -1 % the user fed down a detval matrix
     time1 = 0;
         % check to see if this is right

@@ -5,6 +5,7 @@ function llike = f_sar(rho,detval,epe0,eped,epe0d,n)
 %  USAGE:llike = f_sar(rho,detval,epe0,eped,epe0d,n)
 %  where: rho  = spatial autoregressive parameter
 %         detval = a matrix with vectorized log-determinant information
+%                or a size [1 1] fitted spline model /* RSB */ 
 %         epe0   = see below
 %         eped   = see below
 %         eoe0d  = see below
@@ -31,28 +32,30 @@ function llike = f_sar(rho,detval,epe0,eped,epe0d,n)
 % Department of Economics
 % Toledo, OH 43606
 % jlesage@spatial-econometrics.com
-%  all(size(detval) == [1 1])
 if nargin == 6
-gsize = detval(2,1) - detval(1,1);
+  if  all(size(detval) == [1 1]) % /* RSB */
+    detm = ppval(detval, rho); % /* RSB */
+  else % /* RSB */
+    gsize = detval(2,1) - detval(1,1);
 % Note these are actually log detvalues
-i1 = find(detval(:,1) <= rho + gsize);
-i2 = find(detval(:,1) <= rho - gsize);
-i1 = max(i1);
-i2 = max(i2);
-index = round((i1+i2)/2);
-if isempty(index)
-index = 1;
-end;
-fprintf(1, 'in f_sar.m/f_sar\n') % /* RSB */
+    i1 = find(detval(:,1) <= rho + gsize);
+    i2 = find(detval(:,1) <= rho - gsize);
+    i1 = max(i1);
+    i2 = max(i2);
+    index = round((i1+i2)/2);
+    if isempty(index)
+      index = 1;
+    end;
+    detm = detval(index,2); 
+  end; % /* RSB */
+  fprintf(1, 'in f_sar.m/f_sar\n') % /* RSB */
 
-detm = detval(index,2); 
+  z = epe0 - 2*rho*epe0d + rho*rho*eped;
 
-z = epe0 - 2*rho*epe0d + rho*rho*eped;
-
-llike = (n/2)*log(z) - detm;
+  llike = (n/2)*log(z) - detm;
 
 else
 
-error('f_sar: Wrong # of input arguments');
+  error('f_sar: Wrong # of input arguments');
 
 end;
