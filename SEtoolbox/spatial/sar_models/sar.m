@@ -327,7 +327,14 @@ for i=1:ndraw;
     end;
 
 end;
-
+imps = zeros(p, 3);% RSB
+rmat = results.rho(1,1).^ree;% RSB
+for j=1:p;% RSB
+  bj = results.beta((j+1),1);% RSB
+  imps(j,1) =  sum((bj*trbig).*rmat);% RSB
+  imps(j,3) = sum(bj(1,1)*rmat);% RSB
+  imps(j,2) = imps(j,3) - imps(j,1);% RSB
+end;% RSB
 time5 = etime(clock,t0);
 results.time5 = time5;
 
@@ -347,6 +354,7 @@ results.y = y;
 results.total = total;
 results.direct = direct;
 results.indirect = indirect;
+results.imps = imps;% RSB
 results.nobs = n; 
 results.nvar = nvar;
 results.rmax = rmax;      
