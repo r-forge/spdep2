@@ -32,6 +32,7 @@ function llike = f_sar(rho,detval,epe0,eped,epe0d,n)
 % Department of Economics
 % Toledo, OH 43606
 % jlesage@spatial-econometrics.com
+global funvals;
 if nargin == 6
   if  all(size(detval) == [1 1]) % /* RSB */
     detm = ppval(detval, rho); % /* RSB */
@@ -55,7 +56,8 @@ if nargin == 6
   z = epe0 - 2*rho*epe0d + rho*rho*eped;
 
   llike = (n/2)*log(z) - detm;
-
+  thisi = [rho detm llike]; % /* RSB */
+  funvals = [funvals; thisi]; % /* RSB */
 else
 
   error('f_sar: Wrong # of input arguments');

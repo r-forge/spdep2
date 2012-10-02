@@ -38,6 +38,7 @@ function results = sar(y,x,W,info)
 %         results.indirect = a 3-d matrix (ndraw,p,ntrs) indirect x-impacts
 %                            ndraw = 1,000 by default, ntrs = 101 default
 %                            p = nvar-1 if there is a constant term which we skip
+%         results.imps = (p,3) matrix of fitted impacts% RSB
 %         results.yhat  = yhat         (nobs x 1) vector
 %         results.resid = residuals    (nobs x 1) vector
 %         results.sige  = sige = (y-p*W*y-x*b)'*(y-p*W*y-x*b)/n
@@ -53,7 +54,10 @@ function results = sar(y,x,W,info)
 %         results.rmax  = 1/max eigenvalue of W (or rmax if input)
 %         results.rmin  = 1/min eigenvalue of W (or rmin if input)
 %         results.lflag = lflag from input
-%         results.liter = info.iter option from input
+%         results.iter = info.iter option from input
+%         results.funvals = matrix of fnCnt values of rho, detm and llike% RSB
+%         results.fnCnt = # of function calls% /* RSB */
+%         results.TolX = convergence criterion set by info.convg % /* RSB */
 %         results.order = info.order option from input
 %         results.limit = matrix of [rho lower95,logdet approx, upper95] intervals
 %                         for the case of lflag = 1
@@ -163,12 +167,14 @@ t0 = clock;
 
 % step 1) do regressions
 % step 2) maximize concentrated likelihood function;
+global funvals;
 if isoctave()
 % /* RSB */
     options = [0];
     [prho,liktmp] = fminbnd('f_sar',rmin,rmax,options,detval,epe0,eped,epe0d,n);
 else
     options = optimset('fminbnd');
+    options = optimset(options, 'TolX', convg);% /* RSB */
     [prho,liktmp,exitflag,output] = fminbnd('f_sar',rmin,rmax,options,detval,epe0,eped,epe0d,n);
 end;
    
@@ -182,6 +188,8 @@ if exitflag == 0
 fprintf(1,'\n sar: convergence not obtained in %4d iterations \n',output.iterations);
 end;
 results.iter = output.iterations;
+results.fnCnt = output.funcCount;% /* RSB */
+results.TolX = options.TolX;% /* RSB */
 end;
 % /* RSB */
 
@@ -360,6 +368,9 @@ results.nvar = nvar;
 results.rmax = rmax;      
 results.rmin = rmin;
 results.lflag = ldetflag;
+
+results.funvals = funvals;% RSB
+clear global funvals;% RSB
 results.order = order;
 results.miter = miter;
 results.rbar = 1 - (rsqr1/rsqr2); % rbar-squared
@@ -516,6 +527,7 @@ if nf > 0
         rmax = info.rmax; eflag = 0;
     elseif strcmp(fields{i},'convg')
         options(2) = info.convg;
+	convg = info.convg; % /* RSB */
     elseif strcmp(fields{i},'maxit')
         options(14) = info.maxit;  
     elseif strcmp(fields{i},'lndet')
