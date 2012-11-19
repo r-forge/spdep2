@@ -515,6 +515,7 @@ detval = 0;    % just a flag
 convg = 0.0001;
 maxit = 500;
 ndraw = 1000;
+nasy = 500; % /* RSB */
 
 
 fields = fieldnames(info);
@@ -570,8 +571,8 @@ if nf > 0
         iter = info.iter; 
      elseif strcmp(fields{i},'ndraw')
         ndraw = info.ndraw; 
-     elseif strcmp(fields{i},'asy') /* RSB */
-        nasy = info.asy;  /* RSB */
+     elseif strcmp(fields{i},'asy') % /* RSB */
+        nasy = info.asy;  % /* RSB */
     end;
  end;
  
