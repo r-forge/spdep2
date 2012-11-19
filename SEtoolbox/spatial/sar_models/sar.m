@@ -25,6 +25,7 @@ function results = sar(y,x,W,info)
 %                    containing log-determinant information to save time
 %                    may also be nx1 vector of eigenvalues /* RSB */
 %       info.ndraw = 1,000 by default
+%       info.asy = 500 by default use asymptotic if n less than /* RSB */
 % ---------------------------------------------------
 %  RETURNS: a structure
 %         results.meth  = 'sar'
@@ -111,7 +112,7 @@ end;
 
 
 % parse input options
-[rmin,rmax,convg,maxit,detval,ldetflag,eflag,order,miter,options,ndraw] = sar_parse(info);
+[rmin,rmax,convg,maxit,detval,ldetflag,eflag,order,miter,options,ndraw,nasy] = sar_parse(info);
 
 results.ndraw = ndraw;
     
@@ -211,7 +212,7 @@ parm = [results.beta
 
 results.lik = f2_sar(parm,y,x,W,detval);
 
-if n <= 500
+if n <= nasy
 t0 = clock;
 % asymptotic t-stats based on information matrix
 % (page 80-81 Anselin, 1980)
@@ -490,7 +491,7 @@ results.lndet = detval;
 %llike = -(n/2)*log(pi) - (n/2)*log(sige) + detm - tmp2*epe;
 
 
-function [rmin,rmax,convg,maxit,detval,ldetflag,eflag,order,iter,options,ndraw] = sar_parse(info)
+function [rmin,rmax,convg,maxit,detval,ldetflag,eflag,order,iter,options,ndraw,nasy] = sar_parse(info)
 % PURPOSE: parses input arguments for sar model
 % ---------------------------------------------------
 %  USAGE: [rmin,rmax,convg,maxit,detval,ldetflag,eflag,order,iter,options,ndraw] = sar_parse(info)
@@ -569,6 +570,8 @@ if nf > 0
         iter = info.iter; 
      elseif strcmp(fields{i},'ndraw')
         ndraw = info.ndraw; 
+     elseif strcmp(fields{i},'asy') /* RSB */
+        nasy = info.asy;  /* RSB */
     end;
  end;
  
