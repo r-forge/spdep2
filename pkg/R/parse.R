@@ -29,7 +29,7 @@ if(is.null(prior)){
 	    nsample=1,
 	    #for sar
 	    c_beta=matrix(rep(0,k),k,1), #c is changed to c_beta for c() is a fun.
-	    T=diag(k)*1e+12,
+	    Tbeta=diag(k)*1e+12,
 	    inform_flag=0,
 	    #for sac
 	    lambda=0.2,
@@ -45,7 +45,6 @@ if(is.null(prior)){
 	    cflag=0,
 	    vflag=0.0
     )
-    return(prior)
 	}
 else {
 		if(length(prior$novi_flag)!=1)	prior$novi_flag=0
@@ -69,10 +68,16 @@ else {
 		if(length(prior$nsample)!=1) prior$nsample=1
 		if(length(prior$m)!=1) prior$mm=1
 		if(length(prior$k)!=1) prior$kk=1
-		if(is.null(prior$beta)){ 
+		if(is.null(prior$c_beta))
+			{ 
 			prior$c_beta=matrix(rep(0,k),k,1)
+	    		Tbeta=diag(k)*1e+12
 			}
-		else prior$c_beta=prior$beta	
+			else 
+			{
+				prior$c_beta=prior$c_beta	
+	    			prior$Tbeta=prior$Tbeta
+			}
 		if(prior$k!=0){
 			prior$rval=rgamma(1,prior$mm,1/prior$kk)
 			}
@@ -92,14 +97,15 @@ else {
 			prior$lmax=1
 			prior$eflag=0
 			}	
-		if(length(prior$beta)!=1) {
-			prior$c_beta=prior$beta
-			prior$inform_flag=1
-			}
-		if(length(prior$bcov)!=1) {
-			prior$T=prior$bcov
-			prior$inform_flag=1
-			}
+#VIRGILIO: What exactly is this???
+#		if(length(prior$beta)!=1) {
+#			prior$c_beta=prior$beta
+#			prior$inform_flag=1
+#			}
+#		if(length(prior$bcov)!=1) {
+#			prior$Tbeta=prior$bcov
+#			prior$inform_flag=1
+#			}
 		if(length(dim(prior$lndet))==2) {
 			prior$detval = prior$lndet;
 			prior$ldetflag = -1;
@@ -131,6 +137,7 @@ else {
 
 		
 
-	return(prior)
 }
+
+	return(prior)
 }	

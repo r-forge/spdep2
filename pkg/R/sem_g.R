@@ -11,7 +11,7 @@ k=dim(x)[2]
 n3=dim(W)[1]
 n4=dim(W)[2]
 
-temp=prior_parse(prior,k)
+temp=prior_parse(prior,k=k)
 attach(temp)
 
 results$order=order
@@ -44,7 +44,7 @@ detval = set_lndet(ldetflag,W,rmin,rmax,detval,order,iter);
 
 ## Initialisation
 
-TI = solve(T);
+TI = solve(Tbeta);
 TIc = TI%*%c_beta; ##name changed from c to c_beta for less ambiguity
 iter = 1;
 #In = matrix(rep(1,n),n,1);  ##name changed in to In
@@ -196,7 +196,7 @@ results$sdraw = ssave;
 results$vmean = vmean;
 results$yhat  = yhat;
 results$bmean = c_beta;
-results$bstd  = sqrt(diag(T));
+results$bstd  = sqrt(diag(Tbeta));
 results$rsqr  = rsqr;
 results$rbar = 1 - (rsqr1/rsqr2); #% rbar-squared
 results$sige = sige;
