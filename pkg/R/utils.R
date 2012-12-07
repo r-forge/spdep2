@@ -596,8 +596,21 @@ draw_rho_sem<-function(detval,y,x,Wy,Wx,V,n,k,rmin,rmax,rho)
 		epet[i,1]=t(e)%*%e
 		detxt[i,1]=det(t(xs)%*%xs)
 	}
-	epe=(spline(x=rgrid,y=epet,xout=detval[,1]))$y
+	#Fit on log-scale to avoid having negative values
+	epe=exp((spline(x=rgrid,y=log(epet),xout=detval[,1]))$y)
 	detx=(spline(x=rgrid,y=detxt,xout=detval[,1]))$y
+
+#Code used for testing
+#	if(sum(is.nan(log(epe)))>0)
+#	{
+#		print(rho)
+#		print(min(epe))
+#		print(summary(epe))
+#		print(sort(epe)[1:5])
+#		print(sum(epe<0))
+#		print(summary(epet))
+#	}
+
 	
 	den=detval[,2]-0.5*log(detx)-nmk*log(epe)
 	adj=max(den)
