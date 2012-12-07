@@ -105,16 +105,17 @@ while (iter <= ndraw){ #% start sampling;
 		rhox = c_rho_sem(rho,y,x,bhat,sige,W,detval,V,a1,a2);
 		accept = 0;
 		rho2 = rho + cc*rnorm(1);
-		while(acceptp==0)
+		while(accept==0)
 		{
 			if((rho2>rmin)&(rho2<rmax))	
 				accept=1
 			else 
-				rho2=rho+cc*rorm(1)
+				rho2=rho+cc*rnorm(1)
 		}
 		rhoy = c_rho_sem(rho2,y,x,bhat,sige,W,detval,V,a1,a2);
 		ru = runif(1);
-		if((rhoy-rhox)>exp(1))	p=1
+		if(exp(rhoy-rhox)>1)	
+			p=1
 		else
 		{
 			ratio=exp(rhoy-rhox)

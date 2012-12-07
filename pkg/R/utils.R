@@ -597,7 +597,7 @@ draw_rho_sem<-function(detval,y,x,Wy,Wx,V,n,k,rmin,rmax,rho)
 		detxt[i,1]=det(t(xs)%*%xs)
 	}
 	epe=(spline(x=rgrid,y=epet,xout=detval[,1]))$y
-	detx=(spline(x=rgrid,y=epet,xout=detval[,1]))$y
+	detx=(spline(x=rgrid,y=detxt,xout=detval[,1]))$y
 	
 	den=detval[,2]-0.5*log(detx)-nmk*log(epe)
 	adj=max(den)
@@ -609,7 +609,7 @@ draw_rho_sem<-function(detval,y,x,Wy,Wx,V,n,k,rmin,rmax,rho)
 	x=den
 	
 	isum=sum((y[2:n]+y[1:(n-1)])*(x[2:n]-x[1:(n-1)])/2)
-	z=x/isum
+	z=abs(x/isum)
 	den=cumsum(z)
 	#den=apply(z,2,cumsum)
 	
