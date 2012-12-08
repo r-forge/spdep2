@@ -2,44 +2,62 @@
 ######
 far_g <-function(y,W,ndraw,nomit,prior){
 
+
+n<-nrow(W)
+n2<-ncol(W)
+if(n!=n2)
+	stop("far_g: Wrong size 1st-order contiguity matrix")
+
+tst<-nrow(y)
+junk<-ncol(y)
+
+if(tst!=n)
+	stop("far_g: y-vector length doesn't match W-matrix")
+
+if(junk!=1)
+	stop("far_g: Wrong size y vector on input")
+
 results<-list()
 ### prior inputs ##
 
-temp=prior_parse(prior)
-attach(temp)
+pprior=prior_parse(prior)
+attach(pprior)
 
 results$order = prior$order
 results$iter = prior$iter
 
-n<-nrow(y)
-
-V = matrix(rep(1,n),n,1)
-In = matrix(rep(1,n),n,1)
-ys <- y *sqrt(V)#VIRGILIO:Added this which was missing
-vi = In
 
 #### Allocate storage for results ####
-psave = matrix(rep(0,ndraw-nomit),ndraw-nomit,1)
-ssave = matrix(rep(0,ndraw-nomit),ndraw-nomit,1)
-rtmp = matrix(rep(0,ndraw-nomit),ndraw-nomit,1)
-vmean = matrix(rep(0,n),n,1)
-yhat = matrix(rep(0,n),n,1)
-acc_rate = matrix(rep(0,ndraw),ndraw,1)
+psave = matrix(0, ndraw-nomit,1)
+ssave = matrix(0,ndraw-nomit,1)
+#rtmp = matrix(0, ndraw-nomit,1)
+vmean = matrix(0, n,1)
+yhat = matrix(0,n,1)
+acc_rate = matrix(0,ndraw,1)
 
 #### storage for draw on rvalue ####
-if (mm!=0) rsave = matrix(rep(0,ndraw-nomit),ndraw-nomit,1)
+if (mm!=0)
+	rsave = matrix(0, ndraw-nomit,1)
 
 #tmp = far_eigs(eflag,W,rmin,rmax,n)
 tmp = set_eigs(eflag,W,rmin,rmax,n)
 rmin = tmp$rmin
 rmax = tmp$rmax
+
 detval = set_lndet(ldetflag, W, rmin, rmax, detval, order, iter)
 
 
 iter=1
 
+n<-nrow(y)
+
+V = matrix(1, n,1)
+In = matrix(1, n,1)
+ys <- y *sqrt(V)#VIRGILIO:Added this which was missing
+vi = In
+
 Wy=W%*%y
-Wys = sqrt(V)*Wy
+#Wys = sqrt(V)*Wy
 acc = 0
 cc = 0.1
 
@@ -52,7 +70,7 @@ while(iter<=ndraw){
 	d1 = d0 +t(e)%*%e
 	chi = rchisq(1,nu1)
 	t2 = chi/d1
-	sige = as.vector(1/t2)#VIRGILIO: FIXED issue with dimension
+	sige = as.numeric(1/t2)#VIRGILIO: FIXED issue with dimension
 	
 	e = y-rho*Wy
 
@@ -65,7 +83,7 @@ while(iter<=ndraw){
 		ys = y*sqrt(V)
 	##update rval
 	if(mm!=0){
-		rval = rgamma(1,mm,1/kk)
+		rval = rgamma(1, shape=mm, rate=kk)
 		}
 	}
 
@@ -76,28 +94,28 @@ while(iter<=ndraw){
 		accept = 0
 		rho2 = rho+cc*rnorm(1)
 		while(accept==0){
-			if((rho2 > rmin)&(rho2 < rmax)){ 
+			if((rho2 > rmin)&(rho2 < rmax))
 				accept=1
-			}
-			else rho2 = rho+cc*rnorm(1)
+			else 
+				rho2 = rho+cc*rnorm(1)
 		}
 		rhoy = c_rho(rho2,y,sige,W,detval,In,a1,a2)
 
 		#print(c(rho, rhox, rho2, rhoy))
 
 		ru = runif(1)
-		if((rhoy-rhox)>exp(1)){
-			p=1
-		}
-		else {
+#		if(exp(rhoy-rhox)>(1)){
+#			p=1
+#		}
+#		else {
 			ratio = exp(rhoy-rhox)
-			p = min(ratio)
-		}
+			p = min(1, ratio)
+#		}
 		if(ru < p){
 			rho = rho2
 			acc = acc+1
 		}
-		rtmp[iter,1]=rho
+		#rtmp[iter,1]=rho
 		acc_rate[iter,1]=acc/iter
 
 #### update cc based on sd of rho draws
@@ -114,22 +132,25 @@ while(iter<=ndraw){
 	epe0d = t(ed)%*%e0
 	rho = draw_rho(detval,epe0,eped,epe0d,n,1,rho,a1,a2)
 	}	
-	if(iter > nomit){
+	if(iter > nomit)
+	{
 	ssave[iter-nomit,1] = sige
 	
 	#print(c(rho, iter, nomit))
 	psave[iter-nomit,1] = rho
 	vmean = vmean+vi
-	if(mm!=0) rsave[iter-nomit,1] = rval
+	if(mm!=0)
+		rsave[iter-nomit,1] = rval
 	}
-iter =iter +1
-}
+
+	iter =iter +1
+	}
 ##time??
 
 ##compute posterior means and log marginal likelihood for return arguments 
 
-rho = mean(psave)	
-sigm = mean(ssave)
+rho = apply(psave, 2, mean)	
+sigm = apply(ssave, 2, mean)
 vmean = vmean/(ndraw-nomit)
 V = In/vmean
 
@@ -187,7 +208,7 @@ results$rmax = rmax
 results$rmin = rmin
 
 
-detach()
+detach(pprior)
 return(results)
 
 }###end of far_g
