@@ -307,7 +307,7 @@ xpWy = t(x)%*%Wy;
           ys = y - rho*Wy;          
           b = t(x)%*%ys + sige*TIc;
           b0 = solve((xpx + sige*TI),b);
-          bhat = mvrnorm(1, b0, Sigma); #norm_rnd(sige*AI) + b0;  
+          bhat = mvrnorm(1, b0, sige*AI); #norm_rnd(sige*AI) + b0;  
           xb = x%*%bhat;
           
           ##% update sige

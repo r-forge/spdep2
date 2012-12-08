@@ -1,6 +1,7 @@
 ## test file
 
 library(Matrix)
+library(MASS)
 source('parse.R')
 source('utils.R')
 
@@ -24,7 +25,7 @@ ndraw=150
 nomit=30
 source('sem_g.R')
 results<-sem_g(y, x, W, ndraw, nomit, prior)
-plot(results$pdraw, type="l", main="rho")
+plot(density(results$pdraw), type="l", main="rho")
 summary(results$pdraw)
 
 
@@ -38,9 +39,8 @@ n<-nrow(W)
 x<-cbind(rep(1, n), rnorm(n))
 
 
-y<-cbind(x, W%*%x[,-1])%*%matrix(c(0,5,10), ncol=1)
-y<-matrix(y+rnorm(n), ncol=1)
-y<-solve(diag(nrow(W))-0.4*W)%*%y
+y<-matrix(rnorm(n), ncol=1)
+y<-x%*%matrix(c(5,10), ncol=1) +2*solve(diag(nrow(W))-0.4*W, y)
 
 
 
@@ -48,17 +48,23 @@ y<-solve(diag(nrow(W))-0.4*W)%*%y
 #Heteroc.  model
 prior<-prior_parse(NULL, k=2)
 prior$novi_flag<-0
-results<-sem_g(y, x, W, 150, 50, prior)
-plot(results$pdraw, type="l", main="rho")
+prior$rmin<-.01
+prior$rmax<-.99
+results<-sem_g(y, x, W, 1500, 500, prior)
+plot(density(results$pdraw), type="l", main="rho")
 summary(results$pdraw)
+summary(results$sdraw)
+summary(results$bdraw)
 
 
 
 ##Homoc. model
 prior$novi_flag<-1
-results1<-sem_g(y, x, W, 150, 50, prior)
-plot(results1$pdraw, type="l", main="rho")
+results1<-sem_g(y, x, W, 1500, 500, prior)
+plot(density(results1$pdraw), type="l", main="rho")
 summary(results1$pdraw)
+summary(results1$sdraw)
+summary(results1$bdraw)
 
 
 
@@ -74,25 +80,25 @@ x<-model.matrix(hr0)
 xlag<-cbind(x, W%*%x[,-1])
 
 prior<-prior_parse(NULL, k=ncol(x))
-prior$novi_flag<-0
+prior$novi_flag<-1
 prior$metflag<-1
+prior$rmin<-.01
+prior$rmax<-.99
 
 resultsx<-sem_g(y, x, W, 3000, 1000, prior)
-#plot(results$pdraw, type="l", main="rho")
 plot(density(resultsx$pdraw), type="l", main="rho")
 summary(resultsx$pdraw)
 cbind(apply(resultsx$bdraw, 2, mean), apply(resultsx$bdraw, 2, sd))
 
 #With lagged covariates
 prior<-prior_parse(NULL, k=ncol(xlag))
-prior$novi_flag<-0
+prior$novi_flag<-1
 prior$metflag<-1
 resultsxlag<-sem_g(y, xlag, W, 3000, 1000, prior)
-#plot(results$pdraw, type="l", main="rho")
 plot(density(resultsxlag$pdraw), type="l", main="rho")
 summary(results$pdraw)
-apply(resultsxlag$bdraw, 2, mean)
-apply(resultsxlag$bdraw, 2, mean)
+cbind(apply(resultsxlag$bdraw, 2, mean), apply(resultsxlag$bdraw, 2, sd))
+
 
 
 

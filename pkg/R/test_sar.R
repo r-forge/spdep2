@@ -1,6 +1,7 @@
 ## test file
 
 library(Matrix)
+library(MASS)
 source('parse.R')
 source('utils.R')
 
@@ -79,7 +80,7 @@ x<-model.matrix(hr0)
 xlag<-cbind(x, W%*%x[,-1])
 
 prior<-prior_parse(NULL, k=ncol(x))
-prior$novi_flag<-0
+prior$novi_flag<-1
 prior$metflag<-1
 
 resultsx<-sar_g(y, x, W, 3000, 1000, prior)
@@ -90,7 +91,7 @@ cbind(apply(resultsx$bdraw, 2, mean), apply(resultsx$bdraw, 2, sd))
 
 #With lagged covariates
 prior<-prior_parse(NULL, k=ncol(xlag))
-prior$novi_flag<-0
+prior$novi_flag<-1
 prior$metflag<-1
 resultsxlag<-sar_g(y, xlag, W, 3000, 1000, prior)
 #plot(results$pdraw, type="l", main="rho")
