@@ -19,7 +19,7 @@ d0 = 0;
 a1 = 1.01;
 a2 = 1.01;
 c = matrix(rep(0,k),k,1); #defuse prior for beta
-T = diag(k)*1e+12; ## Abhirup: ??
+Tbeta = diag(k)*1e+12; ## Abhirup: ??
 prior_beta = 0;   #% flag for diffuse prior on beta
 novi_flag = 0; #% do vi-estimates
 inform_flag = 0;
@@ -65,259 +65,7 @@ if(length(prior$lflag)!=0){
 if(length(prior$order)!=0) order=prior$order
 if(length(prior$iter)!=0) iter=prior$iter
 if(length(prior$eig)!=0) eflag=prior$eig
-return (c(nu,d0,rval,mm,kk,rho,sige,rmin,rmax,detval,ldetflag,eflag,order,iter,novi_flag,c,T,inform_flag,a1,a2))
-}
-
-sar_eigs <- function(eflag,W,rmin,rmax,n){
-if (eflag == 1){
-lambda = max(eigen(W)$values)  ##sparse to be used 
-rmin = 1/lambda   
-rmax = 1
-time2 = 0 
-}
-}
-
-### functions for supporting lndet ###
-## reused code from far_g ##
-
-lndetint <- function(wsw,rmin=0,rmax=1){
-c=wsw;
-
-n=dim(c)[1];
-s1=diag(n);
-z=s1-.1*c;
-p=colamd(z); ##colmad in R ?
-#%this is the symmetric minimum degree ordering
-
-
-iter=100;
-alphavec=((1:iter)-1)/iter;
-##%selecting points to use for the interpolation
-alphaselect=c( 10, 20, 40, 50, 60,  70,  80, 85, 90, 95, 96, 97, 98, 99, 100);
-itersub=length(alphaselect);
-
-detsub=matrix(rep(0,itersub),itersub,1);
-for (i in 1:itersub) {
-alpha=alphavec[alphaselect[i]];
-z=s1-alpha*c;
-out=lu(z[,p]); ##lu()
-l=out$l
-r=out$r
-#%LU decomposition
-detsub[i]=sum(log(abs(diag(u))));
-}
-
-#%stores grid and log-determinant for later use
-#%interpolating for finer grid of alpha
-out <- list()
-#out$lndet = interp1(c(0,t(alphavec(alphaselect)),c(0,detsub),alphavec,'spline'); ## interp1 in R ? and t() on that?
-out$rho = t(alphavec);
-return(out)
-}
-
-lndetfull <- function(W,lmin,lmax){
-rvec = seq(lmin,lmax,by=0.01);
-##spparms('tight'); ## Abhirup: in R?
-n  = dim(W)[1];
-z = diag(n) - 0.1*W; #ommited speye
-p = colamd(z); ## colamd in R?
-niter = length(rvec); 
-dettmp = matrix(rep(0,2*niter),niter,2);
-for (i in 1:niter) {
-    rho = rvec[i];
-    z = diag(n) - rho*W; #speye(n) - rho*sparse(W);
-    out = lu(z[,p]); ##lu()
-    l=out$l
-    u=out$r
-    dettmp[i,1] = rho;
-    dettmp[i,2] = sum(log(abs(diag(u))));
-}
-out <- list()
-out$lndet = dettmp[,2];
-out$rho = dettmp[,1];
-return(out)
-}
-
-lndetmc <- function(order,iter,wsw,rmin,rmax){
-n=nrow(wsw);#VIRGILIO:Fixed this ,##ABHIRUP: Changed this.
-
-# Exact moments from 1 to oexact
-td=c(0,sum(sum(wsw^2))/2)  ## full in R??
-oexact=length(td)
-
-o=order
-### Stochastic moments
-
-mavmomi=matrix(rep(0,o*iter),o,iter)
-for (j in 1:iter){ 
-u=rnorm(n)
-v=u
-utu=t(u)%*%u
-for (i in 1:o){
-v=wsw%*%(v)
-mavmomi[i,j]=n*((t(u)%*%v)/(i*utu))
-}
-}
-
-#mavmomi[1:oexact,]=td[,rep(1,iter)] # ABHIRUP: is this allright?? dimentions doesn't match...
-
-###averages across iterations
-avmomi=t(mean(t(mavmomi)))
-
-
-
-###%alpha matrix
-
-alpha=seq(rmin,rmax,0.01)
-#valpha=vander(alpha); VIRGILIO: COmpute Vandermonde matrix
-valpha = vandermonde.matrix(alpha, length(alpha))#From package 'matrixcalc'
-
-#valphaf=fliplr(valpha); VIRGILIO: Flip matrix columns left to right
-valphaf = valpha[, ncol(valpha):1]
-
-alomat=-valphaf[,c(2:(o+1))]  #Abhirup: error: incorrect no of dimentions?
-
-##%Estimated ln|I-aD| using mixture of exact, stochastic moments
-##%exact from 1 to oexact, stochastic from (oexact+1) to o
-
-lndetmat=alomat%*%avmomi
-
-
-##%standard error computations
-srvs=t(alomat%*%mavmomi)
-sderr=t(sqrt((mean(srvs*srvs)-mean(srvs)^2)/iter))
-
-##%lower bound computation
-fbound=t((n*alpha^(o+1))/((o+1)%*%(1-alpha+eps)))
-
-##%confidendence limits, with lower biased downward (more conservative)
-low95=(lndetmat-1.96*sderr-fbound)
-high95=(lndetmat+1.96*sderr)
-
-##%AR parameter, lower confidence limit, estimated log-det, upper confidence limit
-##% confide=[alpha'  low95 lndetmat high95];
-out <- list()
-out$rho = t(alpha)
-out$lndet = lndetmat
-out$up95 = high95
-out$lo95 = low95
-return (out)
-}
-
-######### lndet
-sar_lndet <- function(ldetflag,W,rmin,rmax,detval,order,iter){
-if (ldetflag == 0){ ##% no approximation
-#t0 = clock;    
-t0=0
-out = lndetfull(W,rmin,rmax); ###lndetful to be used
-#time1 = etime(clock,t0);
-time1=0
-tt=seq(rmin,rmax,by=.001); ##% interpolate a finer grid
-outi = interp1(out$rho,out$lndet,t(tt),'spline'); ##Abhirup: interp1 in R??
-detval = c(t(tt),outi)
-}    
-
-if(ldetflag == 1){ ## % use Pace and Barry, 1999 MC approximation
-##t0 = clock;    
-out = lndetmc(order,iter,W,rmin,rmax)##lndetmc to be used
-time1 = 0
-results$limit = c(out$rho, out$lo95, out$lndet, out$up95);	
-tt=seq(rmin,rmax,by=0.001) ## % interpolate a finer grid
-outi = interp1(out$rho,out$lndet,t(tt)) ## spline fitting using out.rho,out.lndet,t(tt) ?? VIRGILIO: We'll check this option later
-detval = c(t(tt), outi)
-}
-
-if (ldetflag == 2){ ##% use Pace and Barry, 1998 spline interpolation
-
-#t0 = clock;
-out = lndetint(W,rmin,rmax);
-time1 = 0
-tt=seq(rmin,rmax,by=.001); ##% interpolate a finer grid
-outi = interp1(out$rho,out$lndet,t(tt),'spline'); ##interp1
-detval = c(t(tt),outi);
-}
-#if(ldetflag == -1){ #% the user fed down a detval matrix
-#    time1 = 0;
-#        #% check to see if this is right
-#        if( detval == 0){
-#            print('far_g: wrgon lndet input argument');
-#        }
-#        n1 = dim(detval)[1];
-#	n2 = dim(detval)[2];
-#        if (n2 ~= 2){
-#            error('far_g: wrong sized lndet input argument');
-#        elseif n1 == 1
-#            error('far_g: wrong sized lndet input argument');
-#        end;
-#}     
-return (list(detval,time1))    
-}
-
-draw_rho <- function(detval,epe0,eped,epe0d,n,k,rho,a1,a2){
-nmk = (n-k)/2
-nrho = length(detval[,1])
-iota = matrix(rep(1,nrho),nrho,1);
-
-z = epe0%*%iota - 2*detval[,1]%*%epe0d + detval[,1]*detval[,1]%*%eped;
-den = detval[,2] - nmk*log(z)
-bprior = dbeta(detval[,1],a1,a2)#VIRGILIO: Changed this
-den = den + log(bprior)
-
-n = length(den)
-y = detval[,1]
-adj = max(den)
-den = den - adj
-x = exp(den)
-
-## trapezoid rule
-isum = sum((y[2:n,1] + y[1:n-1,1])*(x[2:n,1] - x[1:n-1,1])/2)
-z = abs(x/isum)
-den = cumsum(z)
-
-rnd = runif(1)*sum(z)
-ind = which(den <= rnd)
-idraw = max(ind)
-if (idraw > 0 & idraw < nrho) rho = detval[idraw,1]
-}
-
-sar_marginal <- function(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,logdetx,a1,a2){
-n = length(detval)
-nmk = (nobs-nvar)/2
-bprior = dbeta(detval[,1],a1,a2)#VIRGILIO: Changed this
-C = log(bprior) + lgamma(nmk) - nmk*log(2*pi)
-iota = matrix(rep(1,n),n,1)
-z = epe0*iota - 2*detval[,1]*epe0d + detval[,1]*detval[,1]*eped
-den =  detval[,2] - nmk*log(z)
-##den = real(den)
-out = C + den;
-return(out)
-}
-
-sar_marginal2 <- function(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,a1,a2,c,TI,xs,ys,sige,W){
-n = length(detval)
-nmk = (nobs-nvar)/2
-bprior = dbeta(detval[,1],a1,a2)#VIRGILIO: Changed this
-C = log(bprior) + lgamma(nmk) - nmk*log(2*pi)
-iota = matrix(rep(1,n),n,1)
-z = epe0*iota - 2*detval[,1]*epe0d + detval[,1]*detval[,1]*eped
-Q1 = matrix(rep(0,n),n,1);
-Q2 = matrix(rep(0,n),n,1);
-xpxi = inv(t(xs)%*%xs);
-sTI = sige%*%TI;
-xpxis = inv(t(xs)%*%xs + sTI);
-logdetx = log(det(xpxis));
-C = C - 0.5*logdetx;
-          for (i in 1:n){
-           rho = detval[i,1];
-           D = diag(nobs) - rho*W;	#speye
-           bhat = xpxi%*%(t(xs)%*%D%*%ys);
-           beta = xpxis%*%(t(xs)%*%D%*%ys + sTI%*%c); 
-           Q1(i,1) = t(c - beta)%*%sTI%*%(c - beta);
-           Q2(i,1) = t(bhat - beta)%*%(t(xs)%*%xs)%*%(bhat - beta);
-          }
-
-den = C + detval[,2] - nmk*log(z + Q1 + Q2);
-return(den)
+return (c(nu,d0,rval,mm,kk,rho,sige,rmin,rmax,detval,ldetflag,eflag,order,iter,novi_flag,c,Tbeta,inform_flag,a1,a2))
 }
 
 #### start sar_g #####
@@ -347,7 +95,7 @@ results$y = y;
 #end;
 
 #[nu,d0,rval,mm,kk,rho,sige,rmin,rmax,detval,ldetflag, ...
-#eflag,order,iter,novi_flag,c,T,inform_flag,a1,a2] = sar_parse(prior,k);
+#eflag,order,iter,novi_flag,c,Tbeta,inform_flag,a1,a2] = sar_parse(prior,k);
     
 temp=sar_parse(prior,k)
 nu=temp[1]
@@ -366,7 +114,7 @@ order=temp[13]
 iter=temp[14]
 novi_flag=temp[15]
 c=temp[16]
-T=temp[17]
+Tbeta=temp[17]
 inform_flag=temp[18]
 a1=temp[19]
 a2=temp[20]
@@ -406,13 +154,13 @@ a2=temp[20]
 
 #timet = clock; % start the timer
 
-out_temp = sar_eigs(eflag,W,rmin,rmax,n)
+out_temp = set_eigs(eflag,W,rmin,rmax,n)
 rmin=out_temp$rmin
 rmax=out_temp$rmax
 time1=out_temp$time1
 #results$time1 = time1;
 
-out_temp = sar_lndet(ldetflag,W,rmin,rmax,detval,order,iter)
+out_temp = set_lndet(ldetflag,W,rmin,rmax,detval,order,iter)
 detval=out_temp$detval
 time2=out_temp$time2
 #results$time2 = time2;
@@ -432,7 +180,7 @@ vmean= matrix(rep(0,n),n,1)
 #% ====== initializations
 #% compute this stuff once to save time
 
-TI = solve(T);
+TI = solve(Tbeta);
 TIc = TI%*%c;
 
 In = matrix(rep(0,n),n,1);
@@ -483,8 +231,10 @@ iter = 1;
           
           
       #% we use griddy Gibbs to perform rho-draw
-          b0 = (t(xs)%*%xs + sige%*%TI )\(t(xs)%*%ys + sige%*%TIc);
-          bd = (t(xs)%*%xs + sige%*%TI)\(t(xs)%*%Wys + sige%*%TIc);
+#          b0 = (t(xs)%*%xs + sige%*%TI )\(t(xs)%*%ys + sige%*%TIc);
+#          bd = (t(xs)%*%xs + sige%*%TI)\(t(xs)%*%Wys + sige%*%TIc);
+          b0 = solve( (t(xs)%*%xs + sige%*%TI ), (t(xs)%*%ys + sige%*%TIc) );
+          bd = solve( (t(xs)%*%xs + sige%*%TI), (t(xs)%*%Wys + sige%*%TIc) );
           e0 = ys - xs%*%b0;
           ed = Wys - xs%*%bd;
           epe0 = t(e0)%*%e0;
@@ -501,6 +251,8 @@ iter = 1;
     	if (mm != 0)   rsave(iter-nomit,1) = rval
     	         
     }
+
+}
                     
 iter = iter + 1; 
 ##waitbar(iter/ndraw);         
@@ -586,44 +338,50 @@ nobs = n;
 rv=matrix(rnorm(nobs*uiter),nobs,uiter);
 tracew=matrix(rep(0,maxorderu),maxorderu,1);
 wjjju=rv;
-for (jjj=1:maxorderu){
+for (jjj in 1:maxorderu){
     wjjju=W%*%wjjju;
-    tracew[jjj]=mean(mean(rv*wjjju));
+#    tracew[jjj]=mean(mean(rv*wjjju));
+    tracew[jjj, 1]=mean(apply(rv*wjjju, 2, mean));
     
 }
 
 traces=tracew;
 traces[1]=0;
-traces[2]=sum(sum(t(W)*W))/nobs;
+traces[2]=sum(t(W)%*%W)/nobs;
 trs=matrix(c(1,traces));
 ntrs=length(trs);
 trbig=t(trs);
                  
         if (cflag == 1){
-        bdraws = bsave[:,2:length(bsave));
+        bdraws = bsave[,2:length(bsave)];
         }
 	if(cflag == 0){
         bdraws = bsave;
         }
         pdraws = psave;
 
-        ree = 0:ntrs-1;
+        ree = 0:(ntrs-1);
 
         rmat = matrix(rep(0,ntrs),1,ntrs);####three dimentional matrix in R??
-        total = matrix(rep(0,(ndraw-nomit)*p*ntrs)),ndraw-nomit,p,ntrs);
-        direct = zeros(ndraw-nomit,p,ntrs);
-        indirect = zeros(ndraw-nomit,p,ntrs);
+#        total = matrix(rep(0,(ndraw-nomit)*p*ntrs)),ndraw-nomit,p,ntrs);
+        total = array(rep(0,(ndraw-nomit)*p*ntrs),dim=c(ndraw-nomit,p,ntrs));
+#        direct = zeros(ndraw-nomit,p,ntrs);
+        direct = array(rep(0,(ndraw-nomit)*p*ntrs),dim=c(ndraw-nomit,p,ntrs));
+#        indirect = zeros(ndraw-nomit,p,ntrs);
+        indirect = array(rep(0,(ndraw-nomit)*p*ntrs),dim=c(ndraw-nomit,p,ntrs));
         
-for i=1:ndraw-nomit;
-    rmat = pdraws(i,1).^ree;
-    for j=1:p;
-            beta = [bdraws(i,j)];
-            total(i,j,:) = beta(1,1)*rmat;
-    direct(i,j,:) = (beta*trbig).*rmat;
-    indirect(i,j,:) = total(i,j,:) - direct(i,j,:);
-    end;
+for (i in 1:(ndraw-nomit))
+{
+    rmat = pdraws(i,1)^ree;#VIRGILIO: Check this
+    for (j in 1:p)
+	{
+            bbeta = bdraws(i,j);#VIRGILIO: Check this
+            total[i,j,] = bbeta[1,1]*rmat;
+    direct[i,j,] = (bbeta*trbig)*rmat;
+    indirect[i,j,] = total[i,j,] - direct[i,j,];
+    }
 
-end;
+}
 #### ?? ###
 #time4 = etime(clock,t0);
 #results.time4 = time4;
@@ -639,8 +397,8 @@ V = In/vmean;
 
 
 results$sige = sige;
-nobs=dim(x)$1
-nvar=dim(x)$2
+nobs=dim(x)[1]
+nvar=dim(x)[2]
 #[nobs,nvar] = size(x);
           xs = matmul(x,sqrt(V));
           ys = sqrt(V)*y;
@@ -655,9 +413,9 @@ nvar=dim(x)$2
           epe0d = t(ed)%*%e0;
  logdetx = log(det(t(xs)%*%xs + sige%*%TI));
   if (inform_flag == 0){
-   mlike = sar_marginal(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,logdetx,a1,a2);}
+   mlike = rho_marginal(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,logdetx,a1,a2);}
   if(inform_flag == 1){
-   mlike = sar_marginal2(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,logdetx,a1,a2,c,TI,xs,ys,sige,W);
+   mlike = rho_marginal2(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,logdetx,a1,a2,c,TI,xs,ys,sige,W);
   }
  yhat = solve((diag(rep(1,nobs)) - rho*W),(x%*%beta));
  e = y - yhat;
@@ -681,9 +439,9 @@ results$meth  = 'sar_g';
 results$total = total;
 results$direct = direct;
 results$indirect = indirect;
-results$beta_std = std(bsave)';
-results$sige_std = std(ssave);
-results$rho_std = std(psave);
+results$beta_std = apply(bsave, 2, sd);
+results$sige_std = sd(ssave);
+results$rho_std = sd(psave);
 results$beta = beta;
 results$rho = rho;
 results$bdraw = bsave;
@@ -694,7 +452,7 @@ results$vmean = vmean;
 results$yhat  = yhat;
 results$resid = e;
 results$bmean = c;
-results$bstd  = sqrt(diag(T));
+results$bstd  = sqrt(diag(Tbeta));
 results$ndraw = ndraw;
 results$nomit = nomit;
 results$time  = time;
@@ -702,7 +460,7 @@ results$nu = nu;
 results$d0 = d0;
 results$a1 = a1;
 results$a2 = a2;
-results$tflag = 'plevel';
+results$tflag = "plevel";
 results$rmax = rmax; 
 results$rmin = rmin;
 results$lflag = ldetflag;
@@ -713,11 +471,12 @@ results$priorb = inform_flag;
 if (mm!= 0){
 results$rdraw = rsave;
 results$m     = mm;
-results$k     = kk;}
-if(mm==0){
+results$k     = kk;
+}
+else
+{
 results$r     = rval;
 results$rdraw = 0;
 }
 }#### end of sar_g
-
 
