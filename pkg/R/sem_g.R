@@ -4,41 +4,52 @@ sem_g <-function(y,x,W,ndraw,nomit,prior){
 
 results <- list()
 
-n = dim(y)[1];
+n = nrow(y)
+#junk=ncol(y)
 results$y=y
-n1=dim(x)[1]
-k=dim(x)[2]
-n3=dim(W)[1]
-n4=dim(W)[2]
 
-temp=prior_parse(prior,k=k)
-attach(temp)
+n1=nrow(x)
+k=ncol(x)
+n3=nrow(W)
+n4=ncol(W)
+
+if(n1!=n)
+	stop("sem_g: x-matrix constains wrong number of observations")
+if(n3!=n4)
+	stop("sem_g: W matrix is not square")
+if(n3!=n)
+	stop("sem_g: W matrix is not the same size at y,x")
+
+pprior=prior_parse(prior,k=k)
+attach(pprior)
 
 results$order=order
 results$iter=iter
 
-#ommitted: error checking
+checkk<-nrow(c_beta)
+junk<-ncol(c_beta)
 
-V=matrix(rep(1,n),n,1)
-In=matrix(rep(1,n),n,1)
-ys=y*sqrt(V)
-vi=In
+if((checkk!=k) | ()unk!=1)
+	stop("sem_g: prior means are wrong")
 
-bsave=matrix(rep(0,(ndraw-nomit)*k),ndraw-nomit,k) ## changed from 1 to k
-ssave=matrix(rep(0,(ndraw-nomit)),ndraw-nomit,1)
-psave=matrix(rep(0,(ndraw-nomit)),ndraw-nomit,1)
-vmean=matrix(rep(1,n),n,1)
-yhat=matrix(rep(1,n),n,1)
+#V=matrix(1, n,1)
+#In=matrix(1, n,1)
+#vi=In
 
-acc_rate=matrix(rep(0,ndraw),ndraw,1)
+bsave=matrix(0, ndraw-nomit, k) ## changed from 1 to k
+ssave=matrix(0, ndraw-nomit, 1)
+psave=matrix(0, ndraw-nomit, 1)
+vmean=matrix(1, n, 1)
+yhat=matrix(1, n, 1)
+
+acc_rate=matrix(0, ndraw,1)
 
 if(mm!=0)	
-	rsave=matrix(rep(1,ndraw-nomit),ndraw-nomit,1)
+	rsave=matrix(0, ndraw-nomit,1)
 
-out_temp = set_eigs(eflag,W,rmin,rmax,n);
-
-rmin=out_temp$rmin
-rmax=out_temp$rmax
+temp = set_eigs(eflag,W,rmin,rmax,n);
+rmin=temp$rmin
+rmax=temp$rmax
 
 detval = set_lndet(ldetflag,W,rmin,rmax,detval,order,iter);
 
@@ -47,8 +58,9 @@ detval = set_lndet(ldetflag,W,rmin,rmax,detval,order,iter);
 TI = solve(Tbeta);
 TIc = TI%*%c_beta; ##name changed from c to c_beta for less ambiguity
 iter = 1;
-#In = matrix(rep(1,n),n,1);  ##name changed in to In
+In = matrix(1, n,1);  ##name changed in to In
 V = In;
+ys=y*sqrt(V)
 Wy=W%*%y
 Wx=W%*%x
 vi=In
@@ -65,14 +77,14 @@ while (iter <= ndraw){ #% start sampling;
 	#% update beta   
 	xs = matmul(sqrt(V),x);
 	ys = sqrt(V)*y;		
-	Wxs = W%*%xs;
-    Wys = W%*%ys;
-    xss = xs - rho*Wxs;
-    AI = solve(t(xss)%*%xss+as.numeric(sige)*TI)
-    yss = ys - rho*Wys;
-	b = t(xss)%*%yss + as.numeric(sige)*TIc;
+ 	Wxs = W%*%xs;
+        Wys = W%*%ys;
+        xss = xs - rho*Wxs;
+        AI = solve(t(xss)%*%xss+sige*TI)
+        yss = ys - rho*Wys;
+	b = t(xss)%*%yss + sige*TIc;
 	b0 = AI%*%b;
-	bhat = norm_rnd(as.numeric(sige)*AI) + b0; 
+	bhat = mvrnorm(b0, sige*AI); 
 	
 	#update sige:
 	
@@ -80,8 +92,8 @@ while (iter <= ndraw){ #% start sampling;
 	e = yss-xss%*%bhat;
 	ed = e - rho*W%*%e;
 	d1 = 2*d0 + t(ed)%*%ed;
-	chi = chis_rnd(1,nu1);
-	sige = d1/chi;
+	chi = rchisq(1,nu1);
+	sige = as.numeric(d1/chi);
 	
 	#update vi when novi_flag==0
 	if(novi_flag==0){
@@ -89,11 +101,12 @@ while (iter <= ndraw){ #% start sampling;
 		ev = ys - xs%*%bhat; 
 		#chiv = chis_rnd(n,rval+1);  
 		chiv = matrix(rchisq(n,rval+1),n,1); 
-		vi = ((ev*ev/as.numeric(sige)) + In*rval)/chiv; 
+		vi = ((ev*ev/sige) + In*rval)/chiv; 
 		V = In/vi; 
 					
 		#% update rval
-		if (mm != 0)   rval = rgamma(1,mm,1/kk);  
+		if (mm != 0)   
+			rval = rgamma(1,shape=mm,rate=kk);  
 	  }
 	if(metflag==0)
 	{
@@ -114,13 +127,13 @@ while (iter <= ndraw){ #% start sampling;
 		}
 		rhoy = c_rho_sem(rho2,y,x,bhat,sige,W,detval,V,a1,a2);
 		ru = runif(1);
-		if(exp(rhoy-rhox)>1)	
-			p=1
-		else
-		{
+#		if(exp(rhoy-rhox)>1)	
+#			p=1
+#		else
+#		{
 			ratio=exp(rhoy-rhox)
 			p=min(1,ratio)
-		}
+#		}
 		if(ru<p)
 		{
 			rho=rho2
@@ -140,7 +153,8 @@ while (iter <= ndraw){ #% start sampling;
 		ssave[iter-nomit,1] = sige;
 		psave[iter-nomit,1] = rho;
 		vmean = vmean + vi;
-		if(mm!=0)	rsave[iter-nomit,1]=rval
+		if(mm!=0)	
+			rsave[iter-nomit,1]=rval
 	}
 	iter=iter+1
 }
@@ -154,8 +168,8 @@ ys = y*sqrt(V);
 xs = matmul(x,sqrt(V));
 Wys = W%*%ys;
 Wxs = W%*%xs;	
-nobs=dim(x)[1]
-nvar=dim(x)[2]	
+nobs=nrow(xs)
+nvar=nrow(xs)	
 
 if (mlog == 1)
 	{
@@ -169,8 +183,8 @@ if (mlog == 1)
     }
 }
 
-n=dim(x)[1]
-nvar=dim(x)[2]
+n=nrow(x)
+nvar=ncol(x)
 yhat=x%*%bmean
 y=results$y
 n=length(y)
@@ -227,6 +241,8 @@ else
 	results$r=rval
 	results$rdraw=0
 	}
+
+detach(pprior)
 return(results)
 }	
 
