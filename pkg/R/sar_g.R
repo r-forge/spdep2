@@ -251,7 +251,7 @@ if (novi_flag==0){
                         
           #% update rval
           if (mm != 0)   
-		rval = dgamma(1, shape=mm, rate=kk)#gamm_rnd(1,1,mm,kk);  
+		rval = rgamma(1, shape=mm, rate=kk)#gamm_rnd(1,1,mm,kk);  
           
       #% we use griddy Gibbs to perform rho-draw
 #          b0 = (t(xs)%*%xs + sige%*%TI )\(t(xs)%*%ys + sige%*%TIc);
