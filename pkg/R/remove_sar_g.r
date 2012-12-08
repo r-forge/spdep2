@@ -483,8 +483,10 @@ iter = 1;
           
           
       #% we use griddy Gibbs to perform rho-draw
-          b0 = (t(xs)%*%xs + sige%*%TI )\(t(xs)%*%ys + sige%*%TIc);
-          bd = (t(xs)%*%xs + sige%*%TI)\(t(xs)%*%Wys + sige%*%TIc);
+#          b0 = (t(xs)%*%xs + sige%*%TI )\(t(xs)%*%ys + sige%*%TIc);
+#          bd = (t(xs)%*%xs + sige%*%TI)\(t(xs)%*%Wys + sige%*%TIc);
+          b0 = solve( (t(xs)%*%xs + sige%*%TI ), (t(xs)%*%ys + sige%*%TIc) );
+          bd = solve( (t(xs)%*%xs + sige%*%TI), (t(xs)%*%Wys + sige%*%TIc) );
           e0 = ys - xs%*%b0;
           ed = Wys - xs%*%bd;
           epe0 = t(e0)%*%e0;
