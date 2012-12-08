@@ -29,7 +29,7 @@ results$iter=iter
 checkk<-nrow(c_beta)
 junk<-ncol(c_beta)
 
-if((checkk!=k) | ()unk!=1)
+if((checkk!=k) | (junk!=1))
 	stop("sem_g: prior means are wrong")
 
 #V=matrix(1, n,1)
@@ -84,7 +84,7 @@ while (iter <= ndraw){ #% start sampling;
         yss = ys - rho*Wys;
 	b = t(xss)%*%yss + sige*TIc;
 	b0 = AI%*%b;
-	bhat = mvrnorm(b0, sige*AI); 
+	bhat = mvrnorm(1, b0, sige*AI); 
 	
 	#update sige:
 	
