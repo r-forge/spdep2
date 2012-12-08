@@ -79,7 +79,8 @@ draw_rho <-function(detval,epe0,eped,epe0d,n,k,rho,a1=1.01,a2=1.01){
 	rnd = runif(1)*sum(z)
 	ind = which(den <= rnd)
 	idraw = max(ind)
-	if (idraw > 0 & idraw < nrho) rho = detval[idraw,1]#FIXME: This sometimes fail...
+	if (idraw > 0 & idraw < nrho) 
+		rho = detval[idraw,1]#FIXME: This sometimes fail...
 
 	return(rho)
 }	
@@ -416,25 +417,26 @@ return(den)
 #Abhirup: added matmul here
 
 matmul <-function(x,y){
-rx = dim(x)[1];
-cx = dim(x)[2];
-ry = dim(y)[1];
-cy = dim(y)[2];
+rx = nrow(x)
+cx = ncol(x)
+ry = nrow(y)
+cy = ncol(y)
 
 if((cx == cy) & (rx == ry)){
   out = x*y
 }
+
 if ((cx == cy) & (rx == 1)){
-	out = y*matrix(rep(x,ry),ry,cy)
+	out = y*x[rep(1,ry),]#matrix(rep(x,ry),ry,cy, byrow=TRUE)
 }
 if ((cx == cy) & (ry == 1)){
-	out = x*matrix(rep(y,rx),rx,cx)
+	out = x*y[rep(1,rx),]#matrix(rep(y,rx),rx,cx, byrow=TRUE)
 }
 if ((rx == ry) & (cx == 1)){
-	out = y*matrix(rep(x,cy),ry,cy)
+	out = y*x[,rep(1,cy)]#matrix(rep(x,cy),ry,cy)
 }
 if ((rx == ry) & (cy == 1)){
-	out = x*matrix(rep(x,cx),rx,cx)
+	out = x*y[,rep(1,cx)]#matrix(rep(x,cx),rx,cx)
 }
 return(out)
 }
