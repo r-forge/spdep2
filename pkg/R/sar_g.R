@@ -283,7 +283,7 @@ xpWy = t(x)%*%Wy;
           ##% update beta   
           AI = solve((xpx + sige*TI),diag(rep(1,k)));        
           ys = y - rho*Wy;          
-          b = t(x)*ys + sige*TIc;
+          b = t(x)%*%ys + sige*TIc;
           b0 = solve((xpx + sige*TI),b);
           bhat = norm_rnd(sige*AI) + b0;  
           xb = x%*%bhat;
@@ -294,7 +294,7 @@ xpWy = t(x)%*%Wy;
           e = (ys - xb);
           d1 = 2*d0 + t(e)%*%e;
           chi = chis_rnd(1,nu1);
-          sige = d1/chi;
+          sige = as.numeric(d1/chi);
           
           ###% update rho using griddy Gibbs
           AI = solve((xpx + sige*TI),diag(rep(1,k)));
