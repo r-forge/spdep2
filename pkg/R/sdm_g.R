@@ -7,13 +7,13 @@ sdm_g <- function(y,x,W,ndraw,nomit,prior){
 ##############################################
 # ommitted: checking if the user handled the intercept term okay
 results <- list()
-n = dim(y)[1];
+n = nrow(y)
 
 if(sum(x[,1])!=n){
 	tst=apply(x, 2, sum)
 	ind=which(tst==n)
 	if(length(ind)>0){
-		error("sdm_g: intercept term must be in first column of the x-matrix")
+		stop("sdm_g: intercept term must be in first column of the x-matrix")
 	}
 	if(length(ind)==0){
 		xsdm=cbind(x,W%*%x)
@@ -22,31 +22,62 @@ if(sum(x[,1])!=n){
 		}
 	}
 	#if(sum(x[,1]==n)){
-	 if(sum(x[,1])==n){
-	xsdm=cbind(x,W%*%x[,2:ncol(W%*%x)])
+if(sum(x[,1])==n){
+	xsdm=cbind(x,W%*%x[,-1])
 	cflag=1
 	p=ncol(x)-1
-	}	
+}	
 
-nobs=dim(xsdm)[1]
-k=dim(xsdm)[2]
+nobs=nrow(xsdm)
+k=ncol(xsdm)
 
 results$nobs  = n;
 results$nvar  = k;
 results$y = y; 
 # ommitted: check no of parameters input
 
-temp=prior_parse(prior,k) 
-attach(temp)
+pprior=prior_parse(prior,k) 
+attach(pprior)
 
-#ommitted:  check if the user handled the intercept term okay
 #comment: some parameters are ommitted too
 
-n1=dim(W)[1]
-n2=dim(W)[2]
+n1=nrow(W)
+n2=ncol(W)
+
+results$cflag = cflag;
+results$p = p;
+
+if(n1!=n2)
+{
+        stop('sar_g: wrong size weight matrix W');
+}
+else
+{
+        if(n1!=n)
+                stop('sar_g: wrong size weight matrix W');
+}
+
+#    [nchk junk] = size(y);
+nchk <- nrow(y)
+if(nchk!=n)
+        stop('sar_g: wrong size y vector input');
 
 results$order = order;
 results$iter = iter;
+
+checkk<-nrow(c_beta)
+junk<-ncol(c_beta)
+
+if((checkk!=k) | (junk!=1))
+        stop("sem_g: prior means are wrong")
+
+
+checkk<-nrow(Tbeta)
+junk<-ncol(Tbeta)
+
+if((checkk!=k) | (junk!=1))
+        stop("sem_g: prior bcov is wrong")
+
 
 out_temp = set_eigs(eflag,W,rmin,rmax,n);
 rmin=out_temp$rmin
@@ -54,24 +85,24 @@ rmax=out_temp$rmax
 
 detval = set_lndet(ldetflag,W,rmin,rmax,detval,order,iter);
 
-bsave = matrix(rep(0,(ndraw-nomit)*k),ndraw-nomit,k);
+bsave = matrix(0,ndraw-nomit,k);
 if (mm!= 0){
-		rsave = matrix(rep(0,(ndraw-nomit)),ndraw-nomit,1)
+		rsave = matrix(0,ndraw-nomit,1)
 		}
-psave = matrix(rep(0,(ndraw-nomit)),ndraw-nomit,1)
-ssave = matrix(rep(0,(ndraw-nomit)),ndraw-nomit,1)
-vmean = matrix(rep(0,n),n,1)
-acc_rate = matrix(rep(0,ndraw),ndraw,1)
+psave = matrix(0,ndraw-nomit,1)
+ssave = matrix(0,ndraw-nomit,1)
+vmean = matrix(0,n,1)
+acc_rate = matrix(0,ndraw,1)
 
 ntrs = 101;
 
 #comment: initialisations
 
-TI = solve(T);
+TI = solve(Tbeta);
 TIc = TI%*%c_beta; ##name changed from c to c_beta for less ambiguity
 iter = 1;
 
-In = matrix(rep(1,n),n,1);  ##name changed in to In
+In = matrix(1,n,1);  ##name changed in to In
 V = In;
 vi = In;
 Wy = W%*%y;
@@ -86,36 +117,37 @@ iter = 1;
           xs = matmul(sqrt(V),x); ## code for matmul in support functions
           ys = sqrt(V)*y;
           Wys = sqrt(V)*Wy
-          AI = solve((t(xs)%*%xs + as.numeric(sige)*TI),diag(k))         
+          AI = solve((t(xs)%*%xs + as.numeric(sige)*TI))#,diag(k))         
           yss = ys - rho*Wys;          
           xpy = t(xs)%*%yss;
-          b = t(xs)%*%yss + as.numeric(sige)*TIc;
-          b0 = solve((t(xs)%*%xs + as.numeric(sige)*TI),b);
-          bhat = norm_rnd(as.numeric(sige)*AI) + b0;  
+          b = t(xs)%*%yss + sige*TIc;
+          b0 = solve((t(xs)%*%xs + sige*TI),b);
+          bhat = mvrnorm(b0, sige*AI)
           xb = xs%*%bhat; 
                     
           #% update sige
           nu1 = n + 2*nu; 
           e = (yss - xb);
           d1 = 2*d0 + t(e)%*%e;
-          chi = chis_rnd(1,nu1); ##code for chis_rnd
-          sige = d1/chi; 
+          chi = rchisq(1,nu1); ##code for chis_rnd
+          sige = as.numeric(d1/chi); 
 	  ## not present in homosc case.
 	  if(novi_flag==0){
 	  	#% update vi
           	ev = y - rho*Wy - x%*%bhat; 
           	#chiv = chis_rnd(n,rval+1);  
           	chiv = matrix(rchisq(n,rval+1),n,1); 
-          	vi = ((ev*ev/as.numeric(sige)) + In%*%rval)/chiv; 
+          	vi = ((ev*ev/sige) + In%*%rval)/chiv; 
           	V = In/vi; 
                         
           	#% update rval
-          	if (mm != 0)   rval = rgamma(1,mm,1/kk);  
+          	if (mm != 0)
+			rval = rgamma(1,shape=mm, rate=kk);  
           }
           
       #% we use griddy Gibbs to perform rho-draw
-          b0 = solve((t(xs)%*%xs + as.numeric(sige)*TI ),(t(xs)%*%ys + as.numeric(sige)*TIc));
-          bd = solve((t(xs)%*%xs + as.numeric(sige)*TI),(t(xs)%*%Wys + as.numeric(sige)*TIc));
+          b0 = solve((t(xs)%*%xs + sige*TI ),(t(xs)%*%ys + sige*TIc));
+          bd = solve((t(xs)%*%xs + sige*TI),(t(xs)%*%Wys + sige*TIc));
           e0 = ys - xs%*%b0;
           ed = Wys - xs%*%bd;
           epe0 = t(e0)%*%e0;
@@ -130,7 +162,8 @@ iter = 1;
         psave[iter-nomit,1] = rho;
         vmean = vmean + vi; 
 	if(novi_flag==0){
-		if (mm != 0)   rsave[iter-nomit,1] = rval
+		if (mm != 0)   
+			rsave[iter-nomit,1] = rval
 	}
    	         
     }
@@ -142,17 +175,17 @@ uiter=50;
 maxorderu=100;
 nobs = n;
 rv=matrix(rnorm(nobs*uiter),nobs,uiter);
-tracew=matrix(rep(0,maxorderu),maxorderu,1);
+tracew=matrix(0,maxorderu,1);
 wjjju=rv;
 for (jjj in 1:maxorderu){
     wjjju=W%*%wjjju;
-    tracew[jjj]=mean(mean(rv*wjjju));
-    
+    tracew[jjj]=mean(apply(rv*wjjju, 2, mean));
 }
+
 traces=tracew;
-traces[1]=0;
-traces[2]=sum(sum(t(W)*W))/nobs;
-trs=matrix(c(1,traces));
+traces[1,1]=0;
+traces[2,1]=sum(sum(t(W)*W))/nobs;
+trs=matrix(c(1,traces), ncol=1);
 ntrs=length(trs);
 trbig=t(trs);
 trbig2=matrix(c(trbig[1,2:ncol(trbig)],trbig[1,ncol(trbig)]))
@@ -166,7 +199,7 @@ if(cflag == 0){
 }
 pdraws = psave;
 ree = 0:(ntrs-1);
-rmat = matrix(rep(0,ntrs),1,ntrs);####three dimentional matrix in R??
+rmat = matrix(0,1,ntrs);####three dimentional matrix in R??
 total = array(0,c(ndraw-nomit,p,ntrs)) ;
 direct = array(0,c(ndraw-nomit,p,ntrs));	## 3D matrix in R
 indirect = array(0,c(ndraw-nomit,p,ntrs));
@@ -174,29 +207,29 @@ indirect = array(0,c(ndraw-nomit,p,ntrs));
 for (i in 1:(ndraw-nomit)){
     rmat = pdraws[i,1]^ree;
     for (j in 1:p){
-            beta = bdraws[i,j];
-            total[i,j,] = beta*rmat; ##used beta instead of beta[1,1]
-    direct[i,j,] = (beta*trbig)%*%rmat; ##%*%??
+            bbeta = c(bdraws[i,j], bdraws[i, j+p])
+            total[i,j,] = sum(bbeta)*rmat; ##used beta instead of beta[1,1]
+    direct[i,j,] = (bbeta%*%trmat)*rmat; ##%*%??
     indirect[i,j,] = total[i,j,] - direct[i,j,];
     }
 
 }
 
 bmean = apply(bsave, 2, mean);
-beta = t(bmean);
-rho = mean(psave);
-sige = mean(ssave);
+bbeta = t(bmean);
+rho = apply(psave, 2, mean);
+sige = apply(ssave, 2, mean);
+results$sige = sige;
 vmean = vmean/(ndraw-nomit);
 V = In/vmean;
-results$sige = sige;
 
 ### calculate log marginal likelihood
 
-nobs=dim(x)[1]
-nvar=dim(x)[2]
+nobs=nrow(x)
+nvar=ncol(x)
 xs = matmul(x,sqrt(V));
 ys = sqrt(V)*y;
-Wys = W%*%ys;  ## sige %*% or * ??
+Wys = sqrt(V)*Wy
 AI = solve(t(xs)%*%xs + sige*TI);
 b0 = AI%*%(t(xs)%*%ys + sige*TIc);
 bd = AI%*%(t(xs)%*%Wys + sige*TIc);
@@ -213,7 +246,7 @@ logdetx = log(det(t(xs)%*%xs + sige*TI));
 		mlike = rho_marginal2(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,a1,a2,c_beta,TI,xs,ys,sige);#VIRGILIO: W is not needed
   }
   
-yhat = solve((diag(nobs) - rho*W),(x%*%t(beta)));
+yhat = solve((diag(nobs) - rho*W),(xs%*%t(bbeta)));
 e = y - yhat; 
 
 ## compute R squared
@@ -236,7 +269,7 @@ results$indirect = indirect;
 results$beta_std = t(apply(bsave,2,sd));
 results$sige_std = apply(ssave,2,sd);
 results$rho_std = apply(psave,2,sd);
-results$beta = beta;
+results$beta = bbeta;
 results$rho = rho;
 results$bdraw = bsave;
 results$pdraw = psave;
@@ -246,10 +279,10 @@ results$vmean = vmean;
 results$yhat  = yhat;
 results$resid = e;
 results$bmean = c_beta;
-results$bstd  = sqrt(diag(T));
+results$bstd  = sqrt(diag(Tbeta));
 results$ndraw = ndraw;
 results$nomit = nomit;
-results$time  = time;
+#results$time  = time;
 results$nu = nu;
 results$d0 = d0;
 results$a1 = a1;
@@ -270,6 +303,8 @@ if(mm==0){
 results$r     = rval;
 results$rdraw = 0;
 }
+
+detach(pprior)
 return(results)
 }
 
