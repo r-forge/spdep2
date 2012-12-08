@@ -97,27 +97,29 @@ results$y = y;
 #[nu,d0,rval,mm,kk,rho,sige,rmin,rmax,detval,ldetflag, ...
 #eflag,order,iter,novi_flag,c,Tbeta,inform_flag,a1,a2] = sar_parse(prior,k);
     
-temp=sar_parse(prior,k)
-nu=temp[1]
-d0=temp[2]
-rval=temp[3]
-mm=temp[4]
-kk=temp[5]
-rho=temp[6]
-sige=temp[7]
-rmin=temp[8]
-rmax=temp[9]
-detval=temp[10]
-ldetflag=temp[11]
-eflag=temp[12]
-order=temp[13]
-iter=temp[14]
-novi_flag=temp[15]
-c=temp[16]
-Tbeta=temp[17]
-inform_flag=temp[18]
-a1=temp[19]
-a2=temp[20]
+#temp=sar_parse(prior,k)
+temp=prior_parse(prior,k)
+attach(temp)
+#nu=temp[1]
+#d0=temp[2]
+#rval=temp[3]
+#mm=temp[4]
+#kk=temp[5]
+#rho=temp[6]
+#sige=temp[7]
+#rmin=temp[8]
+#rmax=temp[9]
+#detval=temp[10]
+#ldetflag=temp[11]
+#eflag=temp[12]
+#order=temp[13]
+#iter=temp[14]
+#novi_flag=temp[15]
+#c=temp[16]
+#Tbeta=temp[17]
+#inform_flag=temp[18]
+#a1=temp[19]
+#a2=temp[20]
 
 # check if the user handled the intercept term okay
 #    n = ncol(y)
@@ -157,12 +159,12 @@ a2=temp[20]
 out_temp = set_eigs(eflag,W,rmin,rmax,n)
 rmin=out_temp$rmin
 rmax=out_temp$rmax
-time1=out_temp$time1
+#time1=out_temp$time1
 #results$time1 = time1;
 
-out_temp = set_lndet(ldetflag,W,rmin,rmax,detval,order,iter)
-detval=out_temp$detval
-time2=out_temp$time2
+detval = set_lndet(ldetflag,W,rmin,rmax,detval,order,iter)
+#detval=out_temp$detval
+#time2=out_temp$time2
 #results$time2 = time2;
 
 results$order = order;
@@ -181,7 +183,7 @@ vmean= matrix(rep(0,n),n,1)
 #% compute this stuff once to save time
 
 TI = solve(Tbeta);
-TIc = TI%*%c;
+TIc = TI%*%c_beta;
 
 In = matrix(rep(0,n),n,1);
 V = In;
@@ -204,37 +206,37 @@ iter = 1;
           xs = matmul(x,sqrt(V)); ## code for matmul in support functions
           ys = sqrt(V)*y;
           Wys = sqrt(V)*Wy;
-          AI = solve((t(xs)%*%xs + sige%*%TI),diag(rep(1,k)));         
+          AI = solve((t(xs)%*%xs + sige*TI),diag(rep(1,k)));         
           yss = ys - rho*Wys;          
           xpy = t(xs)%*%yss;
-          b = t(xs)%*%yss + sige%*%TIc;
-          b0 = solve((t(xs)%*%xs + sige%*%TI),b);
-          bhat = norm_rnd(sige%*%AI) + b0; ##code for norm_rnd ?? check  
+          b = t(xs)%*%yss + sige*TIc;
+          b0 = solve((t(xs)%*%xs + sige*TI),b);
+          bhat = norm_rnd(sige*AI) + b0; ##code for norm_rnd ?? check  
           xb = xs%*%bhat; 
                     
           #% update sige
           nu1 = n + 2*nu; 
           e = (yss - xb);
-          d1 = 2*d0 + t(e)*e;
+          d1 = 2*d0 + t(e)%*%e;
           chi = chis_rnd(1,nu1); ##code for chis_rnd
-          sige = d1/chi; 
+          sige = as.numeric(d1/chi); 
 
 	  #% update vi
           ev = y - rho*Wy - x%*%bhat; 
           #chiv = chis_rnd(n,rval+1);  
           chiv = matrix(rchisq(n,rval+1),n,1); #% Statistics Toolbox function ##why not use this all the time ??
-          vi = ((ev*ev/sige) + In%*%rval)/chiv;
+          vi = (ev*ev/sige + In%*%rval)/chiv;
           V = In/vi; 
                         
           #% update rval
-          if (mm != 0)   rval = gamm_rnd(1,1,mm,kk);  
+          if (mm != 0)   rval = dgamma(1, shape=mm, rate=kk)#gamm_rnd(1,1,mm,kk);  
           
           
       #% we use griddy Gibbs to perform rho-draw
 #          b0 = (t(xs)%*%xs + sige%*%TI )\(t(xs)%*%ys + sige%*%TIc);
 #          bd = (t(xs)%*%xs + sige%*%TI)\(t(xs)%*%Wys + sige%*%TIc);
-          b0 = solve( (t(xs)%*%xs + sige%*%TI ), (t(xs)%*%ys + sige%*%TIc) );
-          bd = solve( (t(xs)%*%xs + sige%*%TI), (t(xs)%*%Wys + sige%*%TIc) );
+          b0 = solve( (t(xs)%*%xs + sige*TI ), (t(xs)%*%ys + sige*TIc) );
+          bd = solve( (t(xs)%*%xs + sige*TI), (t(xs)%*%Wys + sige*TIc) );
           e0 = ys - xs%*%b0;
           ed = Wys - xs%*%bd;
           epe0 = t(e0)%*%e0;
@@ -248,13 +250,13 @@ iter = 1;
         ssave[iter-nomit,1] = sige;
         psave[iter-nomit,1] = rho;
         vmean = vmean + vi; 
-    	if (mm != 0)   rsave(iter-nomit,1) = rval
+    	if (mm != 0)   rsave[iter-nomit,1] = rval
     	         
     }
 
+iter = iter + 1; 
 }
                     
-iter = iter + 1; 
 ##waitbar(iter/ndraw);         
 }   ##% end of sampling loop
 ##close(hwait);
@@ -279,11 +281,11 @@ xpWy = t(x)%*%Wy;
           while (iter <= ndraw){ #% start sampling;
                   
           ##% update beta   
-          AI = solve((xpx + sige%*%TI),diag(rep(1,k)));        
+          AI = solve((xpx + sige*TI),diag(rep(1,k)));        
           ys = y - rho*Wy;          
-          b = t(x)*ys + sige%*%TIc;
-          b0 = solve((xpx + sige%*%TI),b);
-          bhat = norm_rnd(sige%*%AI) + b0;  
+          b = t(x)*ys + sige*TIc;
+          b0 = solve((xpx + sige*TI),b);
+          bhat = norm_rnd(sige*AI) + b0;  
           xb = x%*%bhat;
           
           ##% update sige
@@ -295,9 +297,9 @@ xpWy = t(x)%*%Wy;
           sige = d1/chi;
           
           ###% update rho using griddy Gibbs
-          AI = solve((xpx + sige%*%TI),diag(rep(1,k)));
-          b0 = solve((xpx + sige%*%TI),(xpy + sige%*%TIc));
-          bd = solve((xpx + sige%*%TI),(xpWy + sige%*%TIc));
+          AI = solve((xpx + sige*TI),diag(rep(1,k)));
+          b0 = solve((xpx + sige*TI),(xpy + sige*TIc));
+          bd = solve((xpx + sige*TI),(xpWy + sige*TIc));
           e0 = y - x%*%b0;
           ed = Wy - x%*%bd;
           epe0 = t(e0)%*%e0;
@@ -362,6 +364,9 @@ trbig=t(trs);
 
         ree = 0:(ntrs-1);
 
+#Number of covariates minus intercept
+p<-(k-1)#FIXME: Check whether intercept is used or not 
+
         rmat = matrix(rep(0,ntrs),1,ntrs);####three dimentional matrix in R??
 #        total = matrix(rep(0,(ndraw-nomit)*p*ntrs)),ndraw-nomit,p,ntrs);
         total = array(rep(0,(ndraw-nomit)*p*ntrs),dim=c(ndraw-nomit,p,ntrs));
@@ -369,14 +374,14 @@ trbig=t(trs);
         direct = array(rep(0,(ndraw-nomit)*p*ntrs),dim=c(ndraw-nomit,p,ntrs));
 #        indirect = zeros(ndraw-nomit,p,ntrs);
         indirect = array(rep(0,(ndraw-nomit)*p*ntrs),dim=c(ndraw-nomit,p,ntrs));
-        
+       
 for (i in 1:(ndraw-nomit))
 {
-    rmat = pdraws(i,1)^ree;#VIRGILIO: Check this
+    rmat = pdraws[i,1]^ree;#VIRGILIO: Check this
     for (j in 1:p)
 	{
-            bbeta = bdraws(i,j);#VIRGILIO: Check this
-            total[i,j,] = bbeta[1,1]*rmat;
+            bbeta = bdraws[i,j];#VIRGILIO: Check this
+            total[i,j,] = bbeta*rmat;
     direct[i,j,] = (bbeta*trbig)*rmat;
     indirect[i,j,] = total[i,j,] - direct[i,j,];
     }
@@ -388,8 +393,8 @@ for (i in 1:(ndraw-nomit))
 
 
 #% compute posterior means and log marginal likelihood for return arguments
-bmean = mean(bsave);
-beta = t(bmean);
+bmean = apply(bsave, 2, mean);
+beta = matrix(bmean, ncol=1);
 rho = mean(psave);
 sige = mean(ssave);
 vmean = vmean/(ndraw-nomit);
@@ -403,15 +408,15 @@ nvar=dim(x)[2]
           xs = matmul(x,sqrt(V));
           ys = sqrt(V)*y;
           Wys = W%*%ys;
-          AI = inv(t(xs)%*%xs + sige%*%TI);
-          b0 = AI*(t(xs)%*%ys + sige%*%TIc);
-          bd = AI*(t(xs)%*%Wys + sige%*%TIc);
+          AI = solve(t(xs)%*%xs + sige*TI);
+          b0 = AI%*%(t(xs)%*%ys + sige*TIc);
+          bd = AI%*%(t(xs)%*%Wys + sige*TIc);
           e0 = ys - xs%*%b0;
           ed = Wys - xs%*%bd;
           epe0 = t(e0)%*%e0;
           eped = t(ed)%*%ed;
           epe0d = t(ed)%*%e0;
- logdetx = log(det(t(xs)%*%xs + sige%*%TI));
+ logdetx = log(det(t(xs)%*%xs + sige*TI));
   if (inform_flag == 0){
    mlike = rho_marginal(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,logdetx,a1,a2);}
   if(inform_flag == 1){
@@ -440,8 +445,8 @@ results$total = total;
 results$direct = direct;
 results$indirect = indirect;
 results$beta_std = apply(bsave, 2, sd);
-results$sige_std = sd(ssave);
-results$rho_std = sd(psave);
+results$sige_std = apply(ssave, 2, sd);
+results$rho_std = apply(psave, 2, sd);
 results$beta = beta;
 results$rho = rho;
 results$bdraw = bsave;
@@ -477,6 +482,9 @@ else
 {
 results$r     = rval;
 results$rdraw = 0;
+
 }
+
+return(results)
 }#### end of sar_g
 
