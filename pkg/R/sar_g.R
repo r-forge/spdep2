@@ -18,7 +18,7 @@ nu = 0;
 d0 = 0;
 a1 = 1.01;
 a2 = 1.01;
-c = matrix(rep(0,k),k,1); #defuse prior for beta
+c_beta = matrix(rep(0,k),k,1); #defuse prior for beta
 Tbeta = diag(k)*1e+12; ## Abhirup: ??
 prior_beta = 0;   #% flag for diffuse prior on beta
 novi_flag = 0; #% do vi-estimates
@@ -81,10 +81,10 @@ n2=dim(W)[1]
 n4=dim(W)[2]
 
 
-time1 = 0
-time2 = 0
-time3 = 0
-time4 = 0
+#time1 = 0
+#time2 = 0
+#time3 = 0
+#time4 = 0
 results <-list()
 results$nobs  = n;
 results$nvar  = k;
@@ -185,7 +185,7 @@ vmean= matrix(rep(0,n),n,1)
 TI = solve(Tbeta);
 TIc = TI%*%c_beta;
 
-In = matrix(rep(0,n),n,1);
+In = matrix(rep(1,n),n,1);
 V = In;
 vi = In;
 Wy = W%*%y;
