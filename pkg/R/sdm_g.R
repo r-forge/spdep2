@@ -69,14 +69,14 @@ checkk<-nrow(c_beta)
 junk<-ncol(c_beta)
 
 if((checkk!=k) | (junk!=1))
-        stop("sem_g: prior means are wrong")
+        stop("sdm_g: prior means are wrong")
 
 
 checkk<-nrow(Tbeta)
 junk<-ncol(Tbeta)
 
-if((checkk!=k) | (junk!=1))
-        stop("sem_g: prior bcov is wrong")
+if((checkk!=k) | (junk!=k))
+        stop("sdm_g: prior bcov is wrong")
 
 
 out_temp = set_eigs(eflag,W,rmin,rmax,n);
@@ -117,12 +117,12 @@ iter = 1;
           xs = matmul(sqrt(V),x); ## code for matmul in support functions
           ys = sqrt(V)*y;
           Wys = sqrt(V)*Wy
-          AI = solve((t(xs)%*%xs + as.numeric(sige)*TI))#,diag(k))         
+          AI = solve(t(xs)%*%xs + sige*TI)#,diag(k))         
           yss = ys - rho*Wys;          
           xpy = t(xs)%*%yss;
           b = t(xs)%*%yss + sige*TIc;
-          b0 = solve((t(xs)%*%xs + sige*TI),b);
-          bhat = mvrnorm(b0, sige*AI)
+          b0 = solve(t(xs)%*%xs + sige*TI,b);
+          bhat = mvrnorm(1, b0, sige*AI)
           xb = xs%*%bhat; 
                     
           #% update sige
