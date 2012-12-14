@@ -5,10 +5,10 @@
 
 sdm_g <- function(y,x,W,ndraw,nomit,prior){
 ##############################################
-# ommitted: checking if the user handled the intercept term okay
 results <- list()
 n = nrow(y)
 
+#checking if the user handled the intercept term okay
 if(sum(x[,1])!=n){
 	tst=apply(x, 2, sum)
 	ind=which(tst==n)
@@ -21,7 +21,6 @@ if(sum(x[,1])!=n){
 		p=ncol(x)
 		}
 	}
-	#if(sum(x[,1]==n)){
 if(sum(x[,1])==n){
 	xsdm=cbind(x,W%*%x[,-1])
 	cflag=1
@@ -39,7 +38,6 @@ results$y = y;
 pprior=prior_parse(prior,k) 
 attach(pprior)
 
-#comment: some parameters are ommitted too
 
 n1=nrow(W)
 n2=ncol(W)
@@ -86,9 +84,10 @@ rmax=out_temp$rmax
 detval = set_lndet(ldetflag,W,rmin,rmax,detval,order,iter);
 
 bsave = matrix(0,ndraw-nomit,k);
-if (mm!= 0){
-		rsave = matrix(0,ndraw-nomit,1)
-		}
+
+if (mm!= 0)
+	rsave = matrix(0,ndraw-nomit,1)
+
 psave = matrix(0,ndraw-nomit,1)
 ssave = matrix(0,ndraw-nomit,1)
 vmean = matrix(0,n,1)
@@ -155,16 +154,19 @@ iter = 1;
           epe0d = t(ed)%*%e0;
           rho = draw_rho(detval,epe0,eped,epe0d,n,k,rho,a1,a2);  #function later
 
+
+#	print(t(bhat))
+#	print(sige)
+#	print(rho)
           
     if (iter > nomit){ ## if we are past burn-in, save the draws
         bsave[iter-nomit,1:k] = t(bhat);
         ssave[iter-nomit,1] = sige;
         psave[iter-nomit,1] = rho;
         vmean = vmean + vi; 
-	if(novi_flag==0){
-		if (mm != 0)   
+	if(novi_flag==0 & mm != 0)   
 			rsave[iter-nomit,1] = rval
-	}
+	
    	         
     }
                     
@@ -184,7 +186,7 @@ for (jjj in 1:maxorderu){
 
 traces=tracew;
 traces[1,1]=0;
-traces[2,1]=sum(sum(t(W)*W))/nobs;
+traces[2,1]=sum(apply(t(W)*W, 2, sum))/nobs;
 trs=matrix(c(1,traces), ncol=1);
 ntrs=length(trs);
 trbig=t(trs);
@@ -199,7 +201,7 @@ if(cflag == 0){
 }
 pdraws = psave;
 ree = 0:(ntrs-1);
-rmat = matrix(0,1,ntrs);####three dimentional matrix in R??
+rmat = matrix(0,1,ntrs);
 total = array(0,c(ndraw-nomit,p,ntrs)) ;
 direct = array(0,c(ndraw-nomit,p,ntrs));	## 3D matrix in R
 indirect = array(0,c(ndraw-nomit,p,ntrs));
@@ -209,7 +211,7 @@ for (i in 1:(ndraw-nomit)){
     for (j in 1:p){
             bbeta = c(bdraws[i,j], bdraws[i, j+p])
             total[i,j,] = sum(bbeta)*rmat; ##used beta instead of beta[1,1]
-    direct[i,j,] = (bbeta%*%trmat)*rmat; ##%*%??
+    direct[i,j,] = (bbeta%*%trmat)*rmat; 
     indirect[i,j,] = total[i,j,] - direct[i,j,];
     }
 
@@ -243,10 +245,10 @@ logdetx = log(det(t(xs)%*%xs + sige*TI));
 		mlike = rho_marginal(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,logdetx,a1,a2);}
   if(inform_flag == 1){
 #   mlike = sar_marginal2(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,a1,a2,c_beta,TI,xs,ys,sige,W);
-		mlike = rho_marginal2(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,a1,a2,c_beta,TI,xs,ys,sige);#VIRGILIO: W is not needed
+		mlike = rho_marginal2(detval,e0,ed,epe0,eped,epe0d,nobs,nvar,logdetx,a1,a2,c_beta,TI,xs,ys,sige);#VIRGILIO: W is not needed
   }
   
-yhat = solve((diag(nobs) - rho*W),(xs%*%t(bbeta)));
+yhat = solve((diag(nobs) - rho*W),(xs%*%bmean));
 e = y - yhat; 
 
 ## compute R squared
@@ -266,14 +268,14 @@ results$meth  = 'sar_g';
 results$total = total;
 results$direct = direct;
 results$indirect = indirect;
-results$beta_std = t(apply(bsave,2,sd));
-results$sige_std = apply(ssave,2,sd);
-results$rho_std = apply(psave,2,sd);
 results$beta = bbeta;
 results$rho = rho;
 results$bdraw = bsave;
 results$pdraw = psave;
 results$sdraw = ssave;
+results$beta_std = t(apply(bsave,2,sd));
+results$sige_std = apply(ssave,2,sd);
+results$rho_std = apply(psave,2,sd);
 results$mlike = mlike;
 results$vmean = vmean;
 results$yhat  = yhat;
@@ -294,14 +296,18 @@ results$lflag = ldetflag;
 results$lndet = detval;
 results$novi  = novi_flag;
 results$priorb = inform_flag;
+results$cflag=cflag;
+results$p=p;
 
 if (mm!= 0){
-results$rdraw = rsave;
-results$m     = mm;
-results$k     = kk;}
-if(mm==0){
-results$r     = rval;
-results$rdraw = 0;
+	results$rdraw = rsave;
+	results$m     = mm;
+	results$k     = kk;
+}
+else
+{
+	results$r     = rval;
+	results$rdraw = 0;
 }
 
 detach(pprior)

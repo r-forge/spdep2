@@ -2,11 +2,11 @@
 
 library(Matrix)
 library(MASS)
+library(spdep)
 source('parse.R')
 source('utils.R')
 
-W<-structure(c(0, .5, 0.5, 0.5, 0, 0.5, 0.5, 0.5, 0), .Dim = c(3L, 
-3L))
+#W<-structure(c(0, .5, 0.5, 0.5, 0, 0.5, 0.5, 0.5, 0), .Dim = c(3L, 3L))
 
 prior = NULL
 #prior<-prior_parse(NULL,2)
@@ -16,11 +16,14 @@ prior = NULL
 
 #prior$metflag<-0#M-H sampler
 
-nsim<-3
-y<-matrix(rnorm(nsim), ncol=1)
+nsim<-1000
+xx<-matrix(rnorm(nsim*2), ncol=2)
+W<-nb2mat(knn2nb(knearneigh(xx, 2)))
+
+y<-matrix(5*rnorm(nsim), ncol=1)
 x<-matrix(rnorm(2*nsim),ncol=2)
 xWx<-cbind(x, W%*%x)
-y<-solve(diag(nsim)-0.9*W, y+xWx%*%matrix(c(1,5, 10, 2), ncol=1))
+y<-solve(diag(nsim)-0.5*W, y+xWx%*%matrix(c(1,5, 10, 2), ncol=1))
 
 
 ndraw=1000
@@ -48,8 +51,8 @@ x<-cbind(rep(1, n), rnorm(n))
 xWx<-cbind(x, W%*%x[,-1])
 
 
-y<-matrix(xWx[,1]+5*xWx[,2]+10*xWx[,3], ncol=1)
-y<-solve(diag(nrow(W))-0.4*W)%*%y
+y<-matrix(xWx[,1]+5*xWx[,2]+10*xWx[,3]+rnorm(n), ncol=1)
+y<-solve(diag(nrow(W))-0.9*W)%*%y
 
 
 #Heteroc.  model
