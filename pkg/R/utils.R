@@ -704,27 +704,28 @@ c_rho_sac <- function(rho,lambda,y,x,b,sige,W1,W2,detval,P,a1,a2)
 	return(cout)
 	}
 
-matdiv <- function(x,y){
-rx=dim(x)[1]
-cx=dim(x)[2]
 
-ry=dim(y)[1]
-cy=dim(y)[2]
+matdiv <- function(x,y){
+rx=nrow(x)
+cx=ncol(x)
+
+ry=nrow(y)
+cy=ncol(y)
 
 if((cx == cy) & (rx == ry)){
   out = x/y
 }
 if ((cx == cy) & (rx == 1)){
-	out = y/matrix(rep(x,ry),ry,cy)
+	out = y/ x[rep(1,ry),]
 }
 if ((cx == cy) & (ry == 1)){
-	out = x/matrix(rep(y,rx),rx,cx)
+	out = x/y[rep(1,rx),]
 }
 if ((rx == ry) & (cx == 1)){
-	out = y/matrix(rep(x,cy),ry,cy)
+	out = y/x[,rep(1,cy)]
 }
 if ((rx == ry) & (cy == 1)){
-	out = x/matrix(rep(x,cx),rx,cx)
+	out = x/y[, rep(1,cx)]
 }
 return(out)
 }

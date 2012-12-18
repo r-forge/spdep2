@@ -80,7 +80,7 @@ for(iii in 1:iiter){
 	wumat[,1]=wu
 	for(ii in 2:o){
 		wu=W%*%wu
-		wumat[,ii]=wu
+		wumat[,ii]=wu[,1]
 		}
 	diag_estimates_iii=umat*wumat
 	diag_ests=diag_ests+diag_estimates_iii	
