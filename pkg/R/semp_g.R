@@ -129,10 +129,10 @@ while(iter <= ndraw){
 	
 	ind=which(yin==0)
 	#y[ind,1]=normrt_rnd(ym[ind,1],yvar[ind,1],0)
-	y[ind,1]=rtnorm(1, mean=ym[ind,1], sd=sqrt(yvar[ind,1]),-Inf, 0)
+	y[ind,1]=rtnorm(length(ind), mean=ym[ind,1], sd=sqrt(yvar[ind,1]),-Inf, 0)
 	ind=which(yin==1)
 	#y[ind,1]=normlt_rnd(ym[ind,1],yvar[ind,1],0)
-	y[ind,1]=rtnorm(1, mean=ym[ind,1], sd=sqrt(yvar[ind,1]),0, Inf)
+	y[ind,1]=rtnorm(length(ind), mean=ym[ind,1], sd=sqrt(yvar[ind,1]),0, Inf)
 	
 	Wy=W%*%y
 	
