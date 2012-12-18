@@ -470,14 +470,14 @@ sem_marginal<-function(detval,y,x,Wy,Wx,nobs,nvar,a1,a2)
 {
 	nmk=(nobs-nvar)/2
 	nrho=length(detval[,1])
-	iota=matrix(rep(1,nrho),nrho,1)
+	iota=matrix(1,nrho,1)
 	rvec=detval[,1]
-	epe=matrix(rep(0,nrho),nrho,1)
+	epe=matrix(0,nrho,1)
 	
 	rgrid=as.matrix(seq((detval[1,1]+0.001),(detval[length(detval[,1]),1]-0.001),0.1))
 	#rgrid=t(rgrid)
-	epetmp=matrix(rep(0,length(rgrid)),length(rgrid),1)
-	detxtmp=matrix(rep(0,length(rgrid)),length(rgrid),1)
+	epetmp=matrix(0,length(rgrid),1)
+	detxtmp=matrix(0,length(rgrid),1)
 	
 	for(i in 1:length(rgrid))
 	{
@@ -501,31 +501,31 @@ sem_marginal<-function(detval,y,x,Wy,Wx,nobs,nvar,a1,a2)
 	
 }
 
-sem_marginal2<-function(detval,y,x,Wy,Wx,nobs,nvar,a1,a2,c,TI,sige)
+sem_marginal2<-function(detval,y,x,Wy,Wx,nobs,nvar,a1,a2,c_beta,TI,sige)
 {
 	nmk=(nobs-nvar)/2
 	nrho=length(detval[,1])
-	iota=matrix(rep(1,nrho),nrho,1)
+	iota=matrix(1,nrho,1)
 	rvec=detval[,1]
-	epe=matrix(rep(0,nrho),nrho,1)
+	epe=matrix(0,nrho,1)
 	rgrid=seq((detval[1,1]+0.001),(detval[dim(detval[1]),1]-0.001),0.1)
 	rgrid=t(rgrid)
-	epetmp=matrix(rep(0,length(rgrid)),length(rgrid),1)
-	detxtmp=matrix(rep(0,length(rgrid)),length(rgrid),1)
-	Q1=matrix(rep(0,length(rgrid)),length(rgrid),1)
-	Q2=matrix(rep(0,length(rgrid)),length(rgrid),1)
+	epetmp=matrix(0,length(rgrid),1)
+	detxtmp=matrix(0,length(rgrid),1)
+	Q1=matrix(0,length(rgrid),1)
+	Q2=matrix(0,length(rgrid),1)
 	sTI=sige*TI
 	for(i in 1:length(rgrid))
 	{
 		xs=x-rgrid[i,1]*Wx
 		ys=y-rgrid[i,1]*Wy
 		bs=solve((t(xs)%*%xs),t(xs)%*%ys)
-		beta=solve((t(xs)%*%xs+sTI),(t(xs)%*%ys+sTI%*%c))
+		beta=solve((t(xs)%*%xs+sTI),(t(xs)%*%ys+sTI%*%c_beta))
 		e=ys-xs%*%bs
 		epetmp[i,1]=t(e)%*%e
 		detxtmp[i,1]=det(t(xs)%*%xs)
-		Q1[i,1]=t(c-beta)%*%sTI%*%(c-beta)
-		Q2[i,1]=t(bs-beta)%*%(t(xs)%*%xs)%*%(c-beta)
+		Q1[i,1]=t(c_beta-beta)%*%sTI%*%(c_beta-beta)
+		Q2[i,1]=t(bs-beta)%*%(t(xs)%*%xs)%*%(c_beta-beta)
 	}
 	
 	tt=rvec
