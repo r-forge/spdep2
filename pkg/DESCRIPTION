@@ -4,7 +4,7 @@ Date: 2012-08-18
 Title: Bayesian spatial regression
 Author: Abhirup Mallik <abhirupkgp@gmail.com>, Virgilio Gomez Rubio <virgilio.gomez@uclm.es>, Roger Bivand <Roger.Bivand@nhh.no>
 Maintainer: Roger Bivand <Roger.Bivand@nhh.no>
-Depends: R(>= 2.15.0), spdep
+Depends: R(>= 2.15.0), spdep, MASS, msm
 Description: Bayesian spatial regression with sparse matrices is a package
  to complement existing model fitting functions in spdep.
 License: GPL (>= 2)
