@@ -179,7 +179,7 @@ while(iter <= ndraw){
 			beff=bhat
 
 		s=solve(hh,diag(n))
-		pdfz=matrix(dnorm(mu), ncol=1) 	#used dnorm in place of stdn_pdf
+		pdfz=matrix(dnorm(mu[,1]), ncol=1) 	#used dnorm in place of stdn_pdf
 		for(kk in 1:p){
 			avg_direct[kk,1]=t(pdfz)%*%(estimated_diags%*%rhovec*beff[kk,1]/n)
 			dd=diag(pdfz[,1])	##spdiags ??
