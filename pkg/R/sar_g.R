@@ -205,7 +205,7 @@ vmean= matrix(0, n,1)
 TI = solve(Tbeta);
 TIc = TI%*%c_beta;
 
-In = matrix(rep(1,n),n,1);
+In = matrix(1,n,1);
 V = In;
 vi = In;
 Wy = W%*%y;
@@ -315,7 +315,8 @@ xpWy = t(x)%*%Wy;
           ##%e = e0 - rho*ed;
           e = (ys - xb);
           d1 = 2*d0 + t(e)%*%e;
-          chi = chis_rnd(1,nu1);
+          #chi = chis_rnd(1,nu1);
+          chi = rchisq(1,nu1);
           sige = as.numeric(d1/chi);
           
           ###% update rho using griddy Gibbs
