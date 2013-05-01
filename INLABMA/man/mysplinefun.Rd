@@ -1,77 +1,52 @@
 \name{mysplinefun}
 \alias{mysplinefun}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
+Compute spline function
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
-}
+This function is similar to \code{splinefun} but it returns 0
+outside the range of \code{x}.
 \usage{
 mysplinefun(x, y = NULL, method = c("fmm", "periodic", "natural", "monoH.FC")[1], ties = mean)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{x}{
-%%     ~~Describe \code{x} here~~
+x-values to use in the interpolation.
 }
   \item{y}{
-%%     ~~Describe \code{y} here~~
+y-values to use in the interpolation (optional).
 }
   \item{method}{
-%%     ~~Describe \code{method} here~~
+	Method used to compute the spline. See \code{\link{splinefun}} for details.
 }
   \item{ties}{
-%%     ~~Describe \code{ties} here~~
+Handling of tied 'x' values. See \code{\link{splinefun}} for details.
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+This function calls \code{\link{splinefun}} and returns a function
+with the fitted spline. The main difference is that this new function
+returns 0 outside the range of 0.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+Returns a function with \code{x} and \code{deriv} arguments.  See \code{\link{splinefun}} for details.
 }
-\references{
+%%\references{
 %% ~put references to the literature/web site here ~
-}
+%%}
 \author{
-%%  ~~who you are~~
+Virgilio GÃmez-Rubio <virgilio.gomez@uclm.es>
 }
-\note{
+%%\note{
 %%  ~~further notes~~
-}
+%%}
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{splinefun}}
 }
-\examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-function (x, y = NULL, method = c("fmm", "periodic", "natural", 
-    "monoH.FC")[1], ties = mean) 
-{
-    xmin <- min(x)
-    xmax <- max(x)
-    ff <- splinefun(x = x, y = y, method = method, ties = ties)
-    fff <- function(x, deriv) {
-        sapply(x, function(X) {
-            if (X < xmin | X > xmax) 
-                return(0)
-            else return(ff(X))
-        })
-    }
-  }
-}
+%%\examples{
+%%}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+\keyword{smooth}

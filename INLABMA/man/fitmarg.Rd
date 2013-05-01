@@ -1,11 +1,12 @@
 \name{fitmarg}
 \alias{fitmarg}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
+Fit posterior marginal distributions to points
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Compute (and re-scale, if necessary) the marginal from a set of
+points \code{x} and values of log-likelihood \code{logy} and 
+log-prior density \code{logp}.
 }
 \usage{
 fitmarg(x, logy, logp = 0, usenormal = FALSE)
@@ -13,72 +14,43 @@ fitmarg(x, logy, logp = 0, usenormal = FALSE)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{x}{
-%%     ~~Describe \code{x} here~~
+Values of the random variable.
 }
   \item{logy}{
-%%     ~~Describe \code{logy} here~~
+Log-likelihood.
 }
   \item{logp}{
-%%     ~~Describe \code{logp} here~~
+Log-prior density.
 }
   \item{usenormal}{
-%%     ~~Describe \code{usenormal} here~~
+Whether use a Normal distribution for the fitted marginal.
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+Fits a marginal at a set of points \code{x} from their log-likelihood
+and log-prior. The fitted marginal is re-scaled to integrate one if
+necessary. If \code{usenormal=TRUE} then the fitted marginal is supposed
+to be Normal, which is computed using the posterior mean and standard
+deviation of \code{x}.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+A function with the fitted marginal is returned.
 }
-\references{
+%%\references{
 %% ~put references to the literature/web site here ~
-}
+%%}
 \author{
-%%  ~~who you are~~
+Virgilio GÃmez-Rubio <virgilio.gomez@uclm.es>
 }
-\note{
+%%\note{
 %%  ~~further notes~~
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
+%%}
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{fitmargBMA,fitmargBMA2,mysplinefun}}
 }
-\examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-function (x, logy, logp = 0, usenormal = FALSE) 
-{
-    if (!usenormal) {
-        func = splinefun(x, logy - max(logy))
-        post = exp(logp + func(x))
-        post.func = splinefun(x, post)
-        xx = seq(min(x), max(x), len = 1000)
-        z = integrate(post.func, min(x), max(x))$value
-        post.func = mysplinefun(x = xx, y = (post.func(xx)/z))
-    }
-    else {
-        xx = seq(min(x), max(x), len = 1000)
-        meany = sum(x * exp(logp + logy))/sum(exp(logp + logy))
-        sdy = sqrt(sum(((x - meany)^2) * exp(logp + logy))/sum(exp(logp + 
-            logy)))
-        post.func = function(x) {
-            dnorm(x, mean = meany, sd = sdy)
-        }
-    }
-    return(post.func)
-  }
-}
+%%\examples{
+%%}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+\keyword{smooth}
