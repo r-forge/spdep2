@@ -1,11 +1,11 @@
 \name{BMArho}
 \alias{BMArho}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
+Compute BMA of \code{fitted.values} from a list of INLA objects
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+This functions performs a weighted average of the component
+\code{fitted.values} from a list of INLA objects.
 }
 \usage{
 BMArho(models, rho, logrhoprior = rep(1, length(rho)))
@@ -13,63 +13,39 @@ BMArho(models, rho, logrhoprior = rep(1, length(rho)))
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{models}{
-%%     ~~Describe \code{models} here~~
+List of INLA models fitted for different values of \code{rho}
 }
   \item{rho}{
-%%     ~~Describe \code{rho} here~~
+Vector fo values of \code{rho} used to compute the list in \code{models}.
 }
   \item{logrhoprior}{
-%%     ~~Describe \code{logrhoprior} here~~
+Log-prior density for each value of \code{rho}.
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+The different \code{fitted.values} are weighted using the values of the
+marginal likelihood of the fitted models and the prior of parameter
+\code{\rho}. \code{\rho} is a parameter that is fixed when computing
+\code{models} and that have a log-prior density  defined in \code{pogrhoprior}.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+Vector of averaged fitted values.
 }
-\references{
+%5\references{
 %% ~put references to the literature/web site here ~
-}
+%%}
 \author{
-%%  ~~who you are~~
+Virgilio Gómez-Rubio <virgilio.gomez@uclm.es>
 }
-\note{
+%%\note{
 %%  ~~further notes~~
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
+%%}
 
 \seealso{
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
-\examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-function (models, rho, logrhoprior = rep(1, length(rho))) 
-{
-    mlik <- unlist(lapply(models, function(X) {
-        X$mlik[1]
-    }))
-    post.func <- fitmarg(rho, mlik, logrhoprior)
-    ws <- (post.func(rho))
-    ws <- ws/sum(ws)
-    fvalues <- mclapply(1:length(models), function(X) {
-        ws[X] * models[[X]]$summary.fitted.values[, 1]
-    })
-    fvalues <- data.frame(fvalues)
-    fvalues <- apply(fvalues, 1, sum)
-    return(fvalues)
-  }
-}
+%%\examples{
+%%}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+\keyword{smooth}
