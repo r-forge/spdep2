@@ -1,99 +1,66 @@
 \name{leroux.inla}
 \alias{leroux.inla}
-%- Also NEED an '\alias' for EACH other topic documented here.
+
 \title{
-%%  ~~function to do ... ~~
+Fit Leroux et al's spatial model.
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+This function fits the model by Leroux et al. for a given value
+of the parameter \code{lambda}, i.e., the mixture parameter that
+appears in the variance..
 }
 \usage{
 leroux.inla(formula, d, W, lambda, improve = TRUE, impacts = FALSE, fhyper = NULL, probit = FALSE, ...)
 }
-%- maybe also 'usage' for other objects documented here.
+
 \arguments{
   \item{formula}{
-%%     ~~Describe \code{formula} here~~
+Formula of the fixed effects.
 }
   \item{d}{
-%%     ~~Describe \code{d} here~~
+A data.frame with the data to be used.
 }
   \item{W}{
-%%     ~~Describe \code{W} here~~
+Adjacency matrix.
 }
   \item{lambda}{
-%%     ~~Describe \code{lambda} here~~
+Parameter used in the mixture of the two precission matrices.
 }
   \item{improve}{
-%%     ~~Describe \code{improve} here~~
-}
-  \item{impacts}{
-%%     ~~Describe \code{impacts} here~~
+Logical. Whether to improve the fitted models to obtain better
+estimates of the marginal likelihoods.
 }
   \item{fhyper}{
-%%     ~~Describe \code{fhyper} here~~
-}
-  \item{probit}{
-%%     ~~Describe \code{probit} here~~
+Extra arguments passed to the definition of the hyperparameters.
 }
   \item{\dots}{
-%%     ~~Describe \code{\dots} here~~
+Extra arguments passed to function \code{inla}.
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+This function fits the model proposed by Leroux et al. (1999)
+for a given value of parameter \code{lambda}. This parameter
+controls the mixture between a diagonal precission (\code{lambda}=1) 
+and an intrinsic CAR precission (\code{lambda}=0).
+
+The marginal log-likelihood is corrected to add half the log-determinant of the precission matrix.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+An INLA object.
 }
 \references{
-%% ~put references to the literature/web site here ~
+Lerout et al. 1999.
 }
 \author{
-%%  ~~who you are~~
+Virgilio Gómez-Rubio <virgilio.gomez@uclm.es>
 }
-\note{
+%%\note{
 %%  ~~further notes~~
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
+%%}
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{sem.inla}},\code{\link{slm.inla}},\code{\link{sdm.inla}}
 }
-\examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-function (formula, d, W, lambda, improve = TRUE, impacts = FALSE, 
-    fhyper = NULL, probit = FALSE, ...) 
-{
-    W2 <- diag(apply(W, 1, sum)) - W
-    Q <- lambda * diag(nrow(W)) + (1 - lambda) * W2
-    environment(formula) <- environment()
-    if (is.null(fhyper)) {
-        formula <- update(formula, . ~ . + f(idx, model = "generic0", 
-            Cmatrix = Q))
-    }
-    else {
-        formula <- update(formula, . ~ . + f(idx, model = "generic0", 
-            Cmatrix = Q, hyper = fhyper))
-    }
-    res <- inla(formula, data = d, ...)
-    if (improve) 
-        res <- inla.hyperpar(res, diff.logdens = 20)
-    res$logdet <- as.numeric(determinant(Q)$modulus)
-    res$mlik <- res$mlik + res$logdet/2
-    return(res)
-  }
-}
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+%%\examples{
+%%}
+\keyword{models}
