@@ -1,7 +1,7 @@
 \name{fitmargBMA2}
 \alias{fitmargBMA2}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{
+\title{fitmargBMA2
 %%  ~~function to do ... ~~
 }
 \description{

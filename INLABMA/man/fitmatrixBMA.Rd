@@ -1,7 +1,7 @@
 \name{fitmatrixBMA}
 \alias{fitmatrixBMA}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{
+\title{fitmatrixBMA
 %%  ~~function to do ... ~~
 }
 \description{
