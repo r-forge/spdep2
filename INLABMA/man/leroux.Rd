@@ -10,7 +10,7 @@ of the parameter \code{lambda}, i.e., the mixture parameter that
 appears in the variance..
 }
 \usage{
-leroux.inla(formula, d, W, lambda, improve = TRUE, impacts = FALSE, fhyper = NULL, probit = FALSE, ...)
+leroux.inla(formula, d, W, lambda, improve = TRUE, fhyper = NULL, ...)
 }
 
 \arguments{

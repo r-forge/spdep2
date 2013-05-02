@@ -2,6 +2,7 @@
 \alias{fitmargBMA}
 \alias{fitmargBMA2}
 \alias{fitmatrixBMA}
+\alias{fitlistBMA}
 \title{
 Compute marginals using Bayesian Model Averaging
 }
@@ -27,6 +28,9 @@ fitlistBMA(models, ws, item)
 \arguments{
   \item{margs}{
 List of 2-column matrices with the values of the (marginal) distributions.
+}
+  \item{models}{
+List of INLA models to be averaged.
 }
   \item{ws}{
 Vector of weights. They do not need to sum up to one.

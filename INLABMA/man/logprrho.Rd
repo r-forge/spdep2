@@ -41,4 +41,7 @@ Virgilio Gómez-Rubio <virgilio.gomez@uclm.es>
 
 rrho<-seq(.01, .99, length.out=100)
 plot(rrho, exp(logprrho(rrho)))
+}
+
+
 \keyword{distribution}

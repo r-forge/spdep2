@@ -15,7 +15,7 @@
 #lambda is the parameter in the mixture of precision matrices
 #
 
-leroux.inla<-function(formula, d, W, lambda, improve=TRUE, impacts=FALSE, fhyper=NULL, probit=FALSE,...)
+leroux.inla<-function(formula, d, W, lambda, improve=TRUE, fhyper=NULL, ...)
 {
 
 	W2<-diag(apply(W, 1, sum))-W

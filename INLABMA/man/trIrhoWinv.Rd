@@ -5,7 +5,7 @@
 Compute trace of (I-rho*W)^{-1} matrix
 }
 \description{
-This function computes (or estimates) the trace of matrix (I-\rho*W)^{-1},
+This function computes (or estimates) the trace of matrix (I-rho*W)^{-1},
 which is often needed when computing impacts in some spatial econometrics 
 models.
 }
@@ -21,7 +21,7 @@ Adjacency matrix. Usually, it is row-standardised.
 Value of spatial autocorrelation parameter \code{rho}.
 }
   \item{offset}{
-Number of times (I-\rho*W)^{-1} is multiplied by W (for sdm model).
+Number of times (I-rho*W)^{-1} is multiplied by W (for sdm model).
 }
   \item{order}{
 Order of Taylor expansion used in the approximation of the trace.

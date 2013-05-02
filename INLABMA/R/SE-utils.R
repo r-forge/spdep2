@@ -219,7 +219,8 @@ sdm.inla<-function(formula, d, W, rho, mmatrix=NULL, intercept=TRUE,
 		}
 		else
 		{
-		error("Cannot compute impacts because we need to run the model twice")
+		stop("Cannot compute impacts because we need to run the model twice")
+		#FIXME: Update the following code
 		Df<-dnorm(res$summary.linear.predictor[,1])
                 wtotal<-mean(Df)*rep(1/(1-rho), 2)
                 wdirect<-c(trIrhoWinv(W, rho, Df=diag(Df)), trIrhoWinv(W, rho, 1, Df=diag(Df)))/nrow(W)

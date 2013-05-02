@@ -25,7 +25,7 @@ Log-prior density for each value of \code{rho}.
 \details{
 The different \code{fitted.values} are weighted using the values of the
 marginal likelihood of the fitted models and the prior of parameter
-\code{\rho}. \code{\rho} is a parameter that is fixed when computing
+\code{rho}. \code{rho} is a parameter that is fixed when computing
 \code{models} and that have a log-prior density  defined in \code{pogrhoprior}.
 }
 \value{
@@ -42,7 +42,7 @@ Virgilio Gómez-Rubio <virgilio.gomez@uclm.es>
 %%}
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{BMA2}}
 }
 %%\examples{
 %%}

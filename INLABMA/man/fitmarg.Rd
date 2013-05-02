@@ -40,14 +40,14 @@ A function with the fitted marginal is returned.
 %% ~put references to the literature/web site here ~
 %%}
 \author{
-Virgilio GÃmez-Rubio <virgilio.gomez@uclm.es>
+Virgilio Gómez-Rubio <virgilio.gomez@uclm.es>
 }
 %%\note{
 %%  ~~further notes~~
 %%}
 
 \seealso{
-\code{\link{fitmargBMA,fitmargBMA2,mysplinefun}}
+\code{\link{fitmargBMA}}, \code{\link{fitmargBMA2}},\code{\link{mysplinefun}}
 }
 %%\examples{
 %%}

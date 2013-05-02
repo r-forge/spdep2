@@ -33,6 +33,12 @@ Adjacency matrix.
   \item{rho}{
 Value of the spatial autocorrelation paramter.
 }
+  \item{mmatrix}{
+Design matrix of fixed effects.
+}
+  \item{intercept}{
+Logical. Whether an intercept has been included in the model.
+}
   \item{improve}{
 Logical. Whether improve model fitting (this may require more computing time).
 }

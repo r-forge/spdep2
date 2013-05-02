@@ -6,6 +6,7 @@ Compute spline function
 \description{
 This function is similar to \code{splinefun} but it returns 0
 outside the range of \code{x}.
+}
 \usage{
 mysplinefun(x, y = NULL, method = c("fmm", "periodic", "natural", "monoH.FC")[1], ties = mean)
 }
