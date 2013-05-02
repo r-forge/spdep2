@@ -1,11 +1,11 @@
 \name{logprrho}
 \alias{logprrho}
-%- Also NEED an '\alias' for EACH other topic documented here.
+
 \title{
-%%  ~~function to do ... ~~
+Log-prior density for the spatial autocorrelation parameter \code{rho}
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Compute log-prior density for \code{rho}
 }
 \usage{
 logprrho(rho)
@@ -13,47 +13,32 @@ logprrho(rho)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{rho}{
-%%     ~~Describe \code{rho} here~~
+The value to compute the log-density.
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+This function computes the log-density of the prior for \code{rho}
+according to logit(rho) ~ N(0, prec=.1). THis is one of the default
+priors in \pkg{R-INLA} for spatial autocorrelation parameters.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+Numerical.
 }
-\references{
+%%\references{
 %% ~put references to the literature/web site here ~
-}
+%%}
 \author{
-%%  ~~who you are~~
+Virgilio Gómez-Rubio <virgilio.gomez@uclm.es>
 }
-\note{
+%%\note{
 %%  ~~further notes~~
-}
+%%}
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-\seealso{
+%%\seealso{
 %% ~~objects to See Also as \code{\link{help}}, ~~~
-}
+%%}
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
 
-## The function is currently defined as
-function (rho) 
-{
-    dnorm(log(rho/(1 - rho)), 0, sqrt(1/0.1), log = TRUE) - log(rho * 
-        (1 - rho))
-  }
-}
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+rrho<-seq(.01, .99, length.out=100)
+plot(rrho, exp(logprrho(rrho)))
+\keyword{distribution}

@@ -1,119 +1,83 @@
 \name{sem.inla}
 \alias{sem.inla}
-%- Also NEED an '\alias' for EACH other topic documented here.
+\alias{slm.inla}
+\alias{sdm.inla}
 \title{
-%%  ~~function to do ... ~~
+Fit spatial econometrics models with INLA
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+These functions fit some spatial econometrics models for a given
+value of \code{rho} (the spatial autocorrelation parameter).
+\code{sem.inla} fits a spatial error model, \code{slm} fits a spatial lag model
+and \code{sdm.inla} fits a spatial Durbin model.
 }
 \usage{
+
 sem.inla(formula, d, W, rho, improve = TRUE, impacts = FALSE, fhyper = NULL, probit = FALSE, ...)
+slm.inla(formula, d, W, rho, mmatrix = NULL, improve = TRUE, impacts = FALSE, fhyper = NULL, probit = FALSE, ...)
+sdm.inla(formula, d, W, rho, mmatrix = NULL, intercept = TRUE, impacts = FALSE, improve = TRUE, fhyper = NULL, probit = FALSE, ...)
+
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{formula}{
-%%     ~~Describe \code{formula} here~~
+Formula with the response variable, the fixed effects and, possibly, other
+non-linear effects.
 }
   \item{d}{
-%%     ~~Describe \code{d} here~~
+Data.frame with the data.
 }
   \item{W}{
-%%     ~~Describe \code{W} here~~
+Adjacency matrix.
 }
   \item{rho}{
-%%     ~~Describe \code{rho} here~~
+Value of the spatial autocorrelation paramter.
 }
   \item{improve}{
-%%     ~~Describe \code{improve} here~~
+Logical. Whether improve model fitting (this may require more computing time).
 }
   \item{impacts}{
-%%     ~~Describe \code{impacts} here~~
+Logical. Whether impacts are computed.
 }
   \item{fhyper}{
-%%     ~~Describe \code{fhyper} here~~
+Options to be passed to the definition of the hyper-parameters in the
+spatial effects.
 }
   \item{probit}{
-%%     ~~Describe \code{probit} here~~
+Logical. Whether a probit model is used. Note this is only used
+when computing the impacts and that argument \code{family} must
+be set accordingly.
 }
   \item{\dots}{
-%%     ~~Describe \code{\dots} here~~
+Other arguments passed to function \code{inla}.
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+These functions fit a spatial econometrics model with a fixed value
+of the spatial autocorrelation parameter \code{rho}. 
+
+In addition, the marginal -log-likelihood is corrected to account for
+the variance-covariance matrix of the error term or random effects.
+
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+An \code{inla} object.
 }
 \references{
-%% ~put references to the literature/web site here ~
+Bivand et al. (2013).
 }
 \author{
-%%  ~~who you are~~
+Virgilio Gómez-Rubio <virgilio.gomez@uclm.es>
 }
-\note{
+%%\note{
 %%  ~~further notes~~
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
+%%}
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{leroux.inla}}
 }
-\examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-function (formula, d, W, rho, improve = TRUE, impacts = FALSE, 
-    fhyper = NULL, probit = FALSE, ...) 
-{
-    IrhoW <- diag(nrow(W)) - rho * W
-    IrhoW2 <- IrhoW \%*\% t(IrhoW)
-    environment(formula) <- environment()
-    if (is.null(fhyper)) {
-        formula <- update(formula, . ~ . + f(idx, model = "generic0", 
-            Cmatrix = IrhoW2))
-    }
-    else {
-        formula <- update(formula, . ~ . + f(idx, model = "generic0", 
-            Cmatrix = IrhoW2, hyper = fhyper))
-    }
-    res <- inla(formula, data = d, ...)
-    if (improve) 
-        res <- inla.hyperpar(res, diff.logdens = 20)
-    res$logdet <- as.numeric(determinant(IrhoW2)$modulus)
-    res$mlik <- res$mlik + res$logdet/2
-    res$impacts <- FALSE
-    if (impacts) {
-        res$impacts <- TRUE
-        res$impacts$summary.impacts <- res$summary.fixed[rownames(res$summary.fixed) != 
-            "(Intercept)", ]
-        res$impacts$marginals.impacts <- res$marginals.fixed[names(res$marginals.fixed) != 
-            "(Intercept)"]
-        if (probit) {
-            Dfm <- mean(dnorm(res$summary.linear.predictor[, 
-                1]))
-            mm <- lapply(res$impacts$marginals.impacts, function(X) {
-                inla.marginal.transform(function(x) {
-                  Dfm * x
-                }, X)
-            })
-            names(mm) <- names(res$impacts$marginals.impacts)
-            res$impacts$marginals.impacts <- mm
-            res$impacts$summary.impacts <- Dfm * res$impacts$summary.impacts
-        }
-    }
-    return(res)
-  }
-}
+%%\examples{
+%%}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+\keyword{models}

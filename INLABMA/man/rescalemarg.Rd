@@ -1,11 +1,12 @@
 \name{rescalemarg}
 \alias{rescalemarg}
-%- Also NEED an '\alias' for EACH other topic documented here.
+
 \title{
-%%  ~~function to do ... ~~
+Re-scale marginal distribution to cpmpute the distribution of w*x
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+This function takes a marginal distribution (represetend by a 2-column matrix)
+and computes the marginal distribution of w*x.
 }
 \usage{
 rescalemarg(xx, w)
@@ -13,52 +14,44 @@ rescalemarg(xx, w)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{xx}{
-%%     ~~Describe \code{xx} here~~
+2-column matrix with x and y-values.
 }
   \item{w}{
-%%     ~~Describe \code{w} here~~
+Weight to re-scale the y-values.
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+This function simply re-scales 
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+A 2-column matrix with the new values of w*x and their associated
+probability densities. This is also an object of classes \code{inla.marginal}.
 }
 \references{
-%% ~put references to the literature/web site here ~
+INLA
 }
 \author{
-%%  ~~who you are~~
+Virgilio Gómez-Rubio <virgilio.gomez@uclm.es>
 }
-\note{
+%%\note{
 %%  ~~further notes~~
-}
+%%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{inla.marginal.transform}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+x<-seq(-3,3, by=.01)
+xx<-cbind(x, dnorm(x))
 
-## The function is currently defined as
-function (xx, w) 
-{
-    xx <- inla.marginal.transform(function(x) {
-        w * x
-    }, xx)
-    return(xx)
-  }
+xx2<-rescalemarg(xx, 3)
+
+plot(xx, type="l", xlim=c(-9,9))
+lines(xx2, col="red")
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+\keyword{distribution}

@@ -1,78 +1,49 @@
 \name{recompute.impacts}
 \alias{recompute.impacts}
-%- Also NEED an '\alias' for EACH other topic documented here.
+
 \title{
-%%  ~~function to do ... ~~
+Recompute the impact summaries from the marginals
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+This functions recomputes the impacts summaries using the (approximated)
+marginals rather than by weighting on the different summaries.
 }
 \usage{
 recompute.impacts(obj, impacts = c("total", "direct", "indirect"))
 }
-%- maybe also 'usage' for other objects documented here.
+
 \arguments{
   \item{obj}{
-%%     ~~Describe \code{obj} here~~
+Object with a resulting model obtained by Bayesian MOdel Averaging with BMA2.
 }
   \item{impacts}{
-%%     ~~Describe \code{impacts} here~~
+Types of impacts to recompute.
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+This function uses the impacts marginals to compute some summary statistics.
+By default, the summary of the impacts is obtained by weighting the different
+summaries used in Bayesian MOdel Averaging with function \code{BMA2}.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+Original object with the updated summary statistics of the impacts.
 }
 \references{
-%% ~put references to the literature/web site here ~
+Bivand et al. (2013)
 }
 \author{
-%%  ~~who you are~~
+Virgilio Gómez-Rubio <virgilio.gomez@uclm.es>
 }
-\note{
+%%\note{
 %%  ~~further notes~~
-}
+%%}
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{BMA2}}
 }
-\examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-function (obj, impacts = c("total", "direct", "indirect")) 
-{
-    if (!obj$impacts) 
-        return(obj)
-    for (ii in impacts) {
-        sumname <- paste("summary.", ii, ".impacts", sep = "")
-        margname <- paste("marginals.", ii, ".impacts", sep = "")
-        stab <- obj[[sumname]]
-        for (i in 1:nrow(stab)) {
-            xmean <- inla.emarginal(function(x) {
-                x
-            }, obj[[margname]][[i]])
-            xsd <- sqrt(inla.emarginal(function(x) {
-                (x - xmean)^2
-            }, obj[[margname]][[i]]))
-            stab[i, 1:2] <- c(xmean, xsd)
-        }
-        obj[[sumname]] <- stab[, 1:2]
-    }
-    return(obj)
-  }
-}
+%%\examples{
+%%}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+\keyword{models}

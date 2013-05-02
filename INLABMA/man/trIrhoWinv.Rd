@@ -1,11 +1,13 @@
 \name{trIrhoWinv}
 \alias{trIrhoWinv}
-%- Also NEED an '\alias' for EACH other topic documented here.
+
 \title{
-%%  ~~function to do ... ~~
+Compute trace of (I-rho*W)^{-1} matrix
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+This function computes (or estimates) the trace of matrix (I-\rho*W)^{-1},
+which is often needed when computing impacts in some spatial econometrics 
+models.
 }
 \usage{
 trIrhoWinv(W, rho, offset = 0, order = 20, direct = TRUE, Df = diag(nrow(W)))
@@ -13,79 +15,48 @@ trIrhoWinv(W, rho, offset = 0, order = 20, direct = TRUE, Df = diag(nrow(W)))
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{W}{
-%%     ~~Describe \code{W} here~~
+Adjacency matrix. Usually, it is row-standardised.
 }
   \item{rho}{
-%%     ~~Describe \code{rho} here~~
+Value of spatial autocorrelation parameter \code{rho}.
 }
   \item{offset}{
-%%     ~~Describe \code{offset} here~~
+Number of times (I-\rho*W)^{-1} is multiplied by W (for sdm model).
 }
   \item{order}{
-%%     ~~Describe \code{order} here~~
+Order of Taylor expansion used in the approximation of the trace.
 }
   \item{direct}{
-%%     ~~Describe \code{direct} here~~
+Use direct method, i.e., matrix multiplication, etc.
 }
   \item{Df}{
-%%     ~~Describe \code{Df} here~~
+Diagonal matrix used to compute the impacts in the Probit model
+only used if direct=TRUE.
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+This function computes the trace of (I-rho*W)^{-1}, which is later used
+to computed the impacts. This is an internal function.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+Numerica value.
 }
 \references{
-%% ~put references to the literature/web site here ~
+LeSage and Page (2008)
+Bivand et al. (2013)
 }
 \author{
-%%  ~~who you are~~
+Virgilio Gómez-Rubio <virgilio.gomez@uclm.es>
 }
-\note{
+%%\note{
 %%  ~~further notes~~
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
+%%}
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{sem.inla}}, \code{\link{slm.inla}}, \code{\link{sdm.inla}}
 }
-\examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-function (W, rho, offset = 0, order = 20, direct = TRUE, Df = diag(nrow(W))) 
-{
-    if (!direct) {
-        lambdas <- eigen(W)$values
-        tr <- 0
-        for (i in 0:order) tr <- tr + sum(lambdas^(i + offset)) * 
-            (rho^i)
-    }
-    else {
-        tr <- 0
-        WW <- diag(nrow(W))
-        if (offset > 0) {
-            for (i in 1:(offset)) WW <- WW \%*\% W
-        }
-        WW = Df \%*\% WW
-        for (i in 0:order) {
-            tr <- tr + sum(diag(WW)) * (rho^i)
-            WW <- WW \%*\% W
-        }
-    }
-    return(as.real(tr))
-  }
-}
+%%\examples{
+%%}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+\keyword{math}
