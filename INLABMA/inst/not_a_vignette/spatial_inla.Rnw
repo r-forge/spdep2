@@ -1,3 +1,6 @@
+%Sweave("spatial_inla.Rnw", encoding="UTF-8", keep.source=FALSE)
+%system("pdflatex spatial_inla.tex")
+%system("bibtex spatial_inla")
 \documentclass[article]{jss}
 
 \usepackage{thumbpdf}
