@@ -203,7 +203,7 @@ Markov properties.
 The distribution of observations $y_i$ will depend on the latent effects
 $\mathbf{x}$ and, possibly, a number of hyperparameters $\theta_2$.  Taking
 the vector of hyperparameters $\theta=(\theta_1, \theta_2)$, observations
-$y_i$ will be independent of each other $x_i$ and $\theta$ becuase
+$y_i$ will be independent of each other $x_i$ and $\theta$ because
 of $\mathbf{x}$ being a GMRF.
 
 Following \citet{isi:000264374200002}, the posterior distribution of the model
@@ -232,18 +232,14 @@ can be used. We will describe some of these in more detail in Section
 \ref{sec:spmodels}.
 
 
-The specification of the prior distributions $\pi(\theta)$ is alsoe very 
+The specification of the prior distributions $\pi(\theta)$ is also very 
 flexible. These will often depend on the latent effect but, in principle,
 the most common distributions are available and the user can define its
 own prior distribution in the \pkg{R-INLA} package (but we will come
 back to this later). 
 
-
-** More stuff on how the approximation is done here **
-
-
 Hence, we can write the marginals distributions of the elements in $\mathbf{x}$
-(i.e., latent effects and hyper-parameters) as
+and $\mathbf{\theta}$ (i.e., latent effects and hyper-parameters) as
 
 
 $$
@@ -286,7 +282,7 @@ $\mathbf{\theta}_k$ in a grid for vector of hyperparameters .
 %(x_i|\mathbf{\theta}_k, \mathbf{y})$ should be in order to reduce numerical
 %error and they provide different alternatives.
 
-Note that in the previous equation it is important to have good approxiamtions
+Note that in the previous equation it is important to have good approximations
 to $\pi (x_i|\mathbf{\theta}_k, \mathbf{y})$. A Gaussian approximation
 $\tilde\pi_G (x_i|\mathbf{\theta}_k, \mathbf{y})$, with mean $\mu_i(\theta)$
 and variance $\sigma^2_i(\theta)$, may be a good starting point but a better
@@ -325,7 +321,7 @@ options. Non-linear terms and random effects are included in the formula as
 calls to the \code{f()} function. 
 
 
-The mode is fitted with a call to function \code{inla()}, which will return an
+The model is fitted with a call to function \code{inla()}, which will return an
 \code{inla} object with the fitted model. Note that, by default, only a number
 of results will be returned. These includes the marginal distributions of
 the latent effects and hyperparameters. 
@@ -339,7 +335,7 @@ for model selection. Other model selection criteria such as the DIC
 
 Furthermore, \pkg{R-INLA} includes a number of options to define the
 prior distributions for the parameters in the model. Well-known
-priors distributions are available and the user can define his own prior
+prior distributions are available and the user can define his own prior
 distributions as well.
 
 In the next Section we describe different examples of the use of
@@ -353,7 +349,10 @@ As discussed in Section \ref{sec:INLA}, spatial dependence can be included
 as part of the vector of latent effects $\mathbf{x}$. In principle,
 any number of random effects can be included in the model. In this Section,
 we will describe the different options available, depending on the type of 
-problem.
+problem. A full description of the models described here can be found 
+in the \pkg{R-INLA} website at \url{http://www.r-inla.org}, but we have
+included here a summary here. **ref** also discuss the different spatial
+models included in \pkg{R-INLA}.
 
 \subsection{Analysis of lattice data}
 
@@ -366,7 +365,7 @@ countries, etc.).
 In order to model spatial correlation, neighbourhood must be set among the
 study areas.  It is often considered that two areas are neighbours is they
 share a common boundary.  Spatial autocorrelation is modeled using a Gaussian
-distribution with zero mean with a precision matrix that will model
+distribution with zero mean and a precision matrix that will model
 correlation between neighbours. Given that latent effects are GMRF, 
 we can define the variance-covariance matrix of the random effects
 as
@@ -377,7 +376,7 @@ $$
 \noindent
 where $\sigma^2$ is a common variance parameter and matrix $Q$ encodes
 the spatial structure. Given that we are assuming a latent GMRF, this also
-means that matrix $Q$ will be defined such as element $Q_{ij}$ is zero is
+means that matrix $Q$ will be defined such as element $Q_{ij}$ is zero if
 areas $i$ and $j$ are not neighbours. See, for example, \citet{rueheld:2005} 
 for details.
 

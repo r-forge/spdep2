@@ -201,7 +201,7 @@ Markov properties.
 The distribution of observations $y_i$ will depend on the latent effects
 $\mathbf{x}$ and, possibly, a number of hyperparameters $\theta_2$.  Taking
 the vector of hyperparameters $\theta=(\theta_1, \theta_2)$, observations
-$y_i$ will be independent of each other $x_i$ and $\theta$ becuase
+$y_i$ will be independent of each other $x_i$ and $\theta$ because
 of $\mathbf{x}$ being a GMRF.
 
 Following \citet{isi:000264374200002}, the posterior distribution of the model
@@ -230,18 +230,14 @@ can be used. We will describe some of these in more detail in Section
 \ref{sec:spmodels}.
 
 
-The specification of the prior distributions $\pi(\theta)$ is alsoe very 
+The specification of the prior distributions $\pi(\theta)$ is also very 
 flexible. These will often depend on the latent effect but, in principle,
 the most common distributions are available and the user can define its
 own prior distribution in the \pkg{R-INLA} package (but we will come
 back to this later). 
 
-
-** More stuff on how the approximation is done here **
-
-
 Hence, we can write the marginals distributions of the elements in $\mathbf{x}$
-(i.e., latent effects and hyper-parameters) as
+and $\mathbf{\theta}$ (i.e., latent effects and hyper-parameters) as
 
 
 $$
@@ -284,7 +280,7 @@ $\mathbf{\theta}_k$ in a grid for vector of hyperparameters .
 %(x_i|\mathbf{\theta}_k, \mathbf{y})$ should be in order to reduce numerical
 %error and they provide different alternatives.
 
-Note that in the previous equation it is important to have good approxiamtions
+Note that in the previous equation it is important to have good approximations
 to $\pi (x_i|\mathbf{\theta}_k, \mathbf{y})$. A Gaussian approximation
 $\tilde\pi_G (x_i|\mathbf{\theta}_k, \mathbf{y})$, with mean $\mu_i(\theta)$
 and variance $\sigma^2_i(\theta)$, may be a good starting point but a better
@@ -323,7 +319,7 @@ options. Non-linear terms and random effects are included in the formula as
 calls to the \code{f()} function. 
 
 
-The mode is fitted with a call to function \code{inla()}, which will return an
+The model is fitted with a call to function \code{inla()}, which will return an
 \code{inla} object with the fitted model. Note that, by default, only a number
 of results will be returned. These includes the marginal distributions of
 the latent effects and hyperparameters. 
@@ -337,7 +333,7 @@ for model selection. Other model selection criteria such as the DIC
 
 Furthermore, \pkg{R-INLA} includes a number of options to define the
 prior distributions for the parameters in the model. Well-known
-priors distributions are available and the user can define his own prior
+prior distributions are available and the user can define his own prior
 distributions as well.
 
 In the next Section we describe different examples of the use of
@@ -351,7 +347,10 @@ As discussed in Section \ref{sec:INLA}, spatial dependence can be included
 as part of the vector of latent effects $\mathbf{x}$. In principle,
 any number of random effects can be included in the model. In this Section,
 we will describe the different options available, depending on the type of 
-problem.
+problem. A full description of the models described here can be found 
+in the \pkg{R-INLA} website at \url{http://www.r-inla.org}, but we have
+included here a summary here. **ref** also discuss the different spatial
+models included in \pkg{R-INLA}.
 
 \subsection{Analysis of lattice data}
 
@@ -364,7 +363,7 @@ countries, etc.).
 In order to model spatial correlation, neighbourhood must be set among the
 study areas.  It is often considered that two areas are neighbours is they
 share a common boundary.  Spatial autocorrelation is modeled using a Gaussian
-distribution with zero mean with a precision matrix that will model
+distribution with zero mean and a precision matrix that will model
 correlation between neighbours. Given that latent effects are GMRF, 
 we can define the variance-covariance matrix of the random effects
 as
@@ -375,7 +374,7 @@ $$
 \noindent
 where $\sigma^2$ is a common variance parameter and matrix $Q$ encodes
 the spatial structure. Given that we are assuming a latent GMRF, this also
-means that matrix $Q$ will be defined such as element $Q_{ij}$ is zero is
+means that matrix $Q$ will be defined such as element $Q_{ij}$ is zero if
 areas $i$ and $j$ are not neighbours. See, for example, \citet{rueheld:2005} 
 for details.
 
@@ -428,12 +427,12 @@ and $\varepsilon_i$ is random Gaussian error term.
 > library(maptools)
 > data(boston)
 > library(INLA)
-> adj <- nb2mat(boston.soi, style = "B")
-> boston.c$ID <- 1:nrow(boston.c)
-> form <- log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) + 
-+     AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT) + 
-+     f(ID, model = "besag", graph = adj)
-> m1 <- inla(form, data = boston.c)
+> adj<- nb2mat(boston.soi, style="B")
+> boston.c$ID<-1:nrow(boston.c)
+> form<-log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) +  AGE + 
++ log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)+
++ f(ID, model="besag", graph=adj )
+> m1<-inla(form, data=boston.c)
 \end{Sinput}
 \end{Schunk}
 
@@ -456,41 +455,42 @@ Call:
 
 Time used:
  Pre-processing    Running inla Post-processing           Total 
-          1.476           0.767           0.235           2.478 
+         0.7621          1.1562          0.0726          1.9910 
 
 Fixed effects:
-                 mean       sd 0.025quant  0.5quant 0.975quant      kld
-(Intercept)  3.534954 1.60e-01   3.221396  3.535071   3.847909 0.00e+00
-CRIM        -0.005130 9.18e-04  -0.006932 -0.005130  -0.003330 0.00e+00
-ZN           0.000426 4.65e-04  -0.000486  0.000426   0.001339 0.00e+00
-INDUS       -0.000359 2.48e-03  -0.005234 -0.000359   0.004514 0.00e+00
-CHAS1       -0.028389 2.73e-02  -0.082031 -0.028388   0.025257 7.25e-17
-I(NOX^2)    -0.114759 1.51e-01  -0.409768 -0.114865   0.180924 1.15e-16
-I(RM^2)      0.010762 1.05e-03   0.008694  0.010762   0.012831 0.00e+00
-AGE         -0.001290 4.52e-04  -0.002176 -0.001290  -0.000404 0.00e+00
-log(DIS)    -0.094010 6.88e-02  -0.228925 -0.094034   0.041072 0.00e+00
-log(RAD)     0.051257 2.00e-02   0.012048  0.051257   0.090474 0.00e+00
-TAX         -0.000408 1.11e-04  -0.000625 -0.000408  -0.000191 1.08e-15
-PTRATIO     -0.016932 5.07e-03  -0.026878 -0.016933  -0.006982 5.27e-16
-B            0.000714 9.75e-05   0.000522  0.000714   0.000905 1.18e-30
-log(LSTAT)  -0.229971 2.17e-02  -0.272481 -0.229980  -0.187394 3.70e-32
+               mean     sd 0.025quant 0.5quant 0.975quant kld
+(Intercept)  3.5323 0.1594     3.2192   3.5324     3.8448   0
+CRIM        -0.0051 0.0009    -0.0069  -0.0051    -0.0033   0
+ZN           0.0004 0.0005    -0.0005   0.0004     0.0013   0
+INDUS       -0.0004 0.0025    -0.0052  -0.0004     0.0045   0
+CHAS1       -0.0285 0.0273    -0.0821  -0.0285     0.0251   0
+I(NOX^2)    -0.1136 0.1506    -0.4087  -0.1137     0.1822   0
+I(RM^2)      0.0108 0.0011     0.0087   0.0108     0.0128   0
+AGE         -0.0013 0.0005    -0.0022  -0.0013    -0.0004   0
+log(DIS)    -0.0938 0.0689    -0.2291  -0.0939     0.0415   0
+log(RAD)     0.0513 0.0200     0.0120   0.0513     0.0905   0
+TAX         -0.0004 0.0001    -0.0006  -0.0004    -0.0002   0
+PTRATIO     -0.0169 0.0051    -0.0269  -0.0169    -0.0070   0
+B            0.0007 0.0001     0.0005   0.0007     0.0009   0
+log(LSTAT)  -0.2295 0.0216    -0.2718  -0.2295    -0.1870   0
 
 Random effects:
-Name	  Model	  	Max KLD 
-ID   Besags ICAR model 
+Name	  Model
+ ID   Besags ICAR model 
 
 Model hyperparameters:
-                                        mean   sd     0.025quant 0.5quant
-Precision for the Gaussian observations 379.02 163.48 182.84     338.81  
-Precision for ID                         23.96   3.25  17.60      24.02  
+                                        mean    sd      0.025quant 0.5quant
+Precision for the Gaussian observations 409.186 176.201 198.283    365.787 
+Precision for ID                         23.504   2.947  17.640     23.585 
                                         0.975quant
-Precision for the Gaussian observations 803.47    
-Precision for ID                         30.23    
+Precision for the Gaussian observations 866.128   
+Precision for ID                         29.114   
 
-Expected number of effective parameters(std dev): 383.61(40.59)
-Number of equivalent replicates : 1.319 
+Expected number of effective parameters(std dev): 388.95(38.47)
+Number of equivalent replicates : 1.301 
 
-Marginal Likelihood:  -108.40 
+Marginal Likelihood:  -108.26 
+CPO and PIT are computed
 \end{Soutput}
 \end{Schunk}
 \noindent
@@ -570,10 +570,15 @@ predictors, using \code{control.predictor=list(compute=TRUE)}.
 
 \begin{Schunk}
 \begin{Sinput}
-> fpp <- Ntrees ~ 1 + f(japgrd$SPIDX, model = "bym", graph = adjpine)
-> japinlala <- inla(fpp, family = "poisson", data = as.data.frame(japgrd), 
-+     control.compute = list(dic = TRUE), control.predictor = list(compute = TRUE))
-> japgrd$INLALA <- japinlala$summary.fitted.values[, 1]
+> #fpp<-Ntrees~1+f(japgrd$INLAIDX, model="rw2d",nrow=nrow, ncol=ncol)
+> fpp<-Ntrees~1+f(japgrd$SPIDX, model="bym", graph=adjpine)
+> #INLA-LA
+>    japinlala<-inla(fpp,
++    family="poisson", data=as.data.frame(japgrd),
++ #   working.directory = japwdla, keep=TRUE,
++    control.compute=list(dic=TRUE),
++    control.predictor=list(compute=TRUE))
+> japgrd$INLALA<- japinlala$summary.fitted.values[,1]
 \end{Sinput}
 \end{Schunk}
 \noindent
@@ -1001,16 +1006,23 @@ A simple wrapper function can be defined as follows for the SEM model:
 
 \begin{Schunk}
 \begin{Sinput}
-> semwr.inla <- function(formula, d, W, rho, ...) {
-+     IrhoW <- diag(nrow(W)) - rho * W
-+     IrhoW2 <- IrhoW %*% t(IrhoW)
-+     environment(formula) <- environment()
-+     formula <- update(formula, . ~ . + f(idx, model = "generic0", 
-+         Cmatrix = IrhoW2))
-+     res <- inla(formula, data = d, ...)
-+     res$logdet <- as.numeric(determinant(IrhoW2)$modulus)
-+     res$mlik <- res$mlik + res$logdet/2
-+     return(res)
+> semwr.inla<-function(formula, d, W, rho,...)
++ {
++         IrhoW<-diag(nrow(W))-rho*W
++         IrhoW2<-IrhoW%*%t(IrhoW)
++ 
++         environment(formula)<-environment()
++ 
++         formula<-update(formula,
++           . ~ . + f(idx, model="generic0", Cmatrix =IrhoW2) )
++ 
++         res<-inla(formula, data=d, ...)
++ 
++   #Compute log-determinat to correct the marginal-loglikelihood
++         res$logdet<-as.numeric(determinant(IrhoW2)$modulus)
++         res$mlik<-res$mlik+res$logdet/2
++ 
++         return(res)
 + }
 \end{Sinput}
 \end{Schunk}
@@ -1055,18 +1067,21 @@ standard MCMC methods.
 
 \begin{Schunk}
 \begin{Sinput}
-> rrho <- seq(0.01, 0.99, len = 5)
+> rrho<-seq(0.01, .99, len=5)
 \end{Sinput}
 \end{Schunk}
 \begin{Schunk}
 \begin{Sinput}
-> semmodels = mclapply(rrho, function(rho) {
-+     sem.inla(form, d = boston.c, W = boston.mat, rho = rho, family = "gaussian", 
-+         impacts = FALSE, control.family = list(hyper = zero.variance), 
-+         control.predictor = list(compute = TRUE), control.compute = list(dic = TRUE, 
-+             cpo = TRUE), control.inla = list(print.joint.hyper = TRUE), 
-+         verbose = FALSE)
-+ })
+> semmodels = mclapply(rrho,
++         function(rho) {
++                 sem.inla(form, d=boston.c, W=boston.mat, rho=rho,
++                         family = "gaussian", impacts=FALSE,
++                         control.family = list(hyper = zero.variance),
++                         control.predictor=list(compute=TRUE),
++                         control.compute=list(dic=TRUE, cpo=TRUE),
++                         control.inla=list(print.joint.hyper=TRUE), verbose=FALSE
++                 )
++         })
 \end{Sinput}
 \end{Schunk}
 
@@ -1079,7 +1094,7 @@ the density of the prior at the different values of $\rho$.
 
 \begin{Schunk}
 \begin{Sinput}
-> bmasem <- BMA2(semmodels, rrho, 1, impacts = FALSE)
+> bmasem<-BMA2(semmodels, rrho, 1 , impacts=FALSE)
 \end{Sinput}
 \end{Schunk}
 
@@ -1148,8 +1163,9 @@ Note that now we will beusing a binary adjacency matrix as the random
 effects have an intrinsic CAR specification:
 \begin{Schunk}
 \begin{Sinput}
-> boston.matB <- listw2mat(nb2listw(boston.soi, style = "B"))
-> bmspB <- as(boston.matB, "CsparseMatrix")
+> #Binary adjacency matrix
+> boston.matB<-listw2mat(nb2listw(boston.soi, style="B"))
+> bmspB<-as(boston.matB, "CsparseMatrix")
 \end{Sinput}
 \end{Schunk}
 
@@ -1159,32 +1175,40 @@ a prior for the precission of the random effects in variable \code{fhyper}.
 
 \begin{Schunk}
 \begin{Sinput}
-> rlambda <- seq(0.01, 0.2, length.out = 11)
-> fhyper = list(prec = list(prior = "loggamma", param = c(1, 1), 
-+     initial = log(1), fixed = FALSE))
-> form2 <- log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) + 
+> #Run models
+> rlambda<-seq(0.01, .2, length.out=11)
+> #Setting of hyper-parameters
+> fhyper=list(prec=list(prior="loggamma", param=c(1,1), initial=log(1), fixed=FALSE))
+> #Formula
+> form2<-log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) + 
 +     AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)
 \end{Sinput}
 \end{Schunk}
 
 \begin{Schunk}
 \begin{Sinput}
-> lerouxmodels = mclapply(rlambda, function(lambda) {
-+     leroux.inla(form2, d = boston.c, W = boston.matB, lambda = lambda, 
-+         fhyper = fhyper, improve = TRUE, family = "gaussian", 
-+         control.predictor = list(compute = TRUE), control.compute = list(dic = TRUE, 
-+             cpo = TRUE), control.inla = list(print.joint.hyper = TRUE), 
-+         verbose = FALSE)
-+ })
+> lerouxmodels = mclapply(rlambda,
++         function(lambda) {
++                 leroux.inla(form2, d=boston.c, W=boston.matB, lambda=lambda,
++                         fhyper=fhyper, improve=TRUE,
++                         family = "gaussian",
++ #   control.family = list(hyper = zero.variance),
++                         control.predictor=list(compute=TRUE),
++                         control.compute=list(dic=TRUE, cpo=TRUE),
++                         control.inla=list(print.joint.hyper=TRUE), verbose=FALSE
++                 )
++         })
 \end{Sinput}
 \end{Schunk}
 
 
 
 
+
+
 \begin{Schunk}
 \begin{Sinput}
-> bmaleroux <- BMA2(lerouxmodels, rlambda, 0, impacts = FALSE)
+> bmaleroux<-BMA2(lerouxmodels, rlambda, 0, impacts=FALSE)
 \end{Sinput}
 \end{Schunk}
 
@@ -1192,14 +1216,20 @@ The same model can be fitted usig package \pkg{CARBayes} as follows:
 
 \begin{Schunk}
 \begin{Sinput}
+> #Run with CARBAYES
 > library(CARBayes)
+> 
+> #New model
+> #form2<-log(CMEDV) ~CRIM+ZN + INDUS + CHAS + I(NOX^2)+
+> #   I(RM^2) +  AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)
+> 
 \end{Sinput}
 \end{Schunk}
 \begin{Schunk}
 \begin{Sinput}
 > attach(boston.c)
-> lcarbayes <- gaussian.lerouxCAR(form2, W = as.matrix(bmspB), 
-+     burnin = 500, n.sample = 2500, thin = 5)
+> lcarbayes<- gaussian.lerouxCAR (form2, W=as.matrix(bmspB), burnin=500, 
++    n.sample=2500, thin=5)
 > detach(boston.c)
 \end{Sinput}
 \end{Schunk}
@@ -1214,7 +1244,7 @@ fact that different priors have been used for the variances of the random
 effects and the error term (????). **Check what happens to the other parameters**
 
 % latex table generated in R 3.0.1 by xtable 1.7-1 package
-% Tue May 21 21:06:28 2013
+% Mon May 27 19:53:33 2013
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrr}
@@ -1244,7 +1274,7 @@ effects and the error term (????). **Check what happens to the other parameters*
 
 \begin{figure}[h]
 \begin{center}
-\includegraphics{spatial_inla-031}
+\includegraphics{spatial_inla-032}
 \end{center}
 \caption{Comparisson between the posterior marginal of $\lambda$ in 
 Leroux et al.'s model with INLA and MCMC.}
