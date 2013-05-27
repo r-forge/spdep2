@@ -1227,6 +1227,50 @@ leroux.inla(form2, d=boston.c, W=boston.matB, lambda=lambda,
 @
 
 
+<<echo=FALSE, eval=FALSE>>=
+#As suggested by Lola Ugarte
+
+#My matrix: (1-lambda)*I_n+lambda*CAR
+Q <- diag(1-apply(boston.matB, 1, sum)) + boston.matB
+
+#My code
+form3<-log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) +
+    AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)+
+    f(idx, model="generic1",  Cmatrix = Q, constr=TRUE, hyper = fhyper)
+
+#Lola's code
+form32<-log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) +
+    AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)+
+    f(idx, model="generic1",  Cmatrix = Q, constr=TRUE, 
+    hyper =list(prec=list(prior="loggamma", param=c(1,5e-5)),
+    beta=list(prior="gaussian", param=c(0,.00001)))
+)
+
+leroux2<-inla(form32,  data=boston.c, family = "gaussian",
+    control.family = list(hyper = zero.variance),
+     control.predictor=list(compute=TRUE),
+                        control.compute=list(dic=TRUE, cpo=TRUE),
+                        control.inla=list(print.joint.hyper=TRUE), verbose=FALSE
+                )
+
+
+#Compare results between INLA and CARBayes
+plot(density(1-lcarbayes$samples.rho, from=0, to=1), xlim=c(0,.2),
+  main=expression(paste("Marginal distribution of ", lambda)))
+lines(bmaleroux$rho$marginal[,1], bmaleroux$rho$marginal[,2], col="red")
+legend(.15, 15, c("INLA", "MCMC"), col=c("red", "black"), lty=1)
+
+kk<-inla.tmarginal(function(x){1-x}, leroux2$marginals.hyperpar[[2]])
+lines(kk,  col="blue")
+
+kkk<-inla.tmarginal(function(x){x/10.3}, leroux2$marginals.hyperpar[[2]])
+lines(kkk, col="pink")
+
+
+
+@
+
+
 <<echo=FALSE>>=
 #Jpg extension used becuase of a server side restriction 
 if(!file.exists("lerouxmodels.RData"))
@@ -1302,7 +1346,7 @@ plot(density(1-lcarbayes$samples.rho, from=0, to=1), xlim=c(0,.2),
 lines(bmaleroux$rho$marginal[,1], bmaleroux$rho$marginal[,2], col="red")
 legend(.15, 15, c("INLA", "MCMC"), col=c("red", "black"), lty=1)
 
-#Precission of random effects
+#Precission of error term
 plot(density(1/lcarbayes$samples.nu2 ),
   main=expression(paste("Marginal distribution of ", 1/sigma^2, " error")))
 lines(bmaleroux$marginals.hyperpar[[1]], col="red")
