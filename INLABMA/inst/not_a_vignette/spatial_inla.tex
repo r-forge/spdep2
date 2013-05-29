@@ -455,7 +455,7 @@ Call:
 
 Time used:
  Pre-processing    Running inla Post-processing           Total 
-         0.7621          1.1562          0.0726          1.9910 
+         0.8171          1.1667          0.0671          2.0509 
 
 Fixed effects:
                mean     sd 0.025quant 0.5quant 0.975quant kld
@@ -504,7 +504,7 @@ marginals of the precisions in the model.
 \includegraphics{spatial_inla-004}
 \end{center}
 \caption{Marginals of the precisions of the error term (top) and
-spatial random effects (bottom).}
+spatial random effects (bottom), Boston housing data}
 \label{fig:marg1}
 \end{figure}
 
@@ -514,7 +514,7 @@ spatial random effects (bottom).}
 Point patterns are analysed with INLA as the result of a counting process,
 i.e., points are not modelled directly but they are aggregated over a a grid
 of small squares. For this reason, the analysis of point patterns is conducted
-similarly as that of lattice data: counts are available for each square and 
+similarly to that of lattice data: counts are available for each square and 
 these are assigned neighbours according to the adjacent squares. Then, counts
 can be smoothed using an appropriate non-linear term, such as spatial
 random effects.
@@ -570,15 +570,10 @@ predictors, using \code{control.predictor=list(compute=TRUE)}.
 
 \begin{Schunk}
 \begin{Sinput}
-> #fpp<-Ntrees~1+f(japgrd$INLAIDX, model="rw2d",nrow=nrow, ncol=ncol)
-> fpp<-Ntrees~1+f(japgrd$SPIDX, model="bym", graph=adjpine)
-> #INLA-LA
->    japinlala<-inla(fpp,
-+    family="poisson", data=as.data.frame(japgrd),
-+ #   working.directory = japwdla, keep=TRUE,
-+    control.compute=list(dic=TRUE),
-+    control.predictor=list(compute=TRUE))
-> japgrd$INLALA<- japinlala$summary.fitted.values[,1]
+> fpp <- Ntrees ~ 1 + f(japgrd$SPIDX, model = "bym", graph = adjpine)
+> japinlala <- inla(fpp, family = "poisson", data = as.data.frame(japgrd), 
++     control.compute = list(dic = TRUE), control.predictor = list(compute = TRUE))
+> japgrd$INLALA <- japinlala$summary.fitted.values[, 1]
 \end{Sinput}
 \end{Schunk}
 \noindent
@@ -591,18 +586,17 @@ pattern using a smoothing method.
 \begin{center}
 \includegraphics{spatial_inla-008}
 \end{center}
-\caption{Estimation of the intensity of a point pattern with \pkg{R-INLA}.}
+\caption{Estimation of the intensity of a point pattern with \pkg{R-INLA}, 
+Japanese black pine dataset}
 \label{fig:sppa}
 \end{figure}
 
 
 
-** Mention other possible models. **
-
 \subsection{Geostatistics}
 
 
-\pkg{R-INLA} deals with geostatistical data on a regular grid. THis means
+\pkg{R-INLA} deals with geostatistical data on a regular grid. This means
 that observations need to be matched to the points in the grid and that those
 points with no observations attached are considered as missing values.
 Hence, this is somewhat similar to the analysis of lattice data and point
@@ -661,14 +655,6 @@ Rongelap data set \citep{DiggleRibeiro:2007}, which records  radionuclide
 concentration at 157 different locations in Rongelap island. We have restricted
 the analysis to one of the clusters in the north-east part of the island
 because obervations need to be matched to a regular grid of points.
-
-
-
-**
-
-Shall we provide an example using the full data set?
-
-**
 
 \begin{Schunk}
 \begin{Sinput}
@@ -1244,7 +1230,7 @@ fact that different priors have been used for the variances of the random
 effects and the error term (????). **Check what happens to the other parameters**
 
 % latex table generated in R 3.0.1 by xtable 1.7-1 package
-% Mon May 27 19:53:33 2013
+% Wed May 29 13:51:45 2013
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrr}
