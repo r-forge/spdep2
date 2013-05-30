@@ -351,7 +351,7 @@ trIrhoWinv<-function(W, rho, offset=0, order=20, direct=TRUE, Df=diag(nrow(W)))
 			WW<-WW%*%W
 		}
 	}
-	return(as.real(tr))
+	return(as.double(tr))
 }
 
 

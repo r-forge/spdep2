@@ -474,6 +474,33 @@ spatial random effects (bottom), Boston housing data}
 \end{figure}
 
 
+A summary of some latent models implemented in \pkg{R-INLA} is available
+in Table \ref{tab:inlamodels}. Note that this is not an exhaustive list and
+that a complete list of the available latent models can be obtanined from
+the \pkg{R-INLA} documentation. Also, detailed examples are available
+from the \pkg{R-INLA} website at \url{http://www.r-inla.org}.
+
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{lccc}
+Name  & Model & Structure & Parameters\\
+\hline
+\code{besag} & & \\
+\code{besagproper} & & \\
+\code{bym} & & \\
+\code{rw2d} & & \\
+\hline
+\code{generic0} & & \\
+\code{generic1} & & \\
+\end{tabular}
+\end{center}
+\caption{Summary of some latent models implemented in \pkg{R-INLA} 
+for spatial statistics}
+\label{tab:inlamodels}
+\end{table}
+
+
 \subsection{Point patterns}
 
 Point patterns are analysed with INLA as the result of a counting process,
@@ -552,7 +579,7 @@ japgrd$INLALA<- japinlala$summary.fitted.values[,1]
 @
 \noindent
 Figure \ref{fig:sppa} shows the original counts and the smoothed counts.  Note
-that this is similar to estimating the intesity of an inhomogenous point
+that this is similar to estimating the intensity of an inhomogenous point
 pattern using a smoothing method.
 
 
@@ -889,6 +916,329 @@ described in Section \ref{sec:examples}.
 \section{Examples}
 \label{sec:examples}
 
+\subsection{Leroux Model}
+
+\citet{Lerouxetal:1999} propose a model for the analysis of spatial data in a
+lattice which is similar to the one by \citet{besagetal:1991}, in the sense
+that they split variation according to  spatial and non-spatial patterns.
+Rather than including the spatial and non-spatial random effect as a sum in the
+linear term they consider a single random effects as follows:
+
+\begin{equation}
+u \sim MVN(0, \Sigma);\ \Sigma=\sigma^2 ((1-\lambda) I_n+\lambda M)^{-1}
+\label{eq:leroux}
+\end{equation}
+\noindent
+Here $M$ is the precision matrix of a process with spatial structure and we
+will take that of an instrinsic CAR specification. Hence, the precision matrix
+is, in a sense, a mixture of the precisions of a non-spatial and a spatial
+one. $\lambda$ controls how strong the spatial structure is. For $\lambda=1$
+the effect is entirely spatial whilst for $\lambda=0$ there is no spatial
+dependence.
+
+In principle, this is not a model that \pkg{R-INLA} can fit. However, if
+$\lambda$ is fixed, then the random effects are Gaussian with a known structure
+for the variance-covariance matrix which can be fitted using a \code{generic0}
+latent model.
+
+\subsubsection{Boston housing data}
+
+Here we revisit the Boston housing data to fit the Leroux et al. model.  First
+of all, it is worth mentioning that the model needs a wrapper function to be
+fitted for a given value of the spatial parameter $\lambda$. This
+wrapper function is included in the \proglang{R} package \pkg{R-INLA}.
+
+It is based on the \code{generic0} latent model available in  \pkg{R-INLA}.
+This model implements a multivariage Gaussian random effect with zero mean and
+precision matrix as in equation (\ref{eq:leroux}). Once $\lambda$ is fixed the
+model can be easily fitted with \pkg{R-INLA}.  We repeat this procedure for
+different values of $\lambda$ to obtain a list of fitted models to be combined
+later.
+
+Hence, we can write a similar wrapper function as in the previous example for
+the spatial econometrics models, which is included in package \pkg{INLABMA}:
+
+<<>>=
+library(INLABMA)
+leroux.inla
+@
+
+
+In the previous code, the precision matrix is created using the adjacency
+matrix and the value of $\lambda$. Then the \code{generic0} model is added to the
+formula with the fixed effects. Finally we correct the marginal log-likelihood
+$\pi(\mathbf{y})$ by adding the log-determinat of $(1-\lambda)I_n+\lambda M)$.
+Note that, in principle, this is not needed to fit a single model and obtain
+the approximations to the posterior marginals as it is a constant. However, we
+are fitting and combining several models so we need to correct for this
+becuase this scaling factor will change with the value of $\lambda$.
+Argument \code{'...'} is used to pass any other options to \code{inla()}. 
+This can be used to tune and set a number of other options.
+
+Similar wrapper functions can be written for other models. The functions
+included in package \pkg{INLABMA} are similar, but include further options
+\citep[see,][for details]{Bivandetal:2013}.
+
+%Note that here \code{zero.variance} is used to set
+%to zero the additional error term which is added by default by \pkg{R-INLA}.
+
+<<echo=FALSE, eval=FALSE, keep.source=FALSE>>=
+#Zero-variance of error term
+zero.variance = list(prec=list(initial = 25, fixed=TRUE))
+@
+
+Also, the adjacency matrix is taken from the data provided in the \code{boston}
+data set.
+Note that we will be using a binary adjacency matrix as the random
+effects have an intrinsic CAR specification:
+<<>>=
+#Binary adjacency matrix
+boston.matB<-listw2mat(nb2listw(boston.soi, style="B"))
+bmspB<-as(boston.matB, "CsparseMatrix")
+@
+
+Function \code{inla.leroux} is used in the example below to compute the fitted
+models for the Leroux et al. model.  In this case, we take $\lambda$ to be in
+the interval $(0.8,0.99)$ after previous assessment on where
+$\pi(\lambda|\mathbf{y})$ has its mode. Also, we define a prior for the
+precission of the random effects in variable \code{fhyper}.
+
+<<>>=
+#Run models
+rlambda<-seq(0.8, .99, length.out=15)
+
+#Setting of hyper-parameters
+fhyper=list(prec=list(prior="loggamma", param=c(1,1), initial=log(1), fixed=FALSE))
+
+#Formula
+form2<-log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) + 
+    AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)
+@
+
+<<eval=FALSE>>=
+lerouxmodels = mclapply(rlambda,
+        function(lambda) {
+                leroux.inla(form2, d=boston.c, W=boston.matB, lambda=lambda,
+                        fhyper=fhyper, improve=TRUE,
+                        family = "gaussian",
+#   control.family = list(hyper = zero.variance),
+                        control.predictor=list(compute=TRUE),
+                        control.compute=list(dic=TRUE, cpo=TRUE),
+                        control.inla=list(print.joint.hyper=TRUE), verbose=FALSE
+                )
+        })
+@
+
+<<echo=FALSE, eval=FALSE>>=
+#Uniform prior on the variances
+loginvunif<-"expression:
+  precision = exp(log_precision);
+  logdens = (precision>1/1000?1:0);
+  return(logdens);"
+
+
+#  logdens=((precision>1000)?(-log(1000)-2*log(precision)):0);
+fhyper2<-list(prec=list(prior=loginvunif))
+
+leroux.inla(form2, d=boston.c, W=boston.matB, lambda=lambda,
+                        fhyper=fhyper2, improve=TRUE,
+                        family = "gaussian",
+#   control.family = list(hyper = zero.variance),
+                        control.predictor=list(compute=TRUE),
+                        control.compute=list(dic=TRUE, cpo=TRUE),
+                        control.inla=list(print.joint.hyper=TRUE), verbose=FALSE
+                )
+
+@
+
+
+
+
+<<echo=FALSE>>=
+#Jpg extension used becuase of a server side restriction 
+if(!file.exists("lerouxmodels.RData"))
+	download.file("http://www.uclm.es/profesorado/vgomez/JSSpaper/lerouxmodels.jpg", "lerouxmodels.RData")
+load("lerouxmodels.RData")
+@
+
+Following this, we need to combine the different models to obtain the final
+model by Bayesian Model Averaging. We will take a uniform prior on $\rho$ and
+set the third argument in the following function to $1$. Note that another
+prior can be used here by giving the density of the prior at the different
+values of $\rho$.
+
+
+
+<<>>=
+bmaleroux<-BMA2(lerouxmodels, rlambda, 0, impacts=FALSE)
+@
+<<echo=FALSE, eval=FALSE>>=
+#Using the same prior as in R-INLA:logit(beta) ~ Normal
+xxxprec<-.01
+xxx<-data.frame(x=seq(-4/sqrt(xxxprec),4/sqrt(xxxprec), length.out=100))
+xxx$y<-dnorm(xxx$x, 0, sd=sqrt(1/xxxprec))
+
+xxx2<-inla.tmarginal(function(x){exp(x)/(1+exp(x))}, xxx)
+
+@
+
+
+\noindent
+\code{bmaleroux} is similar to the object returned by \code{inla()} and it
+includes the posterior marginals and summary statistics for $\lambda$
+in a list element named \code{rho}. This provides summary statistics (mean,
+standard deviation, some quantiles and the posterior marginal.
+
+The same model can be fitted usig package \pkg{CARBayes} as follows:
+
+<<>>=
+#Run with CARBAYES
+library(CARBayes)
+
+#New model
+#form2<-log(CMEDV) ~CRIM+ZN + INDUS + CHAS + I(NOX^2)+
+#   I(RM^2) +  AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)
+
+@
+<<eval=FALSE>>=
+attach(boston.c)
+lcarbayes<- gaussian.lerouxCAR (form2, W=as.matrix(bmspB), burnin=500, 
+   n.sample=2500, thin=5)
+detach(boston.c)
+@
+<<echo=FALSE>>=
+#Jpg extension used becuase of a server side restriction 
+if(!file.exists("lcarbayes.RData"))
+	download.file("http://www.uclm.es/profesorado/vgomez/JSSpaper/lcarbayes.jpg", "lcarbayes.RData")
+load("lcarbayes.RData")
+@
+
+<<eval=FALSE, echo=FALSE>>=
+#
+#COMMENT: Note that by including an error term and the random effects
+#there is a very high negative autocorrelation between the variance
+#Probaly the error term is redundant and it can be removed
+#Also, this may cause some identifiability problem in the variances.
+#
+
+ plot(as.vector(lcarbayes$samples.tau2[,1]), as.vector(lcarbayes$samples.nu2[,1]))
+
+
+@
+
+Table \ref{tab:leroux} shows point estimates and standard deviations of the
+fixed effects and parameter $\lambda$ (bottom line) in the model. It is clear
+that there are no significant differences between the estimates computed with
+MCMC and our method.  Furthermore, Figure \ref{fig:leroux} shows the marginal
+distribution of $\lambda$ and it shows how our estimate is very close to that
+provided by MCMC. The slight difference that is observed may well be due to the
+fact that different priors have been used for the variances of the random
+effects and the error term. \pkg{CARBayes} uses uniform priors on the variances,
+whiles \pkg{R-INLA} assigns inverted Gamma distributions to the variances.
+
+<<echo=FALSE, results=tex>>=
+library(xtable)
+
+tab<-cbind(bmaleroux$summary.fixed[,1:2], summary(lcarbayes$samples.beta)[[1]][,1:2])
+tab<-rbind(tab, c(bmaleroux$rho$mean, bmaleroux$rho$sd, 
+   1-summary(lcarbayes$samples.rho)[[1]][1], 
+   summary(lcarbayes$samples.rho)[[1]][2])
+)
+rownames(tab)[nrow(tab)]<-"lambda"
+
+colnames(tab)<-c("Mean (INLA)", "SD (INLA)", "Mean (MCMC)", "SD (MCMC)") 
+
+
+xtab<-xtable(tab, digits=4)
+xtab[nrow(xtab), 3]<- 1- xtab[nrow(xtab), 3] #CARBAyes gives 1-lambda
+caption(xtab)<-"Point estimates of fixed effects using INLA and MCMC"
+label(xtab)<-"tab:leroux"
+
+print(xtab)
+@
+
+
+\begin{figure}[h]
+\begin{center}
+<<echo=FALSE, fig=TRUE>>=
+par(mfrow=c(2,2))
+#Compare results between INLA and CARBayes
+plot(density(lcarbayes$samples.rho, from=0, to=1), xlim=c(0.8,1),
+  main=expression(paste("Marginal distribution of ", lambda)))
+lines(bmaleroux$rho$marginal[,1], bmaleroux$rho$marginal[,2], col="red")
+legend(.15, 15, c("INLA", "MCMC"), col=c("red", "black"), lty=1)
+
+#Precission of error term
+plot(density(1/lcarbayes$samples.nu2 ),
+  main=expression(paste("Marginal distribution of ", 1/sigma^2, " error")))
+lines(bmaleroux$marginals.hyperpar[[1]], col="red")
+
+#Precission of random effects
+plot(density(1/lcarbayes$samples.tau2 ),
+  main=expression(paste("Marginal distribution of ", 1/sigma^2, " random effects")) )
+lines(bmaleroux$marginals.hyperpar[[2]], col="red")
+
+#Fitted values
+plot(lcarbayes$fitted.values[,1], bmaleroux$summary.fitted.values[,1],
+   main="Fitted values (posterior mean)", xlab="MCMC", ylab="INLA")
+abline(0,1)
+
+@
+\end{center}
+\caption{Comparisson between the posterior marginals of several parameters in 
+Leroux et al.'s model and fitted values with INLA and MCMC.}
+\label{fig:leroux}
+\end{figure}
+
+While writting this paper, \citet{LeeMitchell:2013} have come up with an
+alternative way of fitting this model using \pkg{R-INLA} and a \code{generic1}
+latent model. In general, the results obtained with our approach are very
+similar to the ones obtained with theirs for the Boston housing data.
+
+
+<<echo=FALSE, eval=FALSE>>=
+#As suggested by Lola Ugarte
+
+#My matrix: (1-lambda)*I_n+lambda*CAR
+Q <- diag(1-apply(boston.matB, 1, sum)) + boston.matB
+
+#Lola's code
+form3<-log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) +
+    AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)+
+    f(idx, model="generic1",  Cmatrix = Q, constr=TRUE, 
+    hyper =list(prec=list(prior="loggamma", param=c(1,5e-5)),
+    beta=list(prior="gaussian", param=c(0,.01)))
+)
+
+leroux2<-inla(form3,  data=boston.c, family = "gaussian",
+#    control.family = list(hyper = zero.variance),
+     control.predictor=list(compute=TRUE),
+                        control.compute=list(dic=TRUE, cpo=TRUE),
+                        control.inla=list(print.joint.hyper=TRUE), verbose=FALSE
+                )
+
+
+#Compare results between INLA and CARBayes
+plot(density(lcarbayes$samples.rho, from=0, to=1), xlim=c(0.8,.99),
+  main=expression(paste("Marginal distribution of ", lambda)))
+lines(bmaleroux$rho$marginal[,1], bmaleroux$rho$marginal[,2], col="red")
+lines(leroux2$marginals.hyperpar[[3]], col="blue")
+legend(.15, 15, c("INLA", "MCMC"), col=c("red", "black"), lty=1)
+
+kk<-inla.tmarginal(function(x){1-x}, leroux2$marginals.hyperpar[[2]])
+lines(kk,  col="blue")
+
+kkk<-inla.tmarginal(function(x){x/10.3}, leroux2$marginals.hyperpar[[2]])
+lines(kkk, col="pink")
+
+
+
+@
+
+
+
+
+
 
 \subsection{Spatial Econometrics Models}
 
@@ -959,7 +1309,7 @@ y= (I_n-\rho W)^{-1}(\alpha+\beta X+\gamma W X) +\varepsilon '
 $$
 \noindent
 Note that this is like our previopus model \ref{eq:slm} using an extended desgn
-matrix taht includes both $X$ and $W X$.
+matrix that includes both $X$ and $W X$.
 
 These models cannot be fitted with \pkg{R-INLA} for two reasons. First of all, 
 the SAR specification is not implemented, so we cannot consider it for out
@@ -1089,12 +1439,15 @@ standard MCMC methods.
 
 
 <<>>=
-rrho<-seq(0.01, .99, len=5)
+fform<-log(CMEDV) ~CRIM+ZN + INDUS + CHAS + I(NOX^2)+
+   I(RM^2) +  AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)
+
+rrho1<-seq(0.5, .9, len=20)
 @
 <<eval=FALSE>>=
-semmodels = mclapply(rrho,
+semmodels = mclapply(rrho1,
         function(rho) {
-                sem.inla(form, d=boston.c, W=boston.mat, rho=rho,
+                sem.inla(fform, d=boston.c, W=boston.mat, rho=rho,
                         family = "gaussian", impacts=FALSE,
                         control.family = list(hyper = zero.variance),
                         control.predictor=list(compute=TRUE),
@@ -1118,240 +1471,105 @@ function to $1$. Note that another prior can be used here by giving
 the density of the prior at the different values of $\rho$.
 
 <<>>=
-bmasem<-BMA2(semmodels, rrho, 1 , impacts=FALSE)
+bmasem<-BMA2(semmodels, rrho1, 1 , impacts=FALSE)
 @
 
 \code{bmasem} is similar to the object returned by \code{inla()} and it
 includes the posterior marginals and summary statistics for $\rho$.
 
 
-\subsection{Leroux Model for Disease Mapping}
-
-\citet{Lerouxetal:1999} propose a model for the analysis of spatial data in a
-lattice which is similar to the one by \citet{besagetal:1991}, in the sense
-that they split variation according to  spatial and non-spatial patterns.
-Rather than including the spatial and non-spatial random effects as a sum in
-the linear term they consider a single random effects as follows:
-
-$$
-u \sim MVN(0, \Sigma);\ \Sigma=\sigma^2 ((1-\lambda) M+\lambda I_n)^{-1}
-$$
-\noindent
-Here $M$ is the precision matrix of a process with spatial structure and we
-will take that of an instrinsic CAR specification. Hence, the precision matrix
-is, in a sense, a mixture of the precisions of a non-spatial and a spatial
-one. $\lambda$ controls how strong the spatial structure is. For $\lambda=1$
-the effect is entirely spatial whilst for $\lambda=0$ there is no spatial
-dependence.
-
-Again, this is not a model that \pkg{R-INLA} can fit. However, if  $\lambda$
-is fixed, then the random effects are Gaussian with a known structure for the
-variance-covariance matrix. Hence, we can write a similar wrapper function
-as in the previous example for the spatial econometrics models:
-
-
+SLM and SDM models can be fitted using similar code. In the case of
+the SLM, first we compute the design matrix (of the fixed effects) 
+to be used later when fitting the models. This will speed up the 
+computations.
 
 <<>>=
-leroux.inla
-@
+mmatrix<-model.matrix(fform, boston.c)
 
-
-Note that now we will beusing a binary adjacency matrix as the random
-effects have an intrinsic CAR specification:
-<<>>=
-#Binary adjacency matrix
-boston.matB<-listw2mat(nb2listw(boston.soi, style="B"))
-bmspB<-as(boston.matB, "CsparseMatrix")
-@
-
-In this case, we take $\lambda$ to be in the interval $(0,0.2)$ after previous
-assessment on where $\pi(\lambda|\mathbf{y})$ has its mode. Also, we define
-a prior for the precission of the random effects in variable \code{fhyper}.
-
-<<>>=
-#Run models
-rlambda<-seq(0.01, .2, length.out=11)
-
-#Setting of hyper-parameters
-fhyper=list(prec=list(prior="loggamma", param=c(1,1), initial=log(1), fixed=FALSE))
-
-#Formula
-form2<-log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) + 
-    AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)
+rrho2<-seq(0.3, .6, len=20)
 @
 
 <<eval=FALSE>>=
-lerouxmodels = mclapply(rlambda,
-        function(lambda) {
-                leroux.inla(form2, d=boston.c, W=boston.matB, lambda=lambda,
-                        fhyper=fhyper, improve=TRUE,
-                        family = "gaussian",
-#   control.family = list(hyper = zero.variance),
+slmmodels = mclapply(rrho2,
+        function(rho) {
+                slm.inla(form, d=boston.c, W=boston.mat, rho=rho, mmatrix=mmatrix,
+                        family = "gaussian", impacts=TRUE,
+                        control.data = list(hyper = zero.variance),
+                        control.predictor=list(compute=TRUE),
+                        control.compute=list(dic=TRUE, cpo=TRUE),
+                        control.inla=list(print.joint.hyper=TRUE), verbose=FALSE
+                )
+        })
+
+@
+<<echo=FALSE>>=
+#Jpg extension used becuase of a server side restriction 
+if(!file.exists("slmmodels.RData"))
+	download.file("http://www.uclm.es/profesorado/vgomez/JSSpaper/slmmodels.jpg", "slmmodels.RData")
+load("slmmodels.RData")
+@
+
+<<>>=
+bmaslm<-BMA2(slmmodels, rrho2, 1 , impacts=FALSE)
+@
+
+In the case of the SDM, it is very helpful to compute $X$ and $WX$ beforehand
+to reduce computation time, as this is common to all the fitted models
+regarless of the value of $\rho$. This can be later passed to wrapper function
+\code{sdm.inla}.
+
+<<>>=
+mmW<-bmsp%*%mmatrix[,-1]#Remove intercept
+mmatrixsdm<-cbind(mmatrix, as.matrix(mmW))
+
+rrho3<-seq(0.4, .7, len=20)
+@
+
+<<eval=FALSE>>=
+sdmmodels = mclapply(rrho3,
+        function(rho) {
+                sdm.inla(form, d=boston.c, W=boston.mat, rho=rho, mmatrix=mmatrixsdm,
+                        family = "gaussian", impacts=TRUE,
+                        control.data = list(hyper = zero.variance),
                         control.predictor=list(compute=TRUE),
                         control.compute=list(dic=TRUE, cpo=TRUE),
                         control.inla=list(print.joint.hyper=TRUE), verbose=FALSE
                 )
         })
 @
-
-<<echo=FALSE, eval=FALSE>>=
-#Uniform prior on the variances
-loginvunif<-"expression:
-  precision = exp(log_precision);
-  logdens = (precision>1/1000?1:0);
-  return(logdens);"
-
-
-#  logdens=((precision>1000)?(-log(1000)-2*log(precision)):0);
-fhyper2<-list(prec=list(prior=loginvunif))
-
-leroux.inla(form2, d=boston.c, W=boston.matB, lambda=lambda,
-                        fhyper=fhyper2, improve=TRUE,
-                        family = "gaussian",
-#   control.family = list(hyper = zero.variance),
-                        control.predictor=list(compute=TRUE),
-                        control.compute=list(dic=TRUE, cpo=TRUE),
-                        control.inla=list(print.joint.hyper=TRUE), verbose=FALSE
-                )
-
-@
-
-
-<<echo=FALSE, eval=FALSE>>=
-#As suggested by Lola Ugarte
-
-#My matrix: (1-lambda)*I_n+lambda*CAR
-Q <- diag(1-apply(boston.matB, 1, sum)) + boston.matB
-
-#My code
-form3<-log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) +
-    AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)+
-    f(idx, model="generic1",  Cmatrix = Q, constr=TRUE, hyper = fhyper)
-
-#Lola's code
-form32<-log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) +
-    AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)+
-    f(idx, model="generic1",  Cmatrix = Q, constr=TRUE, 
-    hyper =list(prec=list(prior="loggamma", param=c(1,5e-5)),
-    beta=list(prior="gaussian", param=c(0,.00001)))
-)
-
-leroux2<-inla(form32,  data=boston.c, family = "gaussian",
-    control.family = list(hyper = zero.variance),
-     control.predictor=list(compute=TRUE),
-                        control.compute=list(dic=TRUE, cpo=TRUE),
-                        control.inla=list(print.joint.hyper=TRUE), verbose=FALSE
-                )
-
-
-#Compare results between INLA and CARBayes
-plot(density(1-lcarbayes$samples.rho, from=0, to=1), xlim=c(0,.2),
-  main=expression(paste("Marginal distribution of ", lambda)))
-lines(bmaleroux$rho$marginal[,1], bmaleroux$rho$marginal[,2], col="red")
-legend(.15, 15, c("INLA", "MCMC"), col=c("red", "black"), lty=1)
-
-kk<-inla.tmarginal(function(x){1-x}, leroux2$marginals.hyperpar[[2]])
-lines(kk,  col="blue")
-
-kkk<-inla.tmarginal(function(x){x/10.3}, leroux2$marginals.hyperpar[[2]])
-lines(kkk, col="pink")
-
-
-
-@
-
-
 <<echo=FALSE>>=
 #Jpg extension used becuase of a server side restriction 
-if(!file.exists("lerouxmodels.RData"))
-	download.file("http://www.uclm.es/profesorado/vgomez/JSSpaper/lerouxmodels.jpg", "lerouxmodels.RData")
-load("lerouxmodels.RData")
+if(!file.exists("sdmmodels.RData"))
+	download.file("http://www.uclm.es/profesorado/vgomez/JSSpaper/sdmmodels.jpg", "sdmmodels.RData")
+load("sdmmodels.RData")
 @
 
 <<>>=
-bmaleroux<-BMA2(lerouxmodels, rlambda, 0, impacts=FALSE)
+bmasdm<-BMA2(sdmmodels, rrho3, 1 , impacts=FALSE)
 @
 
-The same model can be fitted usig package \pkg{CARBayes} as follows:
-
-<<>>=
-#Run with CARBAYES
-library(CARBayes)
-
-#New model
-#form2<-log(CMEDV) ~CRIM+ZN + INDUS + CHAS + I(NOX^2)+
-#   I(RM^2) +  AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)
-
-@
-<<eval=FALSE>>=
-attach(boston.c)
-lcarbayes<- gaussian.lerouxCAR (form2, W=as.matrix(bmspB), burnin=500, 
-   n.sample=2500, thin=5)
-detach(boston.c)
-@
-<<echo=FALSE>>=
-#Jpg extension used becuase of a server side restriction 
-if(!file.exists("lcarbayes.RData"))
-	download.file("http://www.uclm.es/profesorado/vgomez/JSSpaper/lcarbayes.jpg", "lcarbayes.RData")
-load("lcarbayes.RData")
-@
-
-Table \ref{tab:leroux} shows point estimates and standard deviations of the
-fixed effects and parameter $\lambda$ (bottom line) in the model. It is clear
-that there are no significant differences between the estimates computed with
-MCMC and our method.  Furthermore, Figure \ref{fig:leroux} shows the marginal
-distribution of $\lambda$ and it shows how our estimate is very close to that
-provided by MCMC. The slight difference that is observed may well be due to the
-fact that different priors have been used for the variances of the random
-effects and the error term (????). **Check what happens to the other parameters**
-
-<<echo=FALSE, results=tex>>=
-library(xtable)
-
-tab<-cbind(bmaleroux$summary.fixed[,1:2], summary(lcarbayes$samples.beta)[[1]][,1:2])
-tab<-rbind(tab, c(bmaleroux$rho$mean, bmaleroux$rho$sd, 
-   1-summary(lcarbayes$samples.rho)[[1]][1], 
-   summary(lcarbayes$samples.rho)[[1]][2])
-)
-rownames(tab)[nrow(tab)]<-"lambda"
-
-colnames(tab)<-c("Mean (INLA)", "SD (INLA)", "Mean (MCMC)", "SD (MCMC)") 
-
-
-xtab<-xtable(tab, digits=4)
-caption(xtab)<-"Point estimates of fixed effects using INLA and MCMC"
-label(xtab)<-"tab:leroux"
-
-print(xtab)
-@
-
+As we have seen in the previous examples, combining the different values 
+for the different values of $\rho$ provides accurate estimates of the posterior
+marginals for the model parameters. The estimates of the marginals of
+$\rho$ can be found in Figure \ref{fig:pmargrho}.
 
 \begin{figure}[h]
 \begin{center}
-<<echo=FALSE, fig=TRUE, height=4, width=8>>=
-par(mfrow=c(1,3))
-#Compare results between INLA and CARBayes
-plot(density(1-lcarbayes$samples.rho, from=0, to=1), xlim=c(0,.2),
-  main=expression(paste("Marginal distribution of ", lambda)))
-lines(bmaleroux$rho$marginal[,1], bmaleroux$rho$marginal[,2], col="red")
-legend(.15, 15, c("INLA", "MCMC"), col=c("red", "black"), lty=1)
+<<eval=TRUE, echo=FALSE, fig=TRUE, width=8, height=4>>=
+plot(bmasem$rho$marginal, xlab=expression(rho), 
+   ylab=expression(paste(pi, "(", rho, "|y)")),
+   main="", type="l", xlim=c(0,1), ylim=c(0, 15))
+lines(bmaslm$rho$marginal, lty=2)
+lines(bmasdm$rho$marginal,lty=3)
 
-#Precission of error term
-plot(density(1/lcarbayes$samples.nu2 ),
-  main=expression(paste("Marginal distribution of ", 1/sigma^2, " error")))
-lines(bmaleroux$marginals.hyperpar[[1]], col="red")
-
-#Precission of random effects
-plot(density(1/lcarbayes$samples.tau2 ),
-  main=expression(paste("Marginal distribution of ", 1/sigma^2, " random effects")) )
-lines(bmaleroux$marginals.hyperpar[[2]], col="red")
+legend(0, 15, legend=c("SEM", "SLM", "SDM"), lty=1:3)
 
 @
 \end{center}
-\caption{Comparisson between the posterior marginal of $\lambda$ in 
-Leroux et al.'s model with INLA and MCMC.}
-\label{fig:leroux}
-\end{figure}
+\caption{Posterior marginal of the spatial autocorrelation parameter $\rho$
+for different spatial models}
+\label{fig:pmargrho}
+\end{figure} 
 
 
 
@@ -1370,6 +1588,39 @@ Leroux et al.'s model with INLA and MCMC.}
 
 \section{Discussion} \label{sec:disc}
 
+The Integrated Nested Laplace Approximation has provided a new paradigm to
+model fitting in Bayesian analysis. By focusing on the marginals and providing
+an interesting computational approach, it has provided an reasonable and faster
+alternative to MCMC. Furthermore, the \pkg{R-INLA} package makes model fitting
+in \pkg{R} a very simple task.  Although \pkg{R-INLA} implements some key
+models, there are some others that have not been implemented yet.
+In addition, it is not easy to implement completely new models within the
+\pkg{R-INLA}.
+
+In this paper we have shown an innovative approach to model fitting with INLA
+and \pkg{R-INLA} which increases the number of latent models that can be fitted
+with INLA. We have been able to do so by fitting conditional models on some
+model parameters and combining the resulting models using simple methods for
+Bayesian model averaging. We have considered the case in which conditioning is
+carried out on a single parameter but our approach can be easily extended to the
+case of more than one parameter.
+
+Given that the different models can be run in parallel, this is not a real
+computational burden. In our examples, 20 models seemed to be enough to obtain
+good approximations. Implementing new models is very simple and the wrapper
+functions included in the examples and the \pkg{INLABMA} package provide
+templates to start with.
+
+
+We have shown that this is a practical approach using different examples in
+spatial statistics. Similarly, complex spatio-temporal models could be fitted
+using a similar approach. However, it should be noted that our approach can be
+extended to other areas.
+
+\section{Acknowledgements}
+
+We would like to thank Duncan Lee and Lola Ugarte for their help and comments
+on how to fit the Leroux model with \pkg{R-INLA}.
 
 
 %\bibliography{INLA_econometrics,RS_handbook_SpatStat_INLA,JSSpaper}

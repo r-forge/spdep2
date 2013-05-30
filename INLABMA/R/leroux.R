@@ -19,7 +19,8 @@ leroux.inla<-function(formula, d, W, lambda, improve=TRUE, fhyper=NULL, ...)
 {
 
 	W2<-diag(apply(W, 1, sum))-W
-	Q<-lambda*diag(nrow(W))+(1-lambda)*W2
+	#Q<-lambda*diag(nrow(W))+(1-lambda)*W2
+	Q<-(1-lambda)*diag(nrow(W))+lambda*W2
 
 	environment(formula)<-environment()
 
