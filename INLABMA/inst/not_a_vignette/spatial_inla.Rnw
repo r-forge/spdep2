@@ -122,7 +122,7 @@ a strong constraint, these models appear in a good number of fields.
 Hence, INLA will be particularly useful when  only
 marginal inference on the model parameters.
 
-The \pkg{R-INLA} package for the \proglang{R} programming language provides
+The \pkg{R-INLA} package\citep{rinla:2013} for the \proglang{R} programming language provides
 an implementation of INLA so that models can be fitted using standard 
 \proglang{R} commands. Results are readily available for plotting or
 further analysis. Although INLA is a general method to approximate the
@@ -342,17 +342,17 @@ In the next Section we describe different examples of the use of
 \pkg{R-INLA} for spatial statistics. Therein we have included
 a detailed description on how \code{inla()} should be called.
 
-\section{Spatial Models with INLA} \label{sec:spmodels}
+\section{Spatial models with INLA} \label{sec:spmodels}
 
 
-As discussed in Section \ref{sec:INLA}, spatial dependence can be included
-as part of the vector of latent effects $\mathbf{x}$. In principle,
-any number of random effects can be included in the model. In this Section,
-we will describe the different options available, depending on the type of 
-problem. A full description of the models described here can be found 
-in the \pkg{R-INLA} website at \url{http://www.r-inla.org}, but we have
-included here a summary here. **ref** also discuss the different spatial
-models included in \pkg{R-INLA}.
+As discussed in Section \ref{sec:INLA}, spatial dependence can be included as
+part of the vector of latent effects $\mathbf{x}$. In principle, any number of
+random effects can be included in the model. In this Section, we will describe
+the different options available, depending on the type of problem. A full
+description of the models described here can be found in the \pkg{R-INLA}
+website at \url{http://www.r-inla.org}, but we have included here a summary
+here. \citet{Blangiardoetal:2013} and \citet{GomezRubioetal:2013} also discuss
+the different spatial models included in \pkg{R-INLA}.
 
 \subsection{Analysis of lattice data}
 
@@ -361,6 +361,19 @@ set the basis for other types of analyses. In the analysis of lattice data
 observations are grouped according to a set of areas, which usually represent
 some sort of administrative region (neighbourhoods, municipalities, provincies,
 countries, etc.).
+
+\pkg{R-INLA} includes a latent model for uncorrelated random effects. In
+this case, the random effects $u_i$ are modelled as
+
+\begin{equation}
+u_i \sim N(0, \tau_u)
+\end{equation}
+\noindent
+where $\tau_u$ refers to the precision of the Gaussian distribution.  It should
+be noted that \pkg{R-INLA} assigns a prior to $\log(\tau_u)$ which, by default,
+it is a Gaussian distribution with zero mean and fixed precision.  Although
+this model is not spatial, it can be combined with other spatial models.
+
 
 In order to model spatial correlation, neighbourhood must be set among the
 study areas.  It is often considered that two areas are neighbours is they
@@ -371,24 +384,38 @@ we can define the variance-covariance matrix of the random effects
 as
 
 $$
-\Sigma = \sigma^2 Q^{-1}
+\Sigma = \frac{1}{\tau} Q^{-1}
 $$
 \noindent
-where $\sigma^2$ is a common variance parameter and matrix $Q$ encodes
+where $\tau$ is a common variance parameter and matrix $Q$ encodes
 the spatial structure. Given that we are assuming a latent GMRF, this also
 means that matrix $Q$ will be defined such as element $Q_{ij}$ is zero if
-areas $i$ and $j$ are not neighbours. See, for example, \citet{rueheld:2005} 
+areas $i$ and $j$ are not neighbours. This means that $Q$ is often a very
+sparse matrix. See, for example, \citet{rueheld:2005} 
 for details.
 
+Available specifications for spatial dependence includes the intrinsic CAR
+specification \citep{besagetal:1991}. This will produce a $Q$ matrix in which
+element $Q_{ii}$ is $n_i$ (the number of neighbours of area $i$) and element
+$Q_{ij},\neq j$ is -1 if areas $i$ and $j$ are neighbours and 0 otherwise. This
+means that the spatial random effects $v_i$ are distributed as
 
-Available specifications for spatial dependence includes the convolution model
-by \citet{besagetal:1991}. This will produce a $Q$ matrix in which element
-$Q_{ii}$ is the number of neighbours of area $i$, and element $Q_{ij},\neq j$
-is -1 if areas $i$ and $j$ are neighbours and 0 otherwise.
+$$
+v_i|v_j,\tau_v N( \frac{1}{n_i}\sum_{i\sim j} v_j, \frac{1}{\tau_vn_i})\ i\neq j
+$$
+\noindent
+$\tau_v$ is the conditional precision of the random effects. As in the previous
+model, \pkg{R-INLA} uses a Gaussian prior on $\log(\tau_v)$.
 
-In addition, the intrinsic CAR specification
-can be used alone, as well as a proper version of this specification **ref**.
+In addition, a proper version of this model is available as well,
+for which the spatial random effects are distributed as
 
+$$
+v_i|v_j,\tau_v N( \frac{1}{n_i+d}\sum_{i\sim j} v_j, \frac{1}{\tau_v(n_i+d)})\ i\neq j
+$$
+\noindent
+$d$ is a positive quantity to make the distribution proper. By default,
+a log-Gamma distribution is assigned to $\log(d)$.
 
 A more general approach is obtained  with the following precision
 matrix:
@@ -399,7 +426,8 @@ $$
 \noindent
 Here $I$ is the identity matrix, $\rho$ a spatial autocorrelation parameter,
 $C$ an adjacency matrix and $\lambda_{max}$ the maximum eigenvalue of $C$.
-This specification ensures that $\rho$ takes values between 0 and 1. 
+This specification ensures that $\rho$ takes values between 0 and 1.
+\pkg{R-INLA} assigns a Gaussian prior on $\log(\rho/(1-\rho))$.
 
 In the following example we use the \code{boston} data set from the
 \proglang{R} package \pkg{spdep} to develop an example on several spatial
@@ -410,6 +438,36 @@ and the neighbourhood structure of the tracts is also available.
 We have converted this into a binary matrix to be used with \pkg{R-INLA}
 using function \code{nd2mat}. This will be passed to function \code{f()} when
 defining the spatial model.
+
+A summary of some latent models implemented in \pkg{R-INLA}, and that can be
+used within the \code{f()} function, is available in Table
+\ref{tab:inlamodels}. Note that this is not an exhaustive list and that a
+complete list of the available latent models can be obtanined from the
+\pkg{R-INLA} documentation. Also, detailed examples are available from the
+\pkg{R-INLA} website at \url{http://www.r-inla.org}.
+
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{ll}
+Name in \code{f()}  & Model \\
+\hline
+\code{besag} & Intrinsic CAR\\
+\code{besagproper} & Proper CAR\\ 
+\code{bym} & Convolution model \\
+\code{rw2d} & 2-D random walk \\
+%\hline[.25cm]
+\code{generic0} & $\Sigma=\frac{1}{\tau}Q^{-1}$ \\[.25cm]
+\code{generic1} & $\Sigma=\frac{1}{\tau}(I_n-\frac{\rho}{\lambda_max}C)^{-1}$
+%\code{rw2d} & Random walk of order 2
+\end{tabular}
+\end{center}
+\caption{Summary of some latent models implemented in \pkg{R-INLA} 
+for spatial statistics.}
+\label{tab:inlamodels}
+\end{table}
+
+
 
 The model that we are fitting is:
 
@@ -469,36 +527,9 @@ plot(m1$marginals.hyperpar[[2]], xlim=c(0,50), type="l",
 @
 \end{center}
 \caption{Marginals of the precisions of the error term (top) and
-spatial random effects (bottom), Boston housing data}
+spatial random effects (bottom), Boston housing data.}
 \label{fig:marg1}
 \end{figure}
-
-
-A summary of some latent models implemented in \pkg{R-INLA} is available
-in Table \ref{tab:inlamodels}. Note that this is not an exhaustive list and
-that a complete list of the available latent models can be obtanined from
-the \pkg{R-INLA} documentation. Also, detailed examples are available
-from the \pkg{R-INLA} website at \url{http://www.r-inla.org}.
-
-
-\begin{table}[h]
-\begin{center}
-\begin{tabular}{lccc}
-Name  & Model & Structure & Parameters\\
-\hline
-\code{besag} & & \\
-\code{besagproper} & & \\
-\code{bym} & & \\
-\code{rw2d} & & \\
-\hline
-\code{generic0} & & \\
-\code{generic1} & & \\
-\end{tabular}
-\end{center}
-\caption{Summary of some latent models implemented in \pkg{R-INLA} 
-for spatial statistics}
-\label{tab:inlamodels}
-\end{table}
 
 
 \subsection{Point patterns}
@@ -597,7 +628,7 @@ print(spplot(japgrd, c("Ntrees", "INLALA"),
 @
 \end{center}
 \caption{Estimation of the intensity of a point pattern with \pkg{R-INLA}, 
-Japanese black pine dataset}
+Japanese black pine dataset.}
 \label{fig:sppa}
 \end{figure}
 
@@ -656,7 +687,7 @@ $$
 \noindent
 Here, $\{\psi_k(s)\}$ are a basis of functions and $w_k$ are associated
 weights. Weights are assumed to be Gaussian. The advantages of this approach
-for sptial statistics are is fully described in \citet{Camelettietal:2011}.
+for sptial statistics are is fully described in \citet{Camelettietal:2013}.
 
 
 In order to show how to fit geostatistical models with \pkg{R-INLA} we
@@ -791,8 +822,7 @@ in Rongelap island.}
 
 
 
-\section[Extending R-INLA to Fit New Models]{Extending \pkg{R-INLA} to Fit New
-Models} 
+\section[Extending {R-INLA} to fit new models]{Extending \pkg{R-INLA} to fit new models} 
 
 \label{sec:extINLA}
 
@@ -916,7 +946,7 @@ described in Section \ref{sec:examples}.
 \section{Examples}
 \label{sec:examples}
 
-\subsection{Leroux Model}
+\subsection{Leroux model}
 
 \citet{Lerouxetal:1999} propose a model for the analysis of spatial data in a
 lattice which is similar to the one by \citet{besagetal:1991}, in the sense
@@ -1089,7 +1119,8 @@ includes the posterior marginals and summary statistics for $\lambda$
 in a list element named \code{rho}. This provides summary statistics (mean,
 standard deviation, some quantiles and the posterior marginal.
 
-The same model can be fitted usig package \pkg{CARBayes} as follows:
+The same model can be fitted usig package \pkg{CARBayes}\citep{CARBayes:2013}
+as follows:
 
 <<>>=
 #Run with CARBAYES
@@ -1151,7 +1182,7 @@ colnames(tab)<-c("Mean (INLA)", "SD (INLA)", "Mean (MCMC)", "SD (MCMC)")
 
 xtab<-xtable(tab, digits=4)
 xtab[nrow(xtab), 3]<- 1- xtab[nrow(xtab), 3] #CARBAyes gives 1-lambda
-caption(xtab)<-"Point estimates of fixed effects using INLA and MCMC"
+caption(xtab)<-"Point estimates of fixed effects using INLA and MCMC."
 label(xtab)<-"tab:leroux"
 
 print(xtab)
@@ -1240,7 +1271,7 @@ lines(kkk, col="pink")
 
 
 
-\subsection{Spatial Econometrics Models}
+\subsection{Spatial econometrics models}
 
 \citet{LeSagePace:2009} describe a good deal of models amply used in spatial
 econometrics. These models have been developed to make it explicit that there
@@ -1351,7 +1382,7 @@ The previous approach can be used here as well. The same code will still work
 as we can define a different family and link function to be used when calling
 \code{inla()}.
 
-\subsubsection{Boston Housing Data}
+\subsubsection{Boston housing data}
 
 Here we revisit the Boston housing data to fit the three models on Spatial
 Econometrics described here. First of all, it is worth mentioning that each
@@ -1359,7 +1390,7 @@ models needs a wrapper function to be fitted for a given value of the
 spatial autocorrelation parameter $\rho$. These wrapper functions are
 included in \proglang{R} package \pkg{R-INLA}.
 
-All functions are based on the ``generic0'' model available in  \pkg{R-INLA}.
+All functions are based on the \code{generic0} model available in  \pkg{R-INLA}.
 This model implements a multivariage Gaussian random effect with zero mean
 and precision matrix $\frac{1}{\sigma^2} Q$. Once $\rho$ is fixed, $Q$ is
 known and the model can be easily fitted with \pkg{R-INLA} for that value of
@@ -1394,7 +1425,7 @@ semwr.inla<-function(formula, d, W, rho,...)
 @
 
 In the previous code, the precision matrix is created using the adjacency
-matrix and the value of $\rho$. Then the ``generic0'' model is added to the
+matrix and the value of $\rho$. Then the \code{generic0} model is added to the
 formula with the fixed effects. Finally we correct the marginal log-likelihood
 $\pi(\mathbf{y})$ by adding the log-determinat of $(I_n-\rho W')(I_n-\rho W)$.
 Note that, in principle, this is not needed to fit a single model and obtain
@@ -1567,7 +1598,7 @@ legend(0, 15, legend=c("SEM", "SLM", "SDM"), lty=1:3)
 @
 \end{center}
 \caption{Posterior marginal of the spatial autocorrelation parameter $\rho$
-for different spatial models}
+for different spatial models.}
 \label{fig:pmargrho}
 \end{figure} 
 
@@ -1611,6 +1642,13 @@ good approximations. Implementing new models is very simple and the wrapper
 functions included in the examples and the \pkg{INLABMA} package provide
 templates to start with.
 
+Other computationally efficient approaches for Bayesian inference on spatial 
+models include, for example, \pkg{RStan} \citep{stan-software:2013}.
+It provides an efficient MCMC algorithm and provides a good number of options
+for Gaussian processes which can be used to implement some of the models
+described in this paper. It is worth mentioning that \pkg{RStan} models are not
+based on \pkg{R} code but on \pkg{C++} code that is compiled once the main
+model is defined.
 
 We have shown that this is a practical approach using different examples in
 spatial statistics. Similarly, complex spatio-temporal models could be fitted
