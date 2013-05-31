@@ -481,10 +481,10 @@ and $\varepsilon_i$ is random Gaussian error term.
 
 \begin{Schunk}
 \begin{Sinput}
-> library(spdep)
-> library(maptools)
-> data(boston)
-> library(INLA)
+> library("spdep")
+> library("maptools")
+> data("boston")
+> library("INLA")
 > adj<- nb2mat(boston.soi, style="B")
 > boston.c$ID<-1:nrow(boston.c)
 > form<-log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) +  AGE + 
@@ -513,7 +513,7 @@ Call:
 
 Time used:
  Pre-processing    Running inla Post-processing           Total 
-          0.833           1.701           0.102           2.637 
+          0.711           1.651           0.135           2.497 
 
 Fixed effects:
                mean     sd 0.025quant 0.5quant 0.975quant kld
@@ -587,8 +587,8 @@ grid, and the we aggregate the pines over the grid of squares.
 
 \begin{Schunk}
 \begin{Sinput}
-> library(spatstat)
-> data(japanesepines)
+> library("spatstat")
+> data("japanesepines")
 > japd <- as.data.frame(japanesepines)
 > nrow <- 10
 > ncol <- 10
@@ -716,9 +716,9 @@ because obervations need to be matched to a regular grid of points.
 
 \begin{Schunk}
 \begin{Sinput}
-> library(geoR)
-> library(geoRglm)
-> data(rongelap)
+> library("geoR")
+> library("geoRglm")
+> data("rongelap")
 > rgldata <- as.data.frame(rongelap)
 > nrow = 5
 > ncol = 5
@@ -956,7 +956,7 @@ the spatial econometrics models, which is included in package \pkg{INLABMA}:
 
 \begin{Schunk}
 \begin{Sinput}
-> library(INLABMA)
+> library("INLABMA")
 > leroux.inla
 \end{Sinput}
 \begin{Soutput}
@@ -1083,7 +1083,7 @@ as follows:
 \begin{Schunk}
 \begin{Sinput}
 > #Run with CARBAYES
-> library(CARBayes)
+> library("CARBayes")
 > 
 > #New model
 > #form2<-log(CMEDV) ~CRIM+ZN + INDUS + CHAS + I(NOX^2)+
@@ -1112,7 +1112,7 @@ effects and the error term. \pkg{CARBayes} uses uniform priors on the variances,
 whiles \pkg{R-INLA} assigns inverted Gamma distributions to the variances.
 
 % latex table generated in R 3.0.1 by xtable 1.7-1 package
-% Fri May 31 13:26:12 2013
+% Fri May 31 13:35:40 2013
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrr}
@@ -1289,7 +1289,7 @@ obtain a list of fitted models to be combined later.
 
 \begin{Schunk}
 \begin{Sinput}
-> library(INLABMA)
+> library("INLABMA")
 \end{Sinput}
 \end{Schunk}
 

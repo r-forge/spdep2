@@ -482,11 +482,11 @@ and $\varepsilon_i$ is random Gaussian error term.
 
 
 <<>>=
-library(spdep)
-library(maptools)
-data(boston)
+library("spdep")
+library("maptools")
+data("boston")
 
-library(INLA)
+library("INLA")
 adj<- nb2mat(boston.soi, style="B")
 
 boston.c$ID<-1:nrow(boston.c)
@@ -551,8 +551,8 @@ Hence, we first split the study are into smaller squares to create a
 grid, and the we aggregate the pines over the grid of squares. 
 
 <<results=hide, keep.source=FALSE>>=
-library(spatstat)
-data(japanesepines)
+library("spatstat")
+data("japanesepines")
 
 japd<-as.data.frame(japanesepines)
 
@@ -698,11 +698,11 @@ the analysis to one of the clusters in the north-east part of the island
 because obervations need to be matched to a regular grid of points.
 
 <<keep.source=FALSE>>=
-library(geoR)
-library(geoRglm)
+library("geoR")
+library("geoRglm")
 
 #Swiss rainfall data
-data(rongelap)
+data("rongelap")
 
 #Prepara data for INLA
 rgldata<-as.data.frame(rongelap)
@@ -989,7 +989,7 @@ Hence, we can write a similar wrapper function as in the previous example for
 the spatial econometrics models, which is included in package \pkg{INLABMA}:
 
 <<>>=
-library(INLABMA)
+library("INLABMA")
 leroux.inla
 @
 
@@ -1124,7 +1124,7 @@ as follows:
 
 <<>>=
 #Run with CARBAYES
-library(CARBayes)
+library("CARBayes")
 
 #New model
 #form2<-log(CMEDV) ~CRIM+ZN + INDUS + CHAS + I(NOX^2)+
@@ -1168,7 +1168,7 @@ effects and the error term. \pkg{CARBayes} uses uniform priors on the variances,
 whiles \pkg{R-INLA} assigns inverted Gamma distributions to the variances.
 
 <<echo=FALSE, results=tex>>=
-library(xtable)
+library("xtable")
 
 tab<-cbind(bmaleroux$summary.fixed[,1:2], summary(lcarbayes$samples.beta)[[1]][,1:2])
 tab<-rbind(tab, c(bmaleroux$rho$mean, bmaleroux$rho$sd, 
@@ -1398,7 +1398,7 @@ $\rho$. We repeat this procedure for different values of $\rho$ to
 obtain a list of fitted models to be combined later.
 
 <<>>=
-library(INLABMA)
+library("INLABMA")
 @
 
 A simple wrapper function can be defined as follows for the SEM model:
