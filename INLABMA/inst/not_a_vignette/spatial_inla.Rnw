@@ -35,7 +35,7 @@ The Integrated Nested Laplace Approximation (INLA) provides an interesting
 way of approximating the posterior marginals of a wide range of Bayesian
 hierarchical models. This approximation is based on conducting a 
 Laplace Approximation of certain functions and numerical integration is
-extensively to integrate some of the models parameters out. 
+extensively used to integrate some of the models parameters out. 
 
 INLA is implemented in the \pkg{R-INLA} package, which provides a suitable
 interface for data analysis. Although the INLA methodology can deal with
@@ -107,11 +107,11 @@ consider different types of fixed and random effects for spatial and
 spatio-temporal analysis.
 
 In general, fitting these models have been possible because of the availability
-of different computational techniques, being Markov Chain Monte Carlo the most
-notable. For large models or big data sets, MCMC can be tedious and reaching
-the required number of samples can take a long time. Not to mention that
-autocorrelation may arise and that an increased number of iterations may be
-required.
+of different computational techniques, the most notable being Markov Chain
+Monte Carlo. For large models or big data sets, MCMC can be tedious and
+reaching the required number of samples can take a long time. Not to mention
+that autocorrelation may arise and that an increased number of iterations may
+be required.
 
 Alternatively, the posterior distributions of the parameters could be
 approximated in some way. However, most models are highly multivarite and
@@ -120,7 +120,7 @@ The Integrated Nested Laplace Approximation \citep[][INLA]{isi:000264374200002} 
 the posterior marginals for latent Gaussian models. Although these may seem
 a strong constraint, these models appear in a good number of fields. 
 Hence, INLA will be particularly useful when  only
-marginal inference on the model parameters.
+marginal inference on the model parameters is needed.
 
 The \pkg{R-INLA} package\citep{rinla:2013} for the \proglang{R} programming language provides
 an implementation of INLA so that models can be fitted using standard 
@@ -133,10 +133,10 @@ are based on other distributions not available in \pkg{R-INLA}.  This may be an
 inconvenience when trying to develop new models as there is no easy way of
 extending \pkg{R-INLA} to fit other models.
 
-We have deivsed a way of extending the number of models that \pkg{R-INLA} can
+We have devised a way of extending the number of models that \pkg{R-INLA} can
 fit with little extra effort. First of all, we consider one (or more)
 parameters in our model so that, if they are fixed, the resulting model can be
-fitted with \pkg{R-INLA}. What we are doing here is, in fact, fit a model
+fitted with \pkg{R-INLA}. What we are doing here is, in fact, to fit a model
 conditioned on the assigned values to the parameters. Then, we can assign
 different values to these parameters and combine the resulting models in some
 way to obtain a fit of the original model. We have used Bayesian Model
@@ -147,7 +147,7 @@ This paper is organised as follows. Section \ref{sec:INLA} describes
 the Integrated Nested Laplace Approximation.  In Section \ref{sec:spmodels}
 the different latent models for spatial statistics are described.
 We describe how to extend \pkg{R-INLA} to fit new models in Section
-\ref{sec:extINLA}. Some examples are provided in Section{sec:examples}.
+\ref{sec:extINLA}. Some examples are provided in Section~\ref{sec:examples}.
 Finally, we discuss why our approach is relevant in Section \ref{sec:disc}.
 
 \section{Integrated Nested Laplace Approximation}
@@ -254,7 +254,7 @@ $$
 
 In order to estimate the previous marginals, we need 
 $\pi(\mathbf{\theta}|\mathbf{y})$ or, alternatively, a convenient
-approximation that the will denote by $\tilde\pi(\theta|\mathbf{y})$.
+approximation that we will denote by $\tilde\pi(\theta|\mathbf{y})$.
 Intially, this approximation can be taken as
 
 $$
@@ -472,7 +472,7 @@ for spatial statistics.}
 The model that we are fitting is:
 
 $$
-y_i = \alpha+\beta X + u_i +\varepsilon_i
+y_i = \alpha+\beta X + v_i +\varepsilon_i
 $$
 \noindent
 where $\alpha$ is the model intercept, $\beta$ a vector of coefficients
@@ -839,8 +839,9 @@ the moment.
 
 This approach is based on considering a model where one or several have been
 fixed in a way that makes the conditioned model fitable with \pkg{R-INLA}.  If
-we denote by $\rho$ the vector of parameters to fix and by $\hat{\rho}$ the
-fixed parameters,  the full posterior marginal could be written as
+we denote by $\rho$ the vector of parameters to fix and by $\hat{\rho}$ a
+specific set of fixed parameter values,  the full posterior marginal could be
+written as
 
 
 $$
