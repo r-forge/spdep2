@@ -5,10 +5,12 @@
 
 \usepackage{thumbpdf}
 \usepackage{amssymb}
+%% need no \usepackage{Sweave.sty}
+
 
 
 <<echo=FALSE>>=
-options(digits=3)
+options(prompt = "R> ", continue = "+  ", width = 70, useFancyQuotes = FALSE)
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -34,7 +36,7 @@ Virgilio G\'omez-Rubio\\Universidad de\\ Castilla-La Mancha
 The Integrated Nested Laplace Approximation (INLA) provides an interesting
 way of approximating the posterior marginals of a wide range of Bayesian
 hierarchical models. This approximation is based on conducting a 
-Laplace Approximation of certain functions and numerical integration is
+Laplace approximation of certain functions and numerical integration is
 extensively used to integrate some of the models parameters out. 
 
 INLA is implemented in the \pkg{R-INLA} package, which provides a suitable
@@ -122,7 +124,7 @@ a strong constraint, these models appear in a good number of fields.
 Hence, INLA will be particularly useful when  only
 marginal inference on the model parameters is needed.
 
-The \pkg{R-INLA} package\citep{rinla:2013} for the \proglang{R} programming language provides
+The \pkg{R-INLA} package \citep{rinla:2013} for the \proglang{R} programming language provides
 an implementation of INLA so that models can be fitted using standard 
 \proglang{R} commands. Results are readily available for plotting or
 further analysis. Although INLA is a general method to approximate the
@@ -150,7 +152,7 @@ to extend \pkg{R-INLA} to fit new models in Section~\ref{sec:extINLA}. Some
 examples are provided in Section~\ref{sec:examples}.  Finally, we discuss why
 our approach is relevant in Section~\ref{sec:disc}.
 
-\section{Integrated Nested Laplace Approximation}
+\section{Integrated nested Laplace approximation}
 \label{sec:INLA}
 
 Bayesian inference is based on computing the posterior distribution of a
@@ -158,9 +160,9 @@ vector of model parameters $\mathbf{x}$ conditioned on the vector of observed
 data $\mathbf{y}$. Bayes' rule states that this posterior distribution
 can be written down as
 
-$$
+\begin{equation}
 \pi(\mathbf{x}|\mathbf{y}) \propto \pi(\mathbf{y}|\mathbf{x}) \pi(\mathbf{x})
-$$
+\end{equation}
 \noindent
 Here, $\pi(\mathbf{y}|\mathbf{x})$ is the likelihood of the model and
 $\pi(\mathbf{x})$ represents the prior distribution on the model parameters.
@@ -170,23 +172,23 @@ Usually, $\pi(\mathbf{x}|\mathbf{y})$ is a highly multivariate distribution
 and difficult to obtain. In particular, it is seldom possible to derive it in
 a closed form. For this reason, several computational approaches  have been 
 proposed to get approximations to it. MCMC is probably the most widely used
-family of computational approaches to estimates the posterior distribution.
+family of computational approaches to estimate the posterior distribution.
 
-The marginal distributions can be denoted by $\pi(x_i|\mathbf{y})$
-and it can be easily derived from the full posterior by integrating
-out over the remaining set of parameters $\mathbf{x}_{-i}$.
+The marginal distribution of parameter $x_i$ can be denoted by
+$\pi(x_i|\mathbf{y})$ and it can be easily derived from the full posterior by
+integrating out over the remaining set of parameters $\mathbf{x}_{-i}$.
 
 Let us assume that we have a set of $n$ observations 
 $\mathbf{y}=\{y_i\}_ {i=1}^n$, whose distribution is of the Exponential family.
 The mean of observation $i$ is $\mu_i$, which is modelled using a linear
 predictor $\eta_i$ as follows:
 
-$$
+\begin{equation}
 \eta_i=\alpha+\sum_{j=1}^{n_f} f^{(j)}(u_{ji})+\sum_{k=1}^{n_{\beta}}\beta_k z_{ki}+\varepsilon_i
-$$
+\end{equation}
 \noindent
 $\alpha$ is the intercept, $f^{(j)}$ are functions on a set of $n_f$ random
-effects on a vector of covariates $\mathbf{u}$, $\beta_k$ are coefficient on
+effects on a vector of covariates $\mathbf{u}$, $\beta_k$ are coefficients on
 some covariates $\mathbf{z}$ and $\varepsilon_i$ are error terms. Hence, the
 vector of latent effects is $\mathbf{x}=\{\{\eta_i\}, \alpha, \{\beta_k\},
 \ldots\}$. Note that given our particular interest in spatial models, terms
@@ -209,15 +211,15 @@ of $\mathbf{x}$ being a GMRF.
 Following \citet{isi:000264374200002}, the posterior distribution of the model
 latent effects $\mathbf{x}$ and hyperparameters $\theta$ can be written as 
 
-$$
+\begin{equation}
 \pi(\mathbf{x}, \mathbf{\theta}|\mathbf{y}) \propto
 \pi(\mathbf{\theta}) \pi(\mathbf{x}|\mathbf{\theta})\prod_{i\in \mathcal{I}}\pi(y_i|x_i,\mathbf{\theta})
 \propto 
-$$
+\end{equation}
 
-$$
+\begin{equation}
 \pi(\mathbf{\theta}) |\mathbf{Q}(\mathbf{\theta})|^{n/2} \exp\{-\frac{1}{2}\mathbf{x}^T \mathbf{Q}(\mathbf{\theta}) \mathbf{x}+\sum_{i\in\mathcal{I}} \log(\pi(y_i|x_i, \mathbf{\theta}) \}
-$$
+\end{equation}
 \noindent
 $\mathcal{I}$ represents an index of observed data (from 1 to $n$),
 $\mathbf{Q}(\mathbf{\theta})$ is a variance-covariance matrix on some
@@ -242,25 +244,25 @@ Hence, we can write the marginals distributions of the elements in $\mathbf{x}$
 and $\mathbf{\theta}$ (i.e., latent effects and hyper-parameters) as
 
 
-$$
+\begin{equation}
 \pi(x_i|\mathbf{y}) \propto \int \pi(x_i|\mathbf{\theta}, \mathbf{y})  \pi(\mathbf{\theta}| \mathbf{y}) d\mathbf{\theta}
-$$
+\end{equation}
 \noindent
 and
 
-$$
+\begin{equation}
 \pi(\theta_j|\mathbf{y}) \propto \int \pi(\mathbf{\theta}| \mathbf{y})  d\mathbf{\theta}_{-j} 
-$$
+\end{equation}
 
 In order to estimate the previous marginals, we need 
 $\pi(\mathbf{\theta}|\mathbf{y})$ or, alternatively, a convenient
 approximation that we will denote by $\tilde\pi(\theta|\mathbf{y})$.
 Initially, this approximation can be taken as
 
-$$
+\begin{equation}
 \tilde\pi(\mathbf{\theta}|\mathbf{y})\propto 
 \frac{\pi(\mathbf{x},\mathbf{\theta},\mathbf{y})}{\tilde\pi_G(\mathbf{x}|\mathbf{\theta},\mathbf{y})}\bigg|_{x=x^*(\theta)}
-$$
+\end{equation}
 \noindent
 Here 
 $\tilde\pi_G(\mathbf{x}|\mathbf{\theta},\mathbf{y})$ is a Gaussian
@@ -269,11 +271,11 @@ is the mode of the full conditional for a given value of $\mathbf{\theta}$.
 \citet{isi:000264374200002} take this approximation and use it 
 to compute the marginal distribution of $x_i$ using numerical integration:
 
-$$
+\begin{equation}
 \tilde\pi(x_i|\mathbf{y})= 
 \sum_k \tilde\pi (x_i|\mathbf{\theta}_k, \mathbf{y})\times 
 \tilde\pi(\mathbf{\theta}_k|\mathbf{y})\times \Delta_k
-$$
+\end{equation}
 \noindent
 Here $\Delta_k$ are the weights associated to vector of values
 $\mathbf{\theta}_k$ in a grid for vector of hyperparameters .
@@ -291,12 +293,12 @@ developed better approximations based on alternative approximation methods,
 such as the Laplace Approximation.  For example, they have used the Laplace
 Approximation to obtain:
 
-$$
+\begin{equation}
 \tilde\pi_{LA}(x_i|\mathbf{\theta}, \mathbf{y}) \propto 
 \frac{\pi(\mathbf{x}, \mathbf{\theta}, \mathbf{y})}
 {\tilde\pi_{GG}(\mathbf{x}_{-i}|x_i, \mathbf{\theta}, \mathbf{y})}
 \bigg|_{\mathbf{x}_{-i}=\mathbf{x}^*_{-i}(x_i, \mathbf{\theta})}
-$$
+\end{equation}
 \noindent
 $\tilde\pi_{GG}(\mathbf{x}_{-i}|x_i, \mathbf{\theta}, \mathbf{y})$ is a
 Gaussian  approximation to $\mathbf{x}_{-i}|x_i, \mathbf{\theta}, \mathbf{y}$
@@ -331,7 +333,8 @@ In addition to the posterior marginals, \pkg{R-INLA} can provide a number
 of additional quantities on the fitted model. For example, it can 
 provide the log-marginal likelihood $\pi(\mathbf{y})$ which can be used
 for model selection. Other model selection criteria such as the DIC 
-\citep{Spiegelhalteretal:2002} and CPO \citep{Heldetal:2010}.
+\citep{Spiegelhalteretal:2002} and CPO \citep{Heldetal:2010} have also
+been implemented.
 
 Furthermore, \pkg{R-INLA} includes a number of options to define the
 prior distributions for the parameters in the model. Well-known
@@ -350,8 +353,8 @@ part of the vector of latent effects $\mathbf{x}$. In principle, any number of
 random effects can be included in the model. In this Section, we will describe
 the different options available, depending on the type of problem. A full
 description of the models described here can be found in the \pkg{R-INLA}
-website at \url{http://www.r-inla.org}, but we have included here a summary
-here. \citet{Blangiardoetal:2013} and \citet{GomezRubioetal:2013} also discuss
+website at \url{http://www.r-inla.org}, but we have included a summary.
+\citet{Blangiardoetal:2013} and \citet{GomezRubioetal:2013} also discuss
 the different spatial models included in \pkg{R-INLA}.
 
 \subsection{Analysis of lattice data}
@@ -371,8 +374,8 @@ u_i \sim N(0, \tau_u)
 \noindent
 where $\tau_u$ refers to the precision of the Gaussian distribution.  It should
 be noted that \pkg{R-INLA} assigns a prior to $\log(\tau_u)$ which, by default,
-it is a Gaussian distribution with zero mean and fixed precision.  Although
-this model is not spatial, it can be combined with other spatial models.
+is a log-Gamma  distribution.  Although this model is not spatial, it can be
+combined with other spatial models.
 
 
 In order to model spatial correlation, neighbourhood must be set among the
@@ -383,11 +386,11 @@ correlation between neighbours. Given that latent effects are GMRF,
 we can define the variance-covariance matrix of the random effects
 as
 
-$$
+\begin{equation}
 \Sigma = \frac{1}{\tau} Q^{-1}
-$$
+\end{equation}
 \noindent
-where $\tau$ is a common variance parameter and matrix $Q$ encodes
+where $\tau$ is a common precision parameter and matrix $Q$ encodes
 the spatial structure. Given that we are assuming a latent GMRF, this also
 means that matrix $Q$ will be defined such as element $Q_{ij}$ is zero if
 areas $i$ and $j$ are not neighbours. This means that $Q$ is often a very
@@ -397,12 +400,12 @@ for details.
 Available specifications for spatial dependence includes the intrinsic CAR
 specification \citep{besagetal:1991}. This will produce a $Q$ matrix in which
 element $Q_{ii}$ is $n_i$ (the number of neighbours of area $i$) and element
-$Q_{ij},\neq j$ is -1 if areas $i$ and $j$ are neighbours and 0 otherwise. This
+$Q_{ij}$ (with $i\neq j$) is -1 if areas $i$ and $j$ are neighbours and 0 otherwise. This
 means that the spatial random effects $v_i$ are distributed as
 
-$$
-v_i|v_j,\tau_v N( \frac{1}{n_i}\sum_{i\sim j} v_j, \frac{1}{\tau_vn_i})\ i\neq j
-$$
+\begin{equation}
+v_i|v_j,\tau_v \sim  N( \frac{1}{n_i}\sum_{i\sim j} v_j, \frac{1}{\tau_vn_i})\ \  i\neq j
+\end{equation}
 \noindent
 $\tau_v$ is the conditional precision of the random effects. As in the previous
 model, \pkg{R-INLA} uses a Gaussian prior on $\log(\tau_v)$.
@@ -410,9 +413,9 @@ model, \pkg{R-INLA} uses a Gaussian prior on $\log(\tau_v)$.
 In addition, a proper version of this model is available as well,
 for which the spatial random effects are distributed as
 
-$$
-v_i|v_j,\tau_v N( \frac{1}{n_i+d}\sum_{i\sim j} v_j, \frac{1}{\tau_v(n_i+d)})\ i\neq j
-$$
+\begin{equation}
+v_i|v_j,\tau_v \sim  N( \frac{1}{n_i+d}\sum_{i\sim j} v_j, \frac{1}{\tau_v(n_i+d)})\ \ i\neq j
+\end{equation}
 \noindent
 $d$ is a positive quantity to make the distribution proper. By default,
 a log-Gamma distribution is assigned to $\log(d)$.
@@ -420,9 +423,9 @@ a log-Gamma distribution is assigned to $\log(d)$.
 A more general approach is obtained  with the following precision
 matrix:
 
-$$
+\begin{equation}
 Q = (I - \frac{\rho}{\lambda_{max}}C)
-$$
+\end{equation}
 \noindent
 Here $I$ is the identity matrix, $\rho$ a spatial autocorrelation parameter,
 $C$ an adjacency matrix and $\lambda_{max}$ the maximum eigenvalue of $C$.
@@ -430,14 +433,24 @@ This specification ensures that $\rho$ takes values between 0 and 1.
 \pkg{R-INLA} assigns a Gaussian prior on $\log(\rho/(1-\rho))$.
 
 In the following example we use the \code{boston} data set from the
-\proglang{R} package \pkg{spdep} to develop an example on several spatial
+\proglang{R} package \pkg{spdep} \citep{spdep:2013} to develop an example on several spatial
 models.  This data set  records median price for houses that were occupied by
 their owners plus some other relevant covariates \citep[see,][for
 details]{HarrisonRubinfeld:1978}. Data have been recorded at the tract level
 and the neighbourhood structure of the tracts is also available.
 We have converted this into a binary matrix to be used with \pkg{R-INLA}
-using function \code{nd2mat}. This will be passed to function \code{f()} when
+using function \code{nb2mat}. This will be passed to function \code{f()} when
 defining the spatial model.
+
+
+<<>>=
+library("spdep")
+data("boston")
+
+adj <- nb2mat(boston.soi, style = "B")
+@
+
+
 
 A summary of some latent models implemented in \pkg{R-INLA}, and that can be
 used within the \code{f()} function, is available in
@@ -471,30 +484,25 @@ for spatial statistics.}
 
 The model that we are fitting is:
 
-$$
+\begin{equation}
 y_i = \alpha+\beta X + v_i +\varepsilon_i
-$$
+\end{equation}
 \noindent
-where $\alpha$ is the model intercept, $\beta$ a vector of coefficients
-of the covariates, $v_i$ a random effect with an intrinsic CAR specification
-and $\varepsilon_i$ is random Gaussian error term.
-
-
+where $\alpha$ is the model intercept, $\beta$ a vector of coefficients of the
+covariates, $v_i$ a random effect with an intrinsic CAR specification and
+$\varepsilon_i$ is random Gaussian error term. As \code{f()} needs an area
+index which must have different values for different areas, this is first
+defined in variable \code{ID}.
 
 <<>>=
-library("spdep")
-library("maptools")
-data("boston")
-
 library("INLA")
-adj<- nb2mat(boston.soi, style="B")
 
-boston.c$ID<-1:nrow(boston.c)
-form<-log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) +  AGE + 
+boston.c$ID <- 1 : nrow(boston.c)
+form <- log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) +  AGE + 
 log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)+
-f(ID, model="besag", graph=adj )
+f(ID, model = "besag", graph = adj )
 
-m1<-inla(form, data=boston.c)
+m1 <- inla(form, data = boston.c)
 @
 
 Note how the call to \code{inla()} is similar to fitting other regression
@@ -510,9 +518,9 @@ follows:
 summary(m1)
 @
 \noindent
-The summary includes summary statistics of the posterior marginals of the
-coefficients of the fixed effects plus the precisions of the instrinsic CAR
-random effect and the error term. Figure~\ref{fig:marg1} shows the estimated
+The output includes summary statistics of the posterior marginals of the
+coefficients of the fixed effects plus the precisions of the error term and
+instrinsic CAR random effect. Figure~\ref{fig:marg1} shows the estimated
 marginals of the precisions in the model.
 
 \begin{figure}[h]
@@ -543,34 +551,43 @@ can be smoothed using an appropriate non-linear term, such as spatial
 random effects.
 
 In the following example we use the Japanese black pine data set from
-\proglang{R} package \pkg{spatstat}. This data set records the location of
+\proglang{R} package \pkg{spatstat} \citep{spatstat:2005}. This data set records the location of
 Japanese black pine saplings in a square sampling in a natural forest.  This
 is example is reproduced from \citet{GomezRubioetal:2013}.
 
-Hence, we first split the study are into smaller squares to create a
-grid, and the we aggregate the pines over the grid of squares. 
+Hence, we first split the study area into smaller squares to create a
+grid of $10\times 10$ squares.
+%, and the we aggregate the pines over the grid of $10\times 10$ squares. 
 
-<<results=hide, keep.source=FALSE>>=
+<<results=hide, keep.source=TRUE>>=
 library("spatstat")
 data("japanesepines")
 
-japd<-as.data.frame(japanesepines)
+japd <- as.data.frame(japanesepines)
 
-nrow<-10
-ncol<-10
-n<-nrow*ncol
-#sp-Grid
-grd<-GridTopology(
-   cellcentre.offset=c(0, 0),
-   cellsize=c(1/9, 1/9), cells.dim=c(nrow, ncol))
+nrow <- 10
+ncol <- 10
+n <- nrow * ncol
 
-polygrdjap<-as(grd, "SpatialPolygons")
-idxpp<-overlay(SpatialPoints(japd), polygrdjap)
+grd <- GridTopology(
+   cellcentre.offset = c(0, 0),
+   cellsize = c(1 / 9, 1 / 9), cells.dim = c(nrow, ncol)
+)
+@
 
-japgrd<-SpatialGridDataFrame(grd, data.frame(Ntrees=rep(0,n)))
 
-tidxpp<-table(idxpp)
-japgrd$Ntrees[as.numeric(names(tidxpp))]<-tidxpp
+After the creation of the grid, we have used function \code{overlay()} on
+the set of points and the newlydefined squares to find how many points can be
+found in each square.
+
+<<>>=
+polygrdjap <- as(grd, "SpatialPolygons")
+idxpp <- overlay(SpatialPoints(japd), polygrdjap)
+
+japgrd <- SpatialGridDataFrame(grd, data.frame( Ntrees = rep(0, n) ) )
+
+tidxpp <- table(idxpp)
+japgrd$Ntrees[ as.numeric( names(tidxpp) ) ] <- tidxpp
 @
 
 
@@ -579,34 +596,30 @@ to be passed to the \code{f()} function. Note that care must be taken as
 \proglang{R} and \pkg{R-INLA} may have a different ordering of the areas when
 defining the adjacency matrix.
 
-<<results=hide, keep.source=FALSE>>=
-japgrd$SPIDX<-1:n
-japgrd$INLAIDX<-as.vector((inla.lattice2node.mapping(nrow,ncol))[,ncol:1])
+<<results=hide, keep.source=TRUE>>=
+japgrd$SPIDX <- 1 : n
 
-japnb<-poly2nb(polygrdjap)
+japnb <- poly2nb(polygrdjap)
 
-#Convert the adjacency matrix into a file in the INLA format
-adjpine<-nb2mat(japnb, style="B")
+adjpine <- nb2mat(japnb, style = "B")
 @
 
 Finally, we define the call to \code{inla()} using a \code{formula} which
 includes spatial random effects based on the grid of squares.  In addition, we
-have set other options to compute the DIC,
+have set other options to compute the DIC, with
 \code{control.compute=list(dic=TRUE)}, and the marginals of the linear
 predictors, using \code{control.predictor=list(compute=TRUE)}.
 
-<<keep.source=FALSE>>=
-#fpp<-Ntrees~1+f(japgrd$INLAIDX, model="rw2d",nrow=nrow, ncol=ncol)
-fpp<-Ntrees~1+f(japgrd$SPIDX, model="bym", graph=adjpine)
+<<keep.source=TRUE>>=
+fpp  <-  Ntrees ~ 1 + f(japgrd$SPIDX, model = "bym", graph = adjpine)
 
-#INLA-LA
-   japinlala<-inla(fpp,
-   family="poisson", data=as.data.frame(japgrd),
-#   working.directory = japwdla, keep=TRUE,
-   control.compute=list(dic=TRUE),
-   control.predictor=list(compute=TRUE))
+japinlala <- inla(fpp,
+   family = "poisson", data = as.data.frame(japgrd),
+   control.compute = list(dic = TRUE),
+   control.predictor = list(compute = TRUE)
+)
 
-japgrd$INLALA<- japinlala$summary.fitted.values[,1]
+japgrd$INLALA <-  japinlala$summary.fitted.values[, 1]
 @
 \noindent
 Figure~\ref{fig:sppa} shows the original counts and the smoothed counts.  Note
@@ -642,7 +655,7 @@ that observations need to be matched to the points in the grid and that those
 points with no observations attached are considered as missing values.
 Hence, this is somewhat similar to the analysis of lattice data and point
 patterns. However, \pkg{R-INLA} provides a number of options to build 
-model-based geostatistical models \citet{DiggleRibeiro:2007} First
+model-based geostatistical models \citep{DiggleRibeiro:2007}. First
 of all, different likelihoods can be used. Secondly, there are different
 options to define the spatial random effects. Although it is still possible
 to model spatial dependence in the grid of points using a CAR specification,
@@ -652,9 +665,9 @@ to model spatial dependence in the grid of points using a CAR specification,
 This correlation allows, for example, the use of exponentially decaying
 functions such as 
 
-$$
+\begin{equation}
 \Sigma_{ij} = \sigma^2 \exp(-d_{ij}/\varphi)
-$$
+\end{equation}
 \noindent
 where $d_{ij}$ is the distance between points $i$ and $j$, and $\varphi$
 is a parameter that controls the scale of the spatial dependence.
@@ -681,13 +694,13 @@ More recently, \citet{Lindgren:2011} follow a different approach based on
 a triangulation on the sampling points and the use of stochastic partial
 differential equations. Now, the spatial effects are defined as
 
-$$
+\begin{equation}
 u(s)=\sum_{k=1}^n \psi_k(s)w_k,\ s\in \mathbb{R}^2
-$$
+\end{equation}
 \noindent
 Here, $\{\psi_k(s)\}$ are a basis of functions and $w_k$ are associated
 weights. Weights are assumed to be Gaussian. The advantages of this approach
-for spatial statistics are is fully described in \citet{Camelettietal:2013}.
+for spatial statistics are fully described in \citet{Camelettietal:2013}.
 
 
 In order to show how to fit geostatistical models with \pkg{R-INLA} we
@@ -695,108 +708,116 @@ reproduce here an example from \citet{GomezRubioetal:2013} based on the
 Rongelap data set \citep{DiggleRibeiro:2007}, which records  radionuclide
 concentration at 157 different locations in Rongelap island. We have restricted
 the analysis to one of the clusters in the north-east part of the island
-because observations need to be matched to a regular grid of points.
+because observations need to be matched to a regular grid of points.  For this
+analysis we have used \proglang{R} packages \pkg{geoR} \citep{geoR:2001} and
+\pkg{geoRglm} \citep{geoRglm:2002}.
 
-<<keep.source=FALSE>>=
+
+
+First of all, data are loaded and the data from the desired clusters
+are extracted from the original data set by checking that their coordinates
+are in the window $(-700, -500)\times (-1900, -1700)$.
+
+<<keep.source=TRUE>>=
 library("geoR")
 library("geoRglm")
 
-#Swiss rainfall data
 data("rongelap")
 
-#Prepare data for INLA
-rgldata<-as.data.frame(rongelap)
+rgldata <- as.data.frame(rongelap)
+xy <- rongelap[[1]]
 
-###define the dimension of the grid
-nrow=5
-ncol=5
-n=nrow*ncol
+idx1 <- (xy[,1] < -500 & xy[,1] > -700 & 
+   xy[,2] > -1900 & xy[,2] < -1700)
 
-#
-#Select eastern points
-#
-xy<-rongelap[[1]]
-
-#Cluster 1
-#plot(xy, xlim=c(-700, -500), ylim=c(-1900, -1700))
-
-idx1<-(xy[,1]< -500 & xy[,1]> -700 & xy[,2]> -1900 & xy[,2]< -1700)
-#plot(xy[idx1,])
-
-#Cluster 2
-#plot(xy, xlim=c(-500,-300), ylim=c(-1500, -1300))
-
-idx2<-(xy[,1]< -300 & xy[,1]> -500 & xy[,2]> -1500 & xy[,2]< -1300)
-#plot(xy[idx2,])
-
-
-xxyy<-SpatialPoints(rbind(xy[idx1,],xy[idx2,]))
-
-
-#Subset data set
-rgldata<-rgldata[idx1,]
+rgldata <- rgldata[idx1, ]
 @
 
-<<keep.source=FALSE>>=
-#sp-Grid
-grd<-GridTopology(
-   cellcentre.offset=c(min(rgldata$X1), min(rgldata$X2)),
-   cellsize=c(diff(range(rgldata$X1))/(nrow-1), diff(range(rgldata$X2))/(ncol-1)),
-   cells.dim=c(nrow, ncol))
 
-#Mapping between INLA and sp grids:
-#INLA: storage by column
-#sp: storage by row
+The following step is to  define the grid topology for the grid that will be
+used to match these points to. The grid is defined to be of dimension 
+$5\times 5$. 
 
-inla2sp<-as.vector((inla.lattice2node.mapping(nrow,ncol))[,ncol:1])
+<<keep.source=TRUE>>=
+nrow <- 5
+ncol <- 5
+n <- nrow * ncol
 
-spgrd<-SpatialGridDataFrame(grd, as.data.frame(rgldata[inla2sp,]))
-#spplot(spgrd, "data")
+grdoffset <- c( min(rgldata$X1), min(rgldata$X2) )
+csize1 <- diff( range(rgldata$X1) ) / (nrow-1)
+csize2 <- diff( range(rgldata$X2) ) / (ncol-1)
+grd <- GridTopology(
+   cellcentre.offset = grdoffset, 
+   cellsize = c(csize1, csize2),
+   cells.dim = c(nrow, ncol)
+)
+@
+\noindent
+Data will be placed in a \code{SpatialGridDataFrame} (using the previously
+defined grid topology) and re-organised according to what \pkg{R-INLA} expects
+for this model (i.e., grid data stored by column).  An index variable \code{IDX}
+is added to be used in \code{f()} when defining the model. However, 
+\pkg{R-INLA} will rely on how the rows are ordered in the data passed to 
+\code{inla()} when defining distances and adjacencies (i.e., the index
+variable ordering will not be considered).
 
-polygrd<-as(grd, "SpatialPolygons")
+<<>>=
+inla2sp <- inla.lattice2node.mapping(nrow, ncol)[ , ncol:1]
+inla2sp <- as.vector(inla2sp)
 
-#Match data to grid
-dataidx<-overlay(SpatialPoints(as.matrix(rgldata[,1:2])), polygrd)
+spgrd <- SpatialGridDataFrame(grd, as.data.frame(rgldata[inla2sp, ]) )
 
-#Aggregate data
-yag<-by(rgldata$data, dataidx, sum)
-umag<-by(rgldata$units.m, dataidx, sum)
-ratioag<-yag/umag
-
-#Add ratio to SGDF
-spgrd$ratioag<-NA
-spgrd$ratioag[as.numeric(names(ratioag))]<-ratioag
-
-#ADD INDICES
-spgrd$SPIDX<-1:nrow(spgrd)
-spgrd$INLAIDX<-inla2sp
-
-
-#New geodata
-rongelap2<-as.geodata(cbind(coordinates(spgrd)[!is.na(spgrd$ratioag),], spgrd$ratioag[!is.na(spgrd$ratioag)]))
+spgrd$IDX <- 1 : nrow(spgrd@data)
 @
 
+
+Next, we create a \code{SpatialPolygons} with the boudanries of the squares
+in the grid. This way, it is easy to match the data to the newly created grid using function
+\code{overlay()}.
+
+
+<<>>=
+polygrd <- as(grd, "SpatialPolygons")
+
+dataidx <- overlay(SpatialPoints( as.matrix(rgldata[, 1:2]) ), polygrd)
+@
+
+It should be noted that  radionuclide concentration is measured at each square
+by the average of the observations in the square, and this needs
+to be computed beforehand.
+
+
+<<>>=
+yag <- by(rgldata$data, dataidx, sum)
+umag <- by(rgldata$units.m, dataidx, sum)
+ratioag <- yag / umag
+@
+
+Then, a new column is added to the \code{SpatialGridDataFrame} with these
+averages.\code{NA} will be used for
+the squares with no data so that these values will be imputed from the model.
+<<>>=
+spgrd$ratioag <- NA
+spgrd$ratioag[ as.numeric(names(ratioag)) ] <- ratioag
+@
 
 Here we define a model with an intercept term and a random effect of the
 Mat\'ern class. Note how we have fixed, for convenience, 
 the value of the range and precision.
 
-<<keep.source=FALSE>>=
-#INLA-LA
-formula<- ratioag~1+f(spgrd$INLAIDX, model = "matern2d", nrow=nrow, ncol=ncol,
-   hyper=list(range=list(initial=log(sqrt(8)/.5), fixed=TRUE),
-#   hyper=list(range=list(initial=log(1), fixed=TRUE),
-            prec=list(initial=log(1), fixed=TRUE)
-                ))
+<<keep.source=TRUE>>=
+formula <-  ratioag ~ 1 + f(spgrd$IDX, model = "matern2d", 
+   nrow = nrow, ncol = ncol,
+   hyper = list(range = list(initial = log(sqrt(8)/.5), fixed = TRUE),
+            prec = list(initial = log(1), fixed = TRUE)))
+                
 
-rglinlala<-inla(formula, family = "poisson",
-#   working.directory = rglwdla, keep=TRUE,
+rglinlala <- inla(formula, family = "poisson",
    control.predictor = list(compute = TRUE),
-   control.compute=list(dic=TRUE),
-   data =as.data.frame(spgrd))
+   control.compute = list(dic = TRUE),
+   data = as.data.frame(spgrd) )
 
-spgrd$INLALA<-rglinlala$summary.fitted.values[,1]
-
+spgrd$INLALA <- rglinlala$summary.fitted.values[,1]
 @
 
 Figure~\ref{fig:geos} shows the observed and estimated radionuclide
@@ -814,7 +835,7 @@ print(spplot(spgrd, c("ratioag", "INLALA"),
 ))
 
 @
-\caption{Observed (left) and estimated (right) of radionuclide concentration
+\caption{Observed (left) and estimated (right) radionuclide concentration
 in Rongelap island.}
 \label{fig:geos}
 \end{center}
@@ -837,16 +858,16 @@ latent models.  In particular they focus on some latent models used in spatial
 econometrics and which are not available as part of the \pkg{R-INLA} package at
 the moment.
 
-This approach is based on considering a model where one or several have been
+This approach is based on considering a model where one or several parameters have been
 fixed in a way that makes the conditioned model fitable with \pkg{R-INLA}.  If
 we denote by $\rho$ the vector of parameters to fix and by $\hat{\rho}$ a
 specific set of fixed parameter values,  the full posterior marginal could be
 written as
 
 
-$$
+\begin{equation}
 \pi(\mathbf{x}, \mathbf{\theta}|\mathbf{y}, \hat{\rho}) 
-$$
+\end{equation}
 \noindent
 Taking this into account,  it is clear that when conditioning on
 $\rho=\hat\rho$ \pkg{R-INLA} will give us an approximation to
@@ -854,8 +875,8 @@ $\pi(x_i|\mathbf{y}, \hat{\rho})$ and $\pi(\theta_i|\mathbf{y}, \hat{\rho})$.
 
 
 
-Note that the full posterior distribution can be obtained by integrating $\rho$,
-i.e.,
+Note that the full posterior distribution can be obtained by integrating $\rho$
+out, i.e.,
 
 \begin{equation}
 \pi(\mathbf{x}, \mathbf{\theta}|\mathbf{y}) = 
@@ -874,12 +895,12 @@ note that this can be written as
 Here $\pi(\rho)$ is a prior distribution on $\rho$ and $\pi(\mathbf{y}|\rho)$
 is the marginal likelihood of the model, which is reported by \pkg{R-INLA}.
 Hence, $\pi(\rho|\mathbf{y})$ can be estimated by re-scaling
-expression~(\ref{eq:postrho}).
+expression in Equation~\ref{eq:postrho}.
 
 
 The posterior distribution of $\rho$ can be estimated by defining a fine grid
-of values so that $S=\{\rho_i\}_{i=1}^r$ and $\pi(\rho_i|\mathbf{y})$ is
-computed.  Then $\pi(\rho|\mathbf{y})$ can be obtained by fitting and
+of values $S=\{\rho_i\}_{i=1}^r$ so that $\pi(\rho_i|\mathbf{y}),\ i=\ldots,r$
+are computed.  Then $\pi(\rho|\mathbf{y})$ can be obtained by fitting and
 re-scaling a spline (or other non-linear function) to the previous values.
 Using simple numerical integration techniques we can obtain an approximation to
 $\pi(\mathbf{x}, \mathbf{\theta}|\mathbf{y})$ as follows:
@@ -899,29 +920,30 @@ Note that the previous expression can be regarded as a weighted average
 of the different models fitted after conditioning on different values of
 $\rho$.
 
-From equation~\ref{eq:fullpostapp} it is clear that we can obtain the following
+From Equation~\ref{eq:fullpostapp} it is clear that we can obtain the following
 approximations to the posterior marginals of the individual latent parameters
 and hyperparameters:
 
-$$
+\begin{equation}
 \hat{\pi}(x_i|\mathbf{y}) = \sum_j \pi(x_i|\mathbf{y}, \rho_j) w_j
-$$
+\end{equation}
 
-$$
+\begin{equation}
 \hat{\pi}(\theta_i|\mathbf{y}) = \sum_j \pi(\theta_i|\mathbf{y}, \rho_j) w_j
-$$
+\end{equation}
 \noindent
 $w_j$ is a weight associated with $\rho_j$ as follows:
 
-$$
+\begin{equation}
 w_j = \pi(\rho_j|\mathbf{y})\Delta_j
-$$
+\end{equation}
+
 
 This is like making a Bayesian Model Averaging \citep{Hoetingetal:1999} on the
 different conditioned models fitted with \pkg{R-INLA}. Altogether, this
 provides a way of combining simpler models to obtain our desired model. In
 Section~\ref{sec:examples} we show how to apply these ideas to different models
-in spatial and spatio-temporal statistics.
+in spatial statistics.
 
 
 %If $\rho$ is a discrete parameter with values in a (finite) set $S$, this can 
@@ -976,15 +998,13 @@ latent model.
 
 Here we revisit the Boston housing data to fit the Leroux et al. model.  First
 of all, it is worth mentioning that the model needs a wrapper function to be
-fitted for a given value of the spatial parameter $\lambda$. This
-wrapper function is included in the \proglang{R} package \pkg{R-INLA}.
-
-It is based on the \code{generic0} latent model available in  \pkg{R-INLA}.
-This model implements a multivariate Gaussian random effect with zero mean and
-precision matrix as in equation~(\ref{eq:leroux}). Once $\lambda$ is fixed the
-model can be easily fitted with \pkg{R-INLA}.  We repeat this procedure for
-different values of $\lambda$ to obtain a list of fitted models to be combined
-later.
+fitted for a given value of the spatial parameter $\lambda$. This wrapper
+function is included in the \proglang{R} package \pkg{R-INLA} and it is based
+on the \code{generic0} latent model available in  \pkg{R-INLA}.  Once $\lambda$
+is fixed the model can be easily fitted with \pkg{R-INLA}, as the latent effect
+is a multivariate Gaussian random effect with zero mean and precision matrix as
+in Equation~\ref{eq:leroux}.  We repeat this procedure for different values of
+$\lambda$ to obtain a list of fitted models to be combined later.
 
 Hence, we can write a similar wrapper function as in the previous example for
 the spatial econometrics models, which is included in package \pkg{INLABMA}:
@@ -995,10 +1015,10 @@ leroux.inla
 @
 
 
-In the previous code, the precision matrix is created using the adjacency
+In the previous code, the precision matrix \code{Q} is created using the adjacency
 matrix and the value of $\lambda$. Then the \code{generic0} model is added to the
 formula with the fixed effects. Finally we correct the marginal log-likelihood
-$\pi(\mathbf{y})$ by adding the log-determinant of $(1-\lambda)I_n+\lambda M)$.
+$\pi(\mathbf{y|\lambda})$ (conditioned on the value of $\lambda$) by adding half the log-determinant of $(1-\lambda)I_n+\lambda M)$.
 Note that, in principle, this is not needed to fit a single model and obtain
 the approximations to the posterior marginals as it is a constant. However, we
 are fitting and combining several models so we need to correct for this
@@ -1015,7 +1035,7 @@ included in package \pkg{INLABMA} are similar, but include further options
 
 <<echo=FALSE, eval=FALSE, keep.source=FALSE>>=
 #Zero-variance of error term
-zero.variance = list(prec=list(initial = 25, fixed=TRUE))
+zero.variance = list(prec=list(initial = 25, fixed = TRUE))
 @
 
 Also, the adjacency matrix is taken from the data provided in the \code{boston}
@@ -1024,60 +1044,60 @@ Note that we will be using a binary adjacency matrix as the random
 effects have an intrinsic CAR specification:
 <<keep.source=FALSE>>=
 #Binary adjacency matrix
-boston.matB<-listw2mat(nb2listw(boston.soi, style="B"))
-bmspB<-as(boston.matB, "CsparseMatrix")
+boston.matB <- listw2mat( nb2listw(boston.soi, style = "B") )
+bmspB <- as(boston.matB, "CsparseMatrix")
 @
 
 Function \code{inla.leroux} is used in the example below to compute the fitted
 models for the Leroux et al. model.  In this case, we take $\lambda$ to be in
 the interval $(0.8,0.99)$ after previous assessment on where
 $\pi(\lambda|\mathbf{y})$ has its mode. Also, we define a prior for the
-precision of the random effects in variable \code{fhyper}.
+precision of the random effects in variable \code{fhyper}.  In addition, we
+have used \code{mclapply} to parallelise the computations. Note that this is an
+advantage of fitting this conditioned models compared standard MCMC methods.
 
-<<keep.source=FALSE>>=
-#Run models
-rlambda<-seq(0.8, .99, length.out=15)
+<<keep.source=TRUE>>=
+rlambda <- seq(0.8, 0.99, length.out = 15)
 
-#Setting of hyper-parameters
-fhyper=list(prec=list(prior="loggamma", param=c(1,1), initial=log(1), fixed=FALSE))
+fhyper = list(prec = list(prior = "loggamma", 
+   param = c(1,1), initial = log(1), fixed = FALSE))
 
-#Formula
-form2<-log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) + 
+form2 <- log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) + 
     AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)
 @
 
 <<eval=FALSE>>=
 lerouxmodels = mclapply(rlambda,
         function(lambda) {
-                leroux.inla(form2, d=boston.c, W=boston.matB, lambda=lambda,
-                        fhyper=fhyper, improve=TRUE,
+                leroux.inla(form2, d = boston.c, W = boston.matB, 
+			lambda = lambda,
+                        fhyper = fhyper, improve=TRUE,
                         family = "gaussian",
-#   control.family = list(hyper = zero.variance),
-                        control.predictor=list(compute=TRUE),
-                        control.compute=list(dic=TRUE, cpo=TRUE),
-                        control.inla=list(print.joint.hyper=TRUE), verbose=FALSE
+                        control.predictor = list(compute = TRUE),
+                        control.compute = list(dic = TRUE, cpo = TRUE),
+                        control.inla = list(print.joint.hyper = TRUE)
                 )
         })
 @
 
 <<echo=FALSE, eval=FALSE>>=
 #Uniform prior on the variances
-loginvunif<-"expression:
+loginvunif <- "expression:
   precision = exp(log_precision);
   logdens = (precision>1/1000?1:0);
   return(logdens);"
 
 
 #  logdens=((precision>1000)?(-log(1000)-2*log(precision)):0);
-fhyper2<-list(prec=list(prior=loginvunif))
+fhyper2 <- list(prec=list(prior=loginvunif))
 
-leroux.inla(form2, d=boston.c, W=boston.matB, lambda=lambda,
-                        fhyper=fhyper2, improve=TRUE,
+leroux.inla(form2, d = boston.c, W = boston.matB, lambda = lambda,
+                        fhyper = fhyper2, improve = TRUE,
                         family = "gaussian",
 #   control.family = list(hyper = zero.variance),
-                        control.predictor=list(compute=TRUE),
-                        control.compute=list(dic=TRUE, cpo=TRUE),
-                        control.inla=list(print.joint.hyper=TRUE), verbose=FALSE
+                        control.predictor = list(compute = TRUE),
+                        control.compute = list(dic = TRUE, cpo = TRUE),
+                        control.inla = list(print.joint.hyper = TRUE)
                 )
 
 @
@@ -1094,22 +1114,22 @@ load("lerouxmodels.RData")
 
 Following this, we need to combine the different models to obtain the final
 model by Bayesian Model Averaging. We will take a uniform prior on $\rho$ and
-set the third argument in the following function to $1$. Note that another
-prior can be used here by giving the density of the prior at the different
-values of $\rho$.
+set the third argument in the following function to $log(1)=0$. Note that
+another prior can be used here by giving the log-density of the prior at the
+different values of $\rho$.
 
 
 
 <<>>=
-bmaleroux<-BMA2(lerouxmodels, rlambda, 0, impacts=FALSE)
+bmaleroux <- BMA2(lerouxmodels, rlambda, 0, impacts=FALSE)
 @
 <<echo=FALSE, eval=FALSE>>=
 #Using the same prior as in R-INLA:logit(beta) ~ Normal
-xxxprec<-.01
-xxx<-data.frame(x=seq(-4/sqrt(xxxprec),4/sqrt(xxxprec), length.out=100))
-xxx$y<-dnorm(xxx$x, 0, sd=sqrt(1/xxxprec))
+xxxprec <- .01
+xxx <- data.frame(x=seq(-4/sqrt(xxxprec),4/sqrt(xxxprec), length.out=100))
+xxx$y <- dnorm(xxx$x, 0, sd=sqrt(1/xxxprec))
 
-xxx2<-inla.tmarginal(function(x){exp(x)/(1+exp(x))}, xxx)
+xxx2 <- inla.tmarginal(function(x){exp(x)/(1+exp(x))}, xxx)
 
 @
 
@@ -1118,9 +1138,9 @@ xxx2<-inla.tmarginal(function(x){exp(x)/(1+exp(x))}, xxx)
 \code{bmaleroux} is similar to the object returned by \code{inla()} and it
 includes the posterior marginals and summary statistics for $\lambda$
 in a list element named \code{rho}. This provides summary statistics (mean,
-standard deviation, some quantiles and the posterior marginal.
+standard deviation and some quantiles) and the posterior marginal.
 
-The same model can be fitted using package \pkg{CARBayes}\citep{CARBayes:2013}
+The same model can be fitted using package \pkg{CARBayes} \citep{CARBayes:2013}
 as follows:
 
 <<keep.source=FALSE>>=
@@ -1128,14 +1148,14 @@ as follows:
 library("CARBayes")
 
 #New model
-#form2<-log(CMEDV) ~CRIM+ZN + INDUS + CHAS + I(NOX^2)+
+#form2 <- log(CMEDV) ~CRIM+ZN + INDUS + CHAS + I(NOX^2)+
 #   I(RM^2) +  AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)
 
 @
 <<eval=FALSE>>=
 attach(boston.c)
-lcarbayes<- gaussian.lerouxCAR (form2, W=as.matrix(bmspB), burnin=500, 
-   n.sample=2500, thin=5)
+lcarbayes <-  gaussian.lerouxCAR (form2, W = as.matrix(bmspB), burnin = 500, 
+   n.sample = 2500, thin = 5)
 detach(boston.c)
 @
 <<echo=FALSE>>=
@@ -1178,20 +1198,20 @@ model.
 <<echo=FALSE, results=tex>>=
 library("xtable")
 
-tab<-cbind(bmaleroux$summary.fixed[,1:2], summary(lcarbayes$samples.beta)[[1]][,1:2])
-tab<-rbind(tab, c(bmaleroux$rho$mean, bmaleroux$rho$sd, 
+tab <- cbind(bmaleroux$summary.fixed[, 1:2], summary(lcarbayes$samples.beta)[[1]][,1:2])
+tab <- rbind(tab, c(bmaleroux$rho$mean, bmaleroux$rho$sd, 
    1-summary(lcarbayes$samples.rho)[[1]][1], 
    summary(lcarbayes$samples.rho)[[1]][2])
 )
-rownames(tab)[nrow(tab)]<-"lambda"
+rownames(tab)[nrow(tab)] <- "lambda"
 
-colnames(tab)<-c("Mean (INLA)", "SD (INLA)", "Mean (MCMC)", "SD (MCMC)") 
+colnames(tab) <- c("Mean (INLA)", "SD (INLA)", "Mean (MCMC)", "SD (MCMC)") 
 
 
-xtab<-xtable(tab, digits=4)
-xtab[nrow(xtab), 3]<- 1- xtab[nrow(xtab), 3] #CARBAyes gives 1-lambda
-caption(xtab)<-"Point estimates of fixed effects and $\\lambda$ using INLA and MCMC."
-label(xtab)<-"tab:leroux"
+xtab <- xtable(tab, digits=4)
+xtab[nrow(xtab), 3] <-  1- xtab[nrow(xtab), 3] #CARBAyes gives 1-lambda
+caption(xtab) <- "Point estimates of fixed effects and $\\lambda$ using INLA and MCMC."
+label(xtab) <- "tab:leroux"
 
 print(xtab)
 @
@@ -1239,35 +1259,35 @@ are very similar to the ones obtained with theirs for the Boston housing data.
 #As suggested by Lola Ugarte
 
 #My matrix: (1-lambda)*I_n+lambda*CAR
-Q <- diag(1-apply(boston.matB, 1, sum)) + boston.matB
+Q  <-  diag(1-apply(boston.matB, 1, sum)) + boston.matB
 
 #Lola's code
-form3<-log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) +
+form3 <- log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) +
     AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)+
     f(idx, model="generic1",  Cmatrix = Q, constr=TRUE, 
     hyper =list(prec=list(prior="loggamma", param=c(1,5e-5)),
     beta=list(prior="gaussian", param=c(0,.01)))
 )
 
-leroux2<-inla(form3,  data=boston.c, family = "gaussian",
+leroux2 <- inla(form3,  data=boston.c, family = "gaussian",
 #    control.family = list(hyper = zero.variance),
      control.predictor=list(compute=TRUE),
                         control.compute=list(dic=TRUE, cpo=TRUE),
-                        control.inla=list(print.joint.hyper=TRUE), verbose=FALSE
+                        control.inla=list(print.joint.hyper=TRUE)
                 )
 
 
 #Compare results between INLA and CARBayes
-plot(density(lcarbayes$samples.rho, from=0, to=1), xlim=c(0.8,.99),
+plot(density(lcarbayes$samples.rho, from=0, to=1), xlim=c(0.8,0.99),
   main=expression(paste("Marginal distribution of ", lambda)))
 lines(bmaleroux$rho$marginal[,1], bmaleroux$rho$marginal[,2], col="red")
 lines(leroux2$marginals.hyperpar[[3]], col="blue")
 legend(.15, 15, c("INLA", "MCMC"), col=c("red", "black"), lty=1)
 
-kk<-inla.tmarginal(function(x){1-x}, leroux2$marginals.hyperpar[[2]])
+kk <- inla.tmarginal(function(x){1-x}, leroux2$marginals.hyperpar[[2]])
 lines(kk,  col="blue")
 
-kkk<-inla.tmarginal(function(x){x/10.3}, leroux2$marginals.hyperpar[[2]])
+kkk <- inla.tmarginal(function(x){x/10.3}, leroux2$marginals.hyperpar[[2]])
 lines(kkk, col="pink")
 
 
@@ -1319,9 +1339,9 @@ specification.
 Alternatively, autocorrelation can be modelled explicitly so that the
 variable response $y$ depends on itself as follows:
 
-$$
+\begin{equation}
 y= \alpha+\beta X+\rho W y +\varepsilon 
-$$
+\end{equation}
 \noindent
 This model can be reformulated as
 
@@ -1337,17 +1357,17 @@ In addition to the previous models, sometimes lagged covariates are
 added to include the effects of neighbouring covariates. This is known
 as Spatial Durbin Model  and it is often expressed as
 
-$$
+\begin{equation}
 y= \rho W y+ \alpha+\beta X+\gamma W X +\varepsilon 
-$$
+\end{equation}
 \noindent
 which leads to
 
-$$
+\begin{equation}
 y= (I_n-\rho W)^{-1}(\alpha+\beta X+\gamma W X) +\varepsilon '
-$$
+\end{equation}
 \noindent
-Note that this is like our previous model~(\ref{eq:slm}) using an extended
+Note that this is like our previous model in Equation~\ref{eq:slm} using an extended
 design matrix that includes both $X$ and $W X$.
 
 These models cannot be fitted with \pkg{R-INLA} for two reasons. First of all, 
@@ -1376,7 +1396,7 @@ extend this model to consider other likelihoods. In particular,
 whether an event occurred. Hence, the response and the linear predictors are
 linked via a probit function as follows:
 
-$$
+\begin{equation}
 y_i=
 \left\{
 \begin{array}{cc}
@@ -1384,7 +1404,7 @@ y_i=
 0 & if y^*_i < 0
 \end{array}
 \right.
-$$
+\end{equation}
 
 The previous approach can be used here as well. The same code will still work
 as we can define a different family and link function to be used when calling
@@ -1393,58 +1413,51 @@ as we can define a different family and link function to be used when calling
 \subsubsection{Boston housing data}
 
 Here we revisit the Boston housing data to fit the three models on Spatial
-Econometrics described here. First of all, it is worth mentioning that each
-models needs a wrapper function to be fitted for a given value of the
-spatial autocorrelation parameter $\rho$. These wrapper functions are
-included in \proglang{R} package \pkg{R-INLA}.
+Econometrics previously described. First of all, it is worth mentioning that
+each models needs a wrapper function to be fitted for a given value of the
+spatial autocorrelation parameter $\rho$. These wrapper functions are included
+in \proglang{R} package \pkg{R-INLA}.
 
 All functions are based on the \code{generic0} model available in  \pkg{R-INLA}.
 This model implements a multivariate Gaussian random effect with zero mean
-and precision matrix $\frac{1}{\sigma^2} Q$. Once $\rho$ is fixed, $Q$ is
+and precision matrix $\tau Q$. Once $\rho$ is fixed, $Q$ is
 known and the model can be easily fitted with \pkg{R-INLA} for that value of
 $\rho$. We repeat this procedure for different values of $\rho$ to
 obtain a list of fitted models to be combined later.
 
-<<>>=
-library("INLABMA")
-@
-
 A simple wrapper function can be defined as follows for the SEM model:
 
 <<keep.source=FALSE>>=
-semwr.inla<-function(formula, d, W, rho,...)
+semwr.inla <- function(formula, d, W, rho,...)
 {
-        IrhoW<-diag(nrow(W))-rho*W
-        IrhoW2<-IrhoW%*%t(IrhoW)
+        IrhoW <- diag(nrow(W)) - rho*W
+        IrhoW2 <- IrhoW %*% t(IrhoW)
 
-        environment(formula)<-environment()
+        environment(formula) <- environment()
 
-        formula<-update(formula,
-          . ~ . + f(idx, model="generic0", Cmatrix =IrhoW2) )
+        formula <- update(formula,
+          . ~ . + f(idx, model = "generic0", Cmatrix = IrhoW2) )
 
-        res<-inla(formula, data=d, ...)
+        res <- inla(formula, data=d, ...)
 
   #Compute log-determinat to correct the marginal-loglikelihood
-        res$logdet<-as.numeric(determinant(IrhoW2)$modulus)
-        res$mlik<-res$mlik+res$logdet/2
+        res$logdet <- as.numeric( determinant(IrhoW2)$modulus )
+        res$mlik <- res$mlik+res$logdet / 2
 
         return(res)
 }
 @
 
-In the previous code, the precision matrix is created using the adjacency
-matrix and the value of $\rho$. Then the \code{generic0} model is added to the
-formula with the fixed effects. Finally we correct the marginal log-likelihood
-$\pi(\mathbf{y})$ by adding the log-determinat of $(I_n-\rho W')(I_n-\rho W)$.
-Note that, in principle, this is not needed to fit a single model and obtain
-the approximations to the posterior marginals as it is a constant. However, we
-are fitting and combining several models so we need to correct for this
-becuase this scaling factor will change with the value of $\rho$.
-Argument \code{'...'} is used to pass any other options to \code{inla()}. 
-This can be used to tune and set a number of other options.
+In the previous code, the precision matrix \code{IrhoW2} is created using the
+adjacency matrix and the value of $\rho$ and the \code{generic0} model is added
+to the formula after the fixed effects. As discussed with the Leroux model, the
+marginal log-likelihood $\pi(\mathbf{y|\rho})$  (note that now we are
+conditioning on $\rho$) is corrected by adding half the log-determinat of
+$(I_n-\rho W')(I_n-\rho W)$.  Argument \code{'...'} is used to pass any other
+options to \code{inla()}.
 
 Similar wrapper functions can be written for the other models. The functions
-included in pakcage \pkg{INLABMA} are similar, but include further options,
+included in package \pkg{INLABMA} are similar, but include further options,
 to improve fitting or compute the impacts 
 \citep[see,][for details]{Bivandetal:2013}.
 
@@ -1462,36 +1475,34 @@ zero.variance = list(prec=list(initial = 25, fixed=TRUE))
 #INLA: SAR model
 
 #Adjacency matrix
-boston.mat<-nb2mat(boston.soi)
-bmsp<-as(boston.mat, "CsparseMatrix")
+boston.mat <- nb2mat(boston.soi)
+bmsp <- as(boston.mat, "CsparseMatrix")
 
 #index for sptial effect
-boston.c$idx<-1:nrow(boston.c)
+boston.c$idx <- 1 : nrow(boston.c)
 
 @
 
 Next, we define a fine grid on the interval $(0,1)$ to give values
-to $\rho$ and compute the different models under these values. Here
-we have used \code{mclapply} to parallelise the computations. Note
-that this is an advantage of fitting this conditioned models compared 
-standard MCMC methods.
+to $\rho$ and compute the different models under these values. Again,
+we have used \code{mclapply}  to speed up computations.
 
 
 <<>>=
-fform<-log(CMEDV) ~CRIM+ZN + INDUS + CHAS + I(NOX^2)+
+fform <- log(CMEDV) ~CRIM+ZN + INDUS + CHAS + I(NOX^2)+
    I(RM^2) +  AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)
 
-rrho1<-seq(0.5, .9, len=20)
+rrho1 <- seq(0.5, 0.9, len = 20)
 @
 <<eval=FALSE>>=
 semmodels = mclapply(rrho1,
         function(rho) {
-                sem.inla(fform, d=boston.c, W=boston.mat, rho=rho,
-                        family = "gaussian", impacts=FALSE,
+                sem.inla(fform, d = boston.c, W = boston.mat, rho = rho,
+                        family = "gaussian", impacts = FALSE,
                         control.family = list(hyper = zero.variance),
-                        control.predictor=list(compute=TRUE),
-                        control.compute=list(dic=TRUE, cpo=TRUE),
-                        control.inla=list(print.joint.hyper=TRUE), verbose=FALSE
+                        control.predictor = list(compute = TRUE),
+                        control.compute = list(dic = TRUE, cpo = TRUE),
+                        control.inla = list(print.joint.hyper = TRUE)
                 )
         })
 @
@@ -1504,18 +1515,17 @@ load("semmodels.RData")
 
 \noindent
 Following this, we need to combine the different models
-to obtain the final model by Bayesian Model Averaging. We will take
+to obtain the final model by Bayesian Model Averaging. As in the
+example on the Leroux model, we will take
 a uniform prior on $\rho$ and set the third argument in the following
-function to $1$. Note that another prior can be used here by giving
-the density of the prior at the different values of $\rho$.
+function to $\log(1)=0$. 
 
 <<>>=
-bmasem<-BMA2(semmodels, rrho1, 1 , impacts=FALSE)
+bmasem <- BMA2(semmodels, rrho1, 0 , impacts = FALSE)
 @
 
 \code{bmasem} is similar to the object returned by \code{inla()} and it
 includes the posterior marginals and summary statistics for $\rho$.
-
 
 SLM and SDM models can be fitted using similar code. In the case of
 the SLM, first we compute the design matrix (of the fixed effects) 
@@ -1523,20 +1533,21 @@ to be used later when fitting the models. This will speed up the
 computations.
 
 <<>>=
-mmatrix<-model.matrix(fform, boston.c)
+mmatrix <- model.matrix(fform, boston.c)
 
-rrho2<-seq(0.3, .6, len=20)
+rrho2 <- seq(0.3, 0.6, len = 20)
 @
 
 <<eval=FALSE>>=
 slmmodels = mclapply(rrho2,
         function(rho) {
-                slm.inla(form, d=boston.c, W=boston.mat, rho=rho, mmatrix=mmatrix,
-                        family = "gaussian", impacts=TRUE,
+                slm.inla(form, d = boston.c, W = boston.mat, rho = rho, 
+			mmatrix = mmatrix,
+                        family = "gaussian", impacts = TRUE,
                         control.data = list(hyper = zero.variance),
-                        control.predictor=list(compute=TRUE),
-                        control.compute=list(dic=TRUE, cpo=TRUE),
-                        control.inla=list(print.joint.hyper=TRUE), verbose=FALSE
+                        control.predictor = list(compute = TRUE),
+                        control.compute = list(dic = TRUE, cpo = TRUE),
+                        control.inla = list(print.joint.hyper = TRUE)
                 )
         })
 
@@ -1549,7 +1560,7 @@ load("slmmodels.RData")
 @
 
 <<>>=
-bmaslm<-BMA2(slmmodels, rrho2, 1 , impacts=FALSE)
+bmaslm <- BMA2(slmmodels, rrho2, 0 , impacts = FALSE)
 @
 
 In the case of the SDM, it is very helpful to compute $X$ and $WX$ beforehand
@@ -1558,21 +1569,22 @@ regarless of the value of $\rho$. This can be later passed to wrapper function
 \code{sdm.inla}.
 
 <<>>=
-mmW<-bmsp%*%mmatrix[,-1]#Remove intercept
-mmatrixsdm<-cbind(mmatrix, as.matrix(mmW))
+mmW <- bmsp %*% mmatrix[,-1]#Remove intercept
+mmatrixsdm <- cbind(mmatrix, as.matrix(mmW) )
 
-rrho3<-seq(0.4, .7, len=20)
+rrho3 <- seq(0.4, 0.7, len = 20)
 @
 
-<<eval=FALSE>>=
+<<eval=FALSE, keep.source=TRUE>>=
 sdmmodels = mclapply(rrho3,
         function(rho) {
-                sdm.inla(form, d=boston.c, W=boston.mat, rho=rho, mmatrix=mmatrixsdm,
-                        family = "gaussian", impacts=TRUE,
+                sdm.inla(form, d = boston.c, W = boston.mat, rho = rho, 
+			mmatrix = mmatrixsdm,
+                        family = "gaussian", impacts = TRUE,
                         control.data = list(hyper = zero.variance),
-                        control.predictor=list(compute=TRUE),
-                        control.compute=list(dic=TRUE, cpo=TRUE),
-                        control.inla=list(print.joint.hyper=TRUE), verbose=FALSE
+                        control.predictor = list(compute = TRUE),
+                        control.compute = list(dic = TRUE, cpo = TRUE),
+                        control.inla = list(print.joint.hyper = TRUE)
                 )
         })
 @
@@ -1584,7 +1596,7 @@ load("sdmmodels.RData")
 @
 
 <<>>=
-bmasdm<-BMA2(sdmmodels, rrho3, 1 , impacts=FALSE)
+bmasdm <- BMA2(sdmmodels, rrho3, 0 , impacts = FALSE)
 @
 
 As we have seen in the previous examples, combining the different values 
@@ -1629,9 +1641,9 @@ for different spatial econometrics models, Boston housing data.}
 
 The Integrated Nested Laplace Approximation has provided a new paradigm to
 model fitting in Bayesian analysis. By focusing on the marginals and providing
-an interesting computational approach, it has provided an reasonable and faster
+an interesting computational approach, it has provided a reasonable and faster
 alternative to MCMC. Furthermore, the \pkg{R-INLA} package makes model fitting
-in \pkg{R} a very simple task.  Although \pkg{R-INLA} implements some key
+in \proglang{R} a very simple task.  Although \pkg{R-INLA} implements some key
 models, there are some others that have not been implemented yet.
 In addition, it is not easy to implement completely new models within the
 \pkg{R-INLA}.
@@ -1663,7 +1675,7 @@ spatial statistics. Similarly, complex spatio-temporal models could be fitted
 using a similar approach. However, it should be noted that our approach can be
 extended to other areas.
 
-\section{Acknowledgements}
+\section*{Acknowledgements}
 
 We would like to thank Duncan Lee and Lola Ugarte for their help and comments
 on how to fit the Leroux model with \pkg{R-INLA}.
