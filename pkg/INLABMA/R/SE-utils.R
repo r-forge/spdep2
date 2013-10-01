@@ -33,7 +33,7 @@ sem.inla<-function(formula, d, W, rho, improve=TRUE, impacts=FALSE, fhyper=NULL,
 	res<-inla(formula, data=d, ...)
 
 	if(improve)
-		res<-inla.hyperpar(res, diff.logdens=20)
+		res<-inla.rerun(res)#inla.hyperpar(res, diff.logdens=20)
 
 	#Compute log-determinat to correct the marginal-loglikelihood
 	res$logdet<-as.numeric(determinant(IrhoW2)$modulus)
@@ -56,7 +56,7 @@ sem.inla<-function(formula, d, W, rho, improve=TRUE, impacts=FALSE, fhyper=NULL,
 
 			mm<-lapply(res$impacts$marginals.impacts,
 			function(X){
-	inla.marginal.transform(function(x){Dfm*x}, X)
+	inla.tmarginal(function(x){Dfm*x}, X)
 			})
 
 	names(mm)<-names(res$impacts$marginals.impacts)
@@ -112,7 +112,7 @@ slm.inla<-function(formula, d, W, rho, mmatrix=NULL, improve=TRUE,
 
 
 	if(improve)
-		res<-inla.hyperpar(res, diff.logdens=20)
+		res<-inla.rerun(res)#inla.hyperpar(res, diff.logdens=20)
 
 	#Compute log-determinat to correct the marginal-loglikelihood
 	res$logdet<-as.numeric(determinant(IrhoW2)$modulus)
@@ -274,7 +274,7 @@ sdm.inla<-function(formula, d, W, rho, mmatrix=NULL, intercept=TRUE,
 
 
 	if(improve)
-		res<-inla.hyperpar(res, diff.logdens=20)
+		res<-inla.rerun(res)#inla.hyperpar(res, diff.logdens=20)
 
 	#Compute log-determinat to correct the marginal-loglikelihood
 	res$logdet<-as.numeric(determinant(IrhoW2)$modulus)
@@ -365,7 +365,7 @@ rescalemarg<-function(xx, w)
 #	xx[,1]<-xx[,1]*w
 #	xx[,2]<-xx[,2]/w
 	#USe inla.marginal.transform
-	xx<-inla.marginal.transform(function(x){w*x}, xx)
+	xx<-inla.tmarginal(function(x){w*x}, xx)
 
 	return(xx)
 }

@@ -8,7 +8,8 @@ This function is similar to \code{splinefun} but it returns 0
 outside the range of \code{x}.
 }
 \usage{
-mysplinefun(x, y = NULL, method = c("fmm", "periodic", "natural", "monoH.FC")[1], ties = mean)
+mysplinefun(x, y = NULL, method = c("fmm", "periodic", "natural", "monoH.FC")[1],
+   ties = mean)
 }
 \arguments{
   \item{x}{
@@ -36,7 +37,7 @@ Returns a function with \code{x} and \code{deriv} arguments.  See \code{\link{sp
 %% ~put references to the literature/web site here ~
 %%}
 \author{
-Virgilio GÃmez-Rubio <virgilio.gomez@uclm.es>
+Virgilio Gómez-Rubio <virgilio.gomez@uclm.es>
 }
 %%\note{
 %%  ~~further notes~~

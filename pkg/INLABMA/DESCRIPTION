@@ -5,7 +5,8 @@ Encoding: latin1
 Title: Bayesian Model Averaging with INLA
 Author: Virgilio Gomez Rubio <virgilio.gomez@uclm.es>, Roger Bivand <Roger.Bivand@nhh.no>
 Maintainer: Virgilio Gomez Rubio <virgilio.gomez@uclm.es>
-Depends: R(>= 2.15.0), INLA, spdep, multicore
+Depends: R(>= 2.15.0), spdep, multicore
+Suggests: INLA
 Description: Spatial Econometrics models using Bayesian Model Averaging 
  on models fitted with INLA.
 License: GPL (>= 2)

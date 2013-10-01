@@ -43,10 +43,11 @@ fitmarg<-function(x, logy, logp=0, usenormal=FALSE)
 {
 	if(!usenormal)
 	{
-	func = splinefun(x, logy-max(logy))
+	#func = splinefun(x, logy-max(logy))
+	#post = exp(logp+func(x))
 
-	#post = exp(logp) * exp(func(x))
-	post = exp(logp+func(x))
+	logpost<-logy-max(logy)+logp-max(logp)
+	post<-exp(logpost)
 
 	post.func = splinefun(x, post)
 

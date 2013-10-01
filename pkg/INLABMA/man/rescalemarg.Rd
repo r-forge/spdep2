@@ -40,9 +40,10 @@ Virgilio Gómez-Rubio <virgilio.gomez@uclm.es>
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{inla.marginal.transform}
+\code{inla.tmarginal}
 }
 \examples{
+\dontrun{
 x<-seq(-3,3, by=.01)
 xx<-cbind(x, dnorm(x))
 
@@ -50,7 +51,7 @@ xx2<-rescalemarg(xx, 3)
 
 plot(xx, type="l", xlim=c(-9,9))
 lines(xx2, col="red")
-
+}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

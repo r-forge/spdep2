@@ -39,7 +39,7 @@ leroux.inla<-function(formula, d, W, lambda, improve=TRUE, fhyper=NULL, ...)
 	res<-inla(formula, data=d, ...)
 
 	if(improve)
-		res<-inla.hyperpar(res, diff.logdens=20)
+		res<-inla.rerun(res)#inla.hyperpar(res, diff.logdens=20)
 
 	#Compute log-determinat to correct the marginal-loglikelihood
 	res$logdet<-as.numeric(determinant(Q)$modulus)

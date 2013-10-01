@@ -13,9 +13,12 @@ and \code{sdm.inla} fits a spatial Durbin model.
 }
 \usage{
 
-sem.inla(formula, d, W, rho, improve = TRUE, impacts = FALSE, fhyper = NULL, probit = FALSE, ...)
-slm.inla(formula, d, W, rho, mmatrix = NULL, improve = TRUE, impacts = FALSE, fhyper = NULL, probit = FALSE, ...)
-sdm.inla(formula, d, W, rho, mmatrix = NULL, intercept = TRUE, impacts = FALSE, improve = TRUE, fhyper = NULL, probit = FALSE, ...)
+sem.inla(formula, d, W, rho, improve = TRUE, impacts = FALSE, fhyper = NULL, 
+   probit = FALSE, ...)
+slm.inla(formula, d, W, rho, mmatrix = NULL, improve = TRUE, impacts = FALSE, 
+   fhyper = NULL, probit = FALSE, ...)
+sdm.inla(formula, d, W, rho, mmatrix = NULL, intercept = TRUE, impacts = FALSE,
+   improve = TRUE, fhyper = NULL, probit = FALSE, ...)
 
 }
 %- maybe also 'usage' for other objects documented here.
