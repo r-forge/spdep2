@@ -22,7 +22,9 @@ leroux.inla<-function(formula, d, W, lambda, improve=TRUE, fhyper=NULL, ...)
 	#Q<-lambda*diag(nrow(W))+(1-lambda)*W2
 	Q<-(1-lambda)*diag(nrow(W))+lambda*W2
 
-	environment(formula)<-environment()
+	#This is a fix to be able to use improve=TRUE later
+	#environment(formula)<-environment()
+	assign("Q", Q, environment(formula) )
 
 	if(is.null(fhyper))
 	{
@@ -38,8 +40,9 @@ leroux.inla<-function(formula, d, W, lambda, improve=TRUE, fhyper=NULL, ...)
 
 	res<-inla(formula, data=d, ...)
 
+
 	if(improve)
-		res<-inla.rerun(res)#inla.hyperpar(res, diff.logdens=20)
+		res<-inla.rerun(res)
 
 	#Compute log-determinat to correct the marginal-loglikelihood
 	res$logdet<-as.numeric(determinant(Q)$modulus)

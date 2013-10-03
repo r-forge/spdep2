@@ -16,7 +16,11 @@ sem.inla<-function(formula, d, W, rho, improve=TRUE, impacts=FALSE, fhyper=NULL,
 	IrhoW<-diag(nrow(W))-rho*W
 	IrhoW2<-IrhoW%*%t(IrhoW)
 
-	environment(formula)<-environment()
+	#environment(formula)<-environment()
+	#This is a fix to be able to use improve=TRUE later
+        #environment(formula)<-environment()
+        assign("IrhoW2", IrhoW2, environment(formula) )
+
 
 	if(is.null(fhyper))
 	{
@@ -87,6 +91,10 @@ slm.inla<-function(formula, d, W, rho, mmatrix=NULL, improve=TRUE,
 	IrhoW<-diag(nrow(W))-rho*W
 	IrhoW2<-IrhoW%*%t(IrhoW)
 
+        #environment(formula)<-environment()
+        #This is a fix to be able to use improve=TRUE later
+        #environment(formula)<-environment()
+        assign("IrhoW2", IrhoW2, environment(formula) )
 
 
 	if(is.null(mmatrix))
@@ -174,6 +182,12 @@ sdm.inla<-function(formula, d, W, rho, mmatrix=NULL, intercept=TRUE,
 {
 	IrhoW<-diag(nrow(W))-rho*W
 	IrhoW2<-IrhoW%*%t(IrhoW)
+
+        #environment(formula)<-environment()
+        #This is a fix to be able to use improve=TRUE later
+        #environment(formula)<-environment()
+        assign("IrhoW2", IrhoW2, environment(formula) )
+
 
 	if(is.null(mmatrix))
 	{
