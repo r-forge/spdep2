@@ -10,6 +10,8 @@
 
 
 
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% declarations for jss.cls %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -490,15 +492,15 @@ where $\alpha$ is the model intercept, $\beta$ a vector of coefficients of the
 covariates, $v_i$ a random effect with an intrinsic CAR specification and
 $\varepsilon_i$ is random Gaussian error term. As \code{f()} needs an area
 index which must have different values for different areas, this is first
-defined in variable \code{ID}.
+defined in variable \code{idx}.
 
 \begin{Schunk}
 \begin{Sinput}
 R> library("INLA")
-R> boston.c$ID <- 1 : nrow(boston.c)
-R> form <- log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) +  AGE + 
-+  log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)+
-+  f(ID, model = "besag", graph = adj )
+R> boston.c$idx <- 1 : nrow(boston.c)
+R> form <- log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) +  
++  AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)+
++  f(idx, model = "besag", graph = adj )
 R> m1 <- inla(form, data = boston.c)
 \end{Sinput}
 \end{Schunk}
@@ -522,41 +524,41 @@ Call:
 
 Time used:
  Pre-processing    Running inla Post-processing           Total 
-         4.6217          6.7057          0.4095         11.7368 
+         0.9767          1.5327          0.0826          2.5921 
 
 Fixed effects:
                mean     sd 0.025quant 0.5quant 0.975quant    mode kld
-(Intercept)  3.5324 0.1595     3.2188   3.5325     3.8450  3.5327   0
+(Intercept)  3.5350 0.1596     3.2211   3.5351     3.8478  3.5353   0
 CRIM        -0.0051 0.0009    -0.0069  -0.0051    -0.0033 -0.0051   0
 ZN           0.0004 0.0005    -0.0005   0.0004     0.0013  0.0004   0
 INDUS       -0.0004 0.0025    -0.0052  -0.0004     0.0045 -0.0004   0
-CHAS1       -0.0285 0.0273    -0.0821  -0.0285     0.0251 -0.0285   0
-I(NOX^2)    -0.1136 0.1506    -0.4091  -0.1137     0.1821 -0.1139   0
+CHAS1       -0.0284 0.0273    -0.0821  -0.0284     0.0252 -0.0284   0
+I(NOX^2)    -0.1148 0.1504    -0.4099  -0.1149     0.1808 -0.1151   0
 I(RM^2)      0.0108 0.0011     0.0087   0.0108     0.0128  0.0108   0
 AGE         -0.0013 0.0005    -0.0022  -0.0013    -0.0004 -0.0013   0
-log(DIS)    -0.0938 0.0689    -0.2292  -0.0939     0.0415 -0.0939   0
+log(DIS)    -0.0940 0.0688    -0.2290  -0.0940     0.0410 -0.0941   0
 log(RAD)     0.0513 0.0200     0.0120   0.0513     0.0905  0.0513   0
 TAX         -0.0004 0.0001    -0.0006  -0.0004    -0.0002 -0.0004   0
 PTRATIO     -0.0169 0.0051    -0.0269  -0.0169    -0.0070 -0.0169   0
 B            0.0007 0.0001     0.0005   0.0007     0.0009  0.0007   0
-log(LSTAT)  -0.2295 0.0216    -0.2719  -0.2295    -0.1870 -0.2295   0
+log(LSTAT)  -0.2300 0.0217    -0.2725  -0.2300    -0.1874 -0.2300   0
 
 Random effects:
 Name	  Model
- ID   Besags ICAR model 
+ idx   Besags ICAR model 
 
 Model hyperparameters:
                                         mean    sd      0.025quant
-Precision for the Gaussian observations 408.673 176.536 197.721   
-Precision for ID                         23.512   2.963  17.628   
+Precision for the Gaussian observations 380.397 163.945 183.592   
+Precision for idx                        24.023   3.261  17.615   
                                         0.5quant 0.975quant mode   
-Precision for the Gaussian observations 365.167  864.758    298.082
-Precision for ID                         23.591   29.143     23.999
+Precision for the Gaussian observations 339.933  806.548    277.344
+Precision for idx                        24.093   30.304     24.511
 
-Expected number of effective parameters(std dev): 388.78(38.60)
-Number of equivalent replicates : 1.302 
+Expected number of effective parameters(std dev): 383.62(40.71)
+Number of equivalent replicates : 1.319 
 
-Marginal Likelihood:  -108.27 
+Marginal Likelihood:  -108.37 
 \end{Soutput}
 \end{Schunk}
 \noindent
@@ -567,7 +569,7 @@ marginals of the precisions in the model.
 
 \begin{figure}[h]
 \begin{center}
-\includegraphics{spatial_inla-005}
+\includegraphics{spatial_inla-006}
 \end{center}
 \caption{Marginals of the precisions of the error term (top) and
 spatial random effects (bottom), Boston housing data.}
@@ -604,21 +606,21 @@ R> ncol <- 10
 R> n <- nrow * ncol
 R> grd <- GridTopology(
 +     cellcentre.offset = c(0, 0),
-+     cellsize = c(1/9, 1/9), cells.dim = c(nrow, ncol)
++     cellsize = c(1 / 9, 1 / 9), cells.dim = c(nrow, ncol)
 +  )
 \end{Sinput}
 \end{Schunk}
 
 
-After the creation of the grid, we have used function \code{overlay()} on
+After the creation of the grid, we have used function \code{over()} on
 the set of points and the newlydefined squares to find how many points can be
 found in each square.
 
 \begin{Schunk}
 \begin{Sinput}
 R> polygrdjap <- as(grd, "SpatialPolygons")
-R> idxpp <- overlay(SpatialPoints(japd), polygrdjap)
-R> japgrd <- SpatialGridDataFrame(grd, data.frame( Ntrees = rep(0,n) ) )
+R> idxpp <- over(SpatialPoints(japd), polygrdjap)
+R> japgrd <- SpatialGridDataFrame(grd, data.frame( Ntrees = rep(0, n) ) )
 R> tidxpp <- table(idxpp)
 R> japgrd$Ntrees[ as.numeric( names(tidxpp) ) ] <- tidxpp
 \end{Sinput}
@@ -643,14 +645,21 @@ includes spatial random effects based on the grid of squares.  In addition, we
 have set other options to compute the DIC, with
 \code{control.compute=list(dic=TRUE)}, and the marginals of the linear
 predictors, using \code{control.predictor=list(compute=TRUE)}.
+We have included the specification of the prior distributions of
+the log-precisions of unstructured and spatial random effects as well.
 
 \begin{Schunk}
 \begin{Sinput}
-R> fpp  <-  Ntrees ~ 1 + f(japgrd$SPIDX, model = "bym", graph = adjpine)
-R>    japinlala <- inla(fpp,
+R> fpp  <-  Ntrees ~ 1 + f(japgrd$SPIDX, model = "bym", graph = adjpine,
++    hyper=list(prec.unstruct=list(prior="loggamma", param=c(0.001, 0.001) ),
++                  prec.spatial=list(prior="loggamma", param=c(0.1,0.1) ))
++  )
+R> japinlala <- inla(fpp,
 +     family = "poisson", data = as.data.frame(japgrd),
 +     control.compute = list(dic = TRUE),
-+     control.predictor = list(compute = TRUE))
++     control.inla=list(tolerance=1e-20, h=1e-8),
++     control.predictor = list(compute = TRUE)
++  )
 R> japgrd$INLALA <-  japinlala$summary.fitted.values[, 1]
 \end{Sinput}
 \end{Schunk}
@@ -662,7 +671,7 @@ pattern using a smoothing method.
 
 \begin{figure}[h]
 \begin{center}
-\includegraphics{spatial_inla-010}
+\includegraphics{spatial_inla-011}
 \end{center}
 \caption{Estimation of the intensity of a point pattern with \pkg{R-INLA}, 
 Japanese black pine dataset.}
@@ -751,7 +760,7 @@ R> rgldata <- as.data.frame(rongelap)
 R> xy <- rongelap[[1]]
 R> idx1 <- (xy[,1] < -500 & xy[,1] > -700 & 
 +     xy[,2] > -1900 & xy[,2] < -1700)
-R> rgldata <- rgldata[idx1,]
+R> rgldata <- rgldata[idx1, ]
 \end{Sinput}
 \end{Schunk}
 
@@ -796,13 +805,13 @@ R> spgrd$IDX <- 1 : nrow(spgrd@data)
 
 Next, we create a \code{SpatialPolygons} with the boudanries of the squares
 in the grid. This way, it is easy to match the data to the newly created grid using function
-\code{overlay()}.
+\code{over()}.
 
 
 \begin{Schunk}
 \begin{Sinput}
 R> polygrd <- as(grd, "SpatialPolygons")
-R> dataidx <- overlay(SpatialPoints( as.matrix(rgldata[, 1:2]) ), polygrd)
+R> dataidx <- over(SpatialPoints( as.matrix(rgldata[, 1:2]) ), polygrd)
 \end{Sinput}
 \end{Schunk}
 
@@ -853,7 +862,7 @@ smoothed the observed values.
 
 \begin{figure}[h]
 \begin{center}
-\includegraphics{spatial_inla-018}
+\includegraphics{spatial_inla-019}
 \caption{Observed (left) and estimated (right) radionuclide concentration
 in Rongelap island.}
 \label{fig:geos}
@@ -1039,7 +1048,7 @@ function (formula, d, W, lambda, improve = TRUE, fhyper = NULL,
 {
     W2 <- diag(apply(W, 1, sum)) - W
     Q <- (1 - lambda) * diag(nrow(W)) + lambda * W2
-    environment(formula) <- environment()
+    assign("Q", Q, environment(formula))
     if (is.null(fhyper)) {
         formula <- update(formula, . ~ . + f(idx, model = "generic0", 
             Cmatrix = Q))
@@ -1100,7 +1109,7 @@ advantage of fitting this conditioned models compared standard MCMC methods.
 
 \begin{Schunk}
 \begin{Sinput}
-R> rlambda <- seq(0.8, .99, length.out = 15)
+R> rlambda <- seq(0.8, 0.99, length.out = 15)
 R> fhyper = list(prec = list(prior = "loggamma", 
 +     param = c(1,1), initial = log(1), fixed = FALSE))
 R> form2 <- log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) + 
@@ -1161,8 +1170,8 @@ R> library("CARBayes")
 \begin{Schunk}
 \begin{Sinput}
 R> attach(boston.c)
-R> lcarbayes <-  gaussian.lerouxCAR (form2, W = as.matrix(bmspB), burnin = 500, 
-+     n.sample = 2500, thin = 5)
+R> lcarbayes <-  gaussian.lerouxCAR (form2, W = as.matrix(bmspB), 
++     burnin = 500,  n.sample = 2500, thin = 5)
 R> detach(boston.c)
 \end{Sinput}
 \end{Schunk}
@@ -1185,29 +1194,29 @@ with MCMC. This may be due to the high correlation between these two parameters
 (-0.9, computed using the MCMC samples) which may cause some confunding in the
 model.
 
-% latex table generated in R 3.0.1 by xtable 1.7-1 package
-% Mon Sep 23 13:45:55 2013
+% latex table generated in R 3.0.2 by xtable 1.7-1 package
+% Thu Oct  3 21:37:05 2013
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrr}
   \hline
  & Mean (INLA) & SD (INLA) & Mean (MCMC) & SD (MCMC) \\ 
   \hline
-(Intercept) & 3.5257 & 0.1691 & 3.5514 & 0.1790 \\ 
-  CRIM & -0.0048 & 0.0009 & -0.0051 & 0.0010 \\ 
-  ZN & 0.0004 & 0.0005 & 0.0004 & 0.0005 \\ 
-  INDUS & -0.0003 & 0.0026 & -0.0002 & 0.0027 \\ 
-  CHAS1 & -0.0258 & 0.0285 & -0.0225 & 0.0292 \\ 
-  I(NOX\verb|^|2) & -0.1206 & 0.1566 & -0.0850 & 0.1683 \\ 
-  I(RM\verb|^|2) & 0.0110 & 0.0011 & 0.0108 & 0.0011 \\ 
-  AGE & -0.0013 & 0.0005 & -0.0012 & 0.0005 \\ 
-  log(DIS) & -0.0906 & 0.0622 & -0.0959 & 0.0634 \\ 
-  log(RAD) & 0.0516 & 0.0210 & 0.0549 & 0.0225 \\ 
+(Intercept) & 3.5260 & 0.1689 & 3.5742 & 0.1518 \\ 
+  CRIM & -0.0048 & 0.0009 & -0.0052 & 0.0009 \\ 
+  ZN & 0.0004 & 0.0005 & 0.0004 & 0.0004 \\ 
+  INDUS & -0.0003 & 0.0026 & 0.0003 & 0.0024 \\ 
+  CHAS1 & -0.0258 & 0.0285 & -0.0245 & 0.0269 \\ 
+  I(NOX\verb|^|2) & -0.1208 & 0.1565 & -0.1632 & 0.1344 \\ 
+  I(RM\verb|^|2) & 0.0110 & 0.0011 & 0.0110 & 0.0010 \\ 
+  AGE & -0.0013 & 0.0005 & -0.0013 & 0.0004 \\ 
+  log(DIS) & -0.0906 & 0.0621 & -0.0940 & 0.0500 \\ 
+  log(RAD) & 0.0516 & 0.0210 & 0.0445 & 0.0205 \\ 
   TAX & -0.0004 & 0.0001 & -0.0004 & 0.0001 \\ 
-  PTRATIO & -0.0173 & 0.0053 & -0.0184 & 0.0057 \\ 
+  PTRATIO & -0.0173 & 0.0053 & -0.0183 & 0.0049 \\ 
   B & 0.0007 & 0.0001 & 0.0007 & 0.0001 \\ 
-  log(LSTAT) & -0.2262 & 0.0222 & -0.2295 & 0.0246 \\ 
-  lambda & 0.9493 & 0.0294 & 0.9537 & 0.0262 \\ 
+  log(LSTAT) & -0.2263 & 0.0222 & -0.2296 & 0.0212 \\ 
+  lambda & 0.9489 & 0.0294 & 0.9441 & 0.0295 \\ 
    \hline
 \end{tabular}
 \caption{Point estimates of fixed effects and $\lambda$ using INLA and MCMC.} 
@@ -1216,7 +1225,7 @@ model.
 
 \begin{figure}[h]
 \begin{center}
-\includegraphics{spatial_inla-033}
+\includegraphics{spatial_inla-034}
 \end{center}
 \caption{Comparisson between the posterior marginals of several parameters in 
 Leroux et al.'s model and fitted values with INLA (red) and MCMC (black).}
@@ -1416,7 +1425,7 @@ we have used \code{mclapply}  to speed up computations.
 \begin{Sinput}
 R> fform <- log(CMEDV) ~CRIM+ZN + INDUS + CHAS + I(NOX^2)+
 +     I(RM^2) +  AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)
-R> rrho1 <- seq(0.5, .9, len = 20)
+R> rrho1 <- seq(0.5, 0.9, len = 20)
 \end{Sinput}
 \end{Schunk}
 \begin{Schunk}
@@ -1458,7 +1467,7 @@ computations.
 \begin{Schunk}
 \begin{Sinput}
 R> mmatrix <- model.matrix(fform, boston.c)
-R> rrho2 <- seq(0.3, .6, len = 20)
+R> rrho2 <- seq(0.3, 0.6, len = 20)
 \end{Sinput}
 \end{Schunk}
 
@@ -1469,7 +1478,7 @@ R> slmmodels = mclapply(rrho2,
 +                  slm.inla(form, d = boston.c, W = boston.mat, rho = rho, 
 +  			mmatrix = mmatrix,
 +                          family = "gaussian", impacts = TRUE,
-+                          control.data = list(hyper = zero.variance),
++                          control.family = list(hyper = zero.variance),
 +                          control.predictor = list(compute = TRUE),
 +                          control.compute = list(dic = TRUE, cpo = TRUE),
 +                          control.inla = list(print.joint.hyper = TRUE)
@@ -1494,7 +1503,7 @@ regarless of the value of $\rho$. This can be later passed to wrapper function
 \begin{Sinput}
 R> mmW <- bmsp %*% mmatrix[,-1]#Remove intercept
 R> mmatrixsdm <- cbind(mmatrix, as.matrix(mmW) )
-R> rrho3 <- seq(0.4, .7, len = 20)
+R> rrho3 <- seq(0.4, 0.7, len = 20)
 \end{Sinput}
 \end{Schunk}
 
@@ -1505,7 +1514,7 @@ R> sdmmodels = mclapply(rrho3,
 +                  sdm.inla(form, d = boston.c, W = boston.mat, rho = rho, 
 +  			mmatrix = mmatrixsdm,
 +                          family = "gaussian", impacts = TRUE,
-+                          control.data = list(hyper = zero.variance),
++                          control.family = list(hyper = zero.variance),
 +                          control.predictor = list(compute = TRUE),
 +                          control.compute = list(dic = TRUE, cpo = TRUE),
 +                          control.inla = list(print.joint.hyper = TRUE)
@@ -1527,7 +1536,7 @@ $\rho$ can be found in Figure~\ref{fig:pmargrho}.
 
 \begin{figure}[h]
 \begin{center}
-\includegraphics{spatial_inla-049}
+\includegraphics{spatial_inla-050}
 \end{center}
 \caption{Posterior marginal of the spatial autocorrelation parameter $\rho$
 for different spatial econometrics models, Boston housing data.}

@@ -13,6 +13,23 @@
 options(prompt = "R> ", continue = "+  ", width = 70, useFancyQuotes = FALSE)
 @
 
+
+<<echo=FALSE>>=
+#TRUE: Run all models
+#FALSE: Download results from author's website for Leroux and spatial 
+#	econometrics models
+runmodels<-FALSE#TRUE
+
+#When runmodels==TRUE
+#> system.time(  Sweave("spatial_inla.Rnw") )
+#  user  system elapsed 
+#779.976  41.545 536.349 
+#
+#model name	: Intel(R) Core(TM)2 Duo CPU     E7500  @ 2.93GHz
+#TWO cores
+
+@
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% declarations for jss.cls %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -492,15 +509,15 @@ where $\alpha$ is the model intercept, $\beta$ a vector of coefficients of the
 covariates, $v_i$ a random effect with an intrinsic CAR specification and
 $\varepsilon_i$ is random Gaussian error term. As \code{f()} needs an area
 index which must have different values for different areas, this is first
-defined in variable \code{ID}.
+defined in variable \code{idx}.
 
 <<>>=
 library("INLA")
 
-boston.c$ID <- 1 : nrow(boston.c)
-form <- log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) +  AGE + 
-log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)+
-f(ID, model = "besag", graph = adj )
+boston.c$idx <- 1 : nrow(boston.c)
+form <- log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) +  
+AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)+
+f(idx, model = "besag", graph = adj )
 
 m1 <- inla(form, data = boston.c)
 @
@@ -576,13 +593,13 @@ grd <- GridTopology(
 @
 
 
-After the creation of the grid, we have used function \code{overlay()} on
+After the creation of the grid, we have used function \code{over()} on
 the set of points and the newlydefined squares to find how many points can be
 found in each square.
 
 <<>>=
 polygrdjap <- as(grd, "SpatialPolygons")
-idxpp <- overlay(SpatialPoints(japd), polygrdjap)
+idxpp <- over(SpatialPoints(japd), polygrdjap)
 
 japgrd <- SpatialGridDataFrame(grd, data.frame( Ntrees = rep(0, n) ) )
 
@@ -609,13 +626,19 @@ includes spatial random effects based on the grid of squares.  In addition, we
 have set other options to compute the DIC, with
 \code{control.compute=list(dic=TRUE)}, and the marginals of the linear
 predictors, using \code{control.predictor=list(compute=TRUE)}.
+We have included the specification of the prior distributions of
+the log-precisions of unstructured and spatial random effects as well.
 
 <<keep.source=TRUE>>=
-fpp  <-  Ntrees ~ 1 + f(japgrd$SPIDX, model = "bym", graph = adjpine)
+fpp  <-  Ntrees ~ 1 + f(japgrd$SPIDX, model = "bym", graph = adjpine,
+  hyper=list(prec.unstruct=list(prior="loggamma", param=c(0.001, 0.001) ),
+                prec.spatial=list(prior="loggamma", param=c(0.1,0.1) ))
+)
 
 japinlala <- inla(fpp,
    family = "poisson", data = as.data.frame(japgrd),
    control.compute = list(dic = TRUE),
+   control.inla=list(tolerance=1e-20, h=1e-8),
    control.predictor = list(compute = TRUE)
 )
 
@@ -773,13 +796,13 @@ spgrd$IDX <- 1 : nrow(spgrd@data)
 
 Next, we create a \code{SpatialPolygons} with the boudanries of the squares
 in the grid. This way, it is easy to match the data to the newly created grid using function
-\code{overlay()}.
+\code{over()}.
 
 
 <<>>=
 polygrd <- as(grd, "SpatialPolygons")
 
-dataidx <- overlay(SpatialPoints( as.matrix(rgldata[, 1:2]) ), polygrd)
+dataidx <- over(SpatialPoints( as.matrix(rgldata[, 1:2]) ), polygrd)
 @
 
 It should be noted that  radionuclide concentration is measured at each square
@@ -1066,7 +1089,7 @@ form2 <- log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) +
     AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)
 @
 
-<<eval=FALSE>>=
+<<leroux, eval=FALSE>>=
 lerouxmodels = mclapply(rlambda,
         function(lambda) {
                 leroux.inla(form2, d = boston.c, W = boston.matB, 
@@ -1104,13 +1127,20 @@ leroux.inla(form2, d = boston.c, W = boston.matB, lambda = lambda,
 
 
 
-
 <<echo=FALSE>>=
-#Jpg extension used becuase of a server side restriction 
-if(!file.exists("lerouxmodels.RData"))
+if(runmodels)
+{
+<<leroux>>
+save(file="lerouxmodels.RData", list=c("lerouxmodels"))
+}else{
+	#Jpg extension used because of a server side restriction 
+	if(!file.exists("lerouxmodels.RData"))
 	download.file("http://www.uclm.es/profesorado/vgomez/JSSpaper/lerouxmodels.jpg", "lerouxmodels.RData")
-load("lerouxmodels.RData")
+
+	load("lerouxmodels.RData")
+}
 @
+
 
 Following this, we need to combine the different models to obtain the final
 model by Bayesian Model Averaging. We will take a uniform prior on $\rho$ and
@@ -1152,17 +1182,23 @@ library("CARBayes")
 #   I(RM^2) +  AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)
 
 @
-<<eval=FALSE>>=
+<<carbayes, eval=FALSE>>=
 attach(boston.c)
-lcarbayes <-  gaussian.lerouxCAR (form2, W = as.matrix(bmspB), burnin = 500, 
-   n.sample = 2500, thin = 5)
+lcarbayes <-  gaussian.lerouxCAR (form2, W = as.matrix(bmspB), 
+   burnin = 500,  n.sample = 2500, thin = 5)
 detach(boston.c)
 @
 <<echo=FALSE>>=
-#Jpg extension used becuase of a server side restriction 
-if(!file.exists("lcarbayes.RData"))
-	download.file("http://www.uclm.es/profesorado/vgomez/JSSpaper/lcarbayes.jpg", "lcarbayes.RData")
-load("lcarbayes.RData")
+if(runmodels){
+<<carbayes>>
+save(file="lcarbayes.RData", list=c("lcarbayes"))
+} else{
+	#Jpg extension used becuase of a server side restriction 
+	if(!file.exists("lcarbayes.RData"))
+		download.file("http://www.uclm.es/profesorado/vgomez/JSSpaper/lcarbayes.jpg", "lcarbayes.RData")
+
+	load("lcarbayes.RData")
+}
 @
 
 <<eval=FALSE, echo=FALSE>>=
@@ -1494,7 +1530,7 @@ fform <- log(CMEDV) ~CRIM+ZN + INDUS + CHAS + I(NOX^2)+
 
 rrho1 <- seq(0.5, 0.9, len = 20)
 @
-<<eval=FALSE>>=
+<<semmodels, eval=FALSE>>=
 semmodels = mclapply(rrho1,
         function(rho) {
                 sem.inla(fform, d = boston.c, W = boston.mat, rho = rho,
@@ -1507,10 +1543,16 @@ semmodels = mclapply(rrho1,
         })
 @
 <<echo=FALSE>>=
-#Jpg extension used becuase of a server side restriction 
-if(!file.exists("semmodels.RData"))
-	download.file("http://www.uclm.es/profesorado/vgomez/JSSpaper/semmodels.jpg", "semmodels.RData")
-load("semmodels.RData")
+if(runmodels){
+<<semmodels>>
+save(file="semmodels.RData", list=c("semmodels"))
+} else {
+	#Jpg extension used becuase of a server side restriction 
+	if(!file.exists("semmodels.RData"))
+		download.file("http://www.uclm.es/profesorado/vgomez/JSSpaper/semmodels.jpg", "semmodels.RData")
+
+	load("semmodels.RData")
+}
 @
 
 \noindent
@@ -1538,13 +1580,13 @@ mmatrix <- model.matrix(fform, boston.c)
 rrho2 <- seq(0.3, 0.6, len = 20)
 @
 
-<<eval=FALSE>>=
+<<slmmodels, eval=FALSE>>=
 slmmodels = mclapply(rrho2,
         function(rho) {
                 slm.inla(form, d = boston.c, W = boston.mat, rho = rho, 
 			mmatrix = mmatrix,
                         family = "gaussian", impacts = TRUE,
-                        control.data = list(hyper = zero.variance),
+                        control.family = list(hyper = zero.variance),
                         control.predictor = list(compute = TRUE),
                         control.compute = list(dic = TRUE, cpo = TRUE),
                         control.inla = list(print.joint.hyper = TRUE)
@@ -1553,10 +1595,16 @@ slmmodels = mclapply(rrho2,
 
 @
 <<echo=FALSE>>=
-#Jpg extension used becuase of a server side restriction 
-if(!file.exists("slmmodels.RData"))
-	download.file("http://www.uclm.es/profesorado/vgomez/JSSpaper/slmmodels.jpg", "slmmodels.RData")
-load("slmmodels.RData")
+if(runmodels){
+<<slmmodels>>
+save(file="slmmodels.RData", list=c("slmmodels"))
+} else {
+	#Jpg extension used becuase of a server side restriction 
+	if(!file.exists("slmmodels.RData"))
+		download.file("http://www.uclm.es/profesorado/vgomez/JSSpaper/slmmodels.jpg", "slmmodels.RData")
+
+	load("slmmodels.RData")
+}
 @
 
 <<>>=
@@ -1575,13 +1623,13 @@ mmatrixsdm <- cbind(mmatrix, as.matrix(mmW) )
 rrho3 <- seq(0.4, 0.7, len = 20)
 @
 
-<<eval=FALSE, keep.source=TRUE>>=
+<<sdmmodels, eval=FALSE, keep.source=TRUE>>=
 sdmmodels = mclapply(rrho3,
         function(rho) {
                 sdm.inla(form, d = boston.c, W = boston.mat, rho = rho, 
 			mmatrix = mmatrixsdm,
                         family = "gaussian", impacts = TRUE,
-                        control.data = list(hyper = zero.variance),
+                        control.family = list(hyper = zero.variance),
                         control.predictor = list(compute = TRUE),
                         control.compute = list(dic = TRUE, cpo = TRUE),
                         control.inla = list(print.joint.hyper = TRUE)
@@ -1589,10 +1637,16 @@ sdmmodels = mclapply(rrho3,
         })
 @
 <<echo=FALSE>>=
-#Jpg extension used becuase of a server side restriction 
-if(!file.exists("sdmmodels.RData"))
-	download.file("http://www.uclm.es/profesorado/vgomez/JSSpaper/sdmmodels.jpg", "sdmmodels.RData")
-load("sdmmodels.RData")
+if(runmodels){
+<<sdmmodels>>
+save(file="sdmmodels.RData", list=c("sdmmodels"))
+} else{
+	#Jpg extension used becuase of a server side restriction 
+	if(!file.exists("sdmmodels.RData"))
+		download.file("http://www.uclm.es/profesorado/vgomez/JSSpaper/sdmmodels.jpg", "sdmmodels.RData")
+
+	load("sdmmodels.RData")
+}
 @
 
 <<>>=
