@@ -42,7 +42,7 @@ Virgilio Gómez-Rubio <virgilio.gomez@uclm.es>
 %%}
 
 \seealso{
-\code{\link{BMA2}}
+\code{\link{INLABMA}}
 }
 %%\examples{
 %%}

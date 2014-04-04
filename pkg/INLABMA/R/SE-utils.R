@@ -13,8 +13,11 @@
 
 sem.inla<-function(formula, d, W, rho, improve=TRUE, impacts=FALSE, fhyper=NULL, probit=FALSE,...)
 {
+	require(Matrix)
+
 	IrhoW<-diag(nrow(W))-rho*W
-	IrhoW2<-IrhoW%*%t(IrhoW)
+	#IrhoW2<-t(IrhoW)%*%IrhoW
+	IrhoW2<-Matrix::crossprod(IrhoW)
 
 	#environment(formula)<-environment()
 	#This is a fix to be able to use improve=TRUE later
@@ -40,7 +43,7 @@ sem.inla<-function(formula, d, W, rho, improve=TRUE, impacts=FALSE, fhyper=NULL,
 		res<-inla.rerun(res)#inla.hyperpar(res, diff.logdens=20)
 
 	#Compute log-determinat to correct the marginal-loglikelihood
-	res$logdet<-as.numeric(determinant(IrhoW2)$modulus)
+	res$logdet<-as.numeric(Matrix::determinant(IrhoW2)$modulus)
 	res$mlik<-res$mlik+res$logdet/2
 
 	#Add impacts as the marginals of the covariate coefficients
@@ -89,7 +92,8 @@ slm.inla<-function(formula, d, W, rho, mmatrix=NULL, improve=TRUE,
 {
 
 	IrhoW<-diag(nrow(W))-rho*W
-	IrhoW2<-IrhoW%*%t(IrhoW)
+	#IrhoW2<-t(IrhoW)%*%IrhoW
+	IrhoW2<-Matrix::crossprod(IrhoW)
 
         #environment(formula)<-environment()
         #This is a fix to be able to use improve=TRUE later
@@ -123,7 +127,7 @@ slm.inla<-function(formula, d, W, rho, mmatrix=NULL, improve=TRUE,
 		res<-inla.rerun(res)#inla.hyperpar(res, diff.logdens=20)
 
 	#Compute log-determinat to correct the marginal-loglikelihood
-	res$logdet<-as.numeric(determinant(IrhoW2)$modulus)
+	res$logdet<-as.numeric(Matrix::determinant(IrhoW2)$modulus)
 	res$mlik<-res$mlik+res$logdet/2
 
 	res$impacts<-FALSE
@@ -181,7 +185,8 @@ sdm.inla<-function(formula, d, W, rho, mmatrix=NULL, intercept=TRUE,
    impacts=FALSE, improve=TRUE, fhyper=NULL, probit=FALSE, ...)
 {
 	IrhoW<-diag(nrow(W))-rho*W
-	IrhoW2<-IrhoW%*%t(IrhoW)
+	#IrhoW2<-t(IrhoW)%*%IrhoW
+	IrhoW2<-Matrix::crossprod(IrhoW)
 
         #environment(formula)<-environment()
         #This is a fix to be able to use improve=TRUE later
@@ -291,7 +296,7 @@ sdm.inla<-function(formula, d, W, rho, mmatrix=NULL, intercept=TRUE,
 		res<-inla.rerun(res)#inla.hyperpar(res, diff.logdens=20)
 
 	#Compute log-determinat to correct the marginal-loglikelihood
-	res$logdet<-as.numeric(determinant(IrhoW2)$modulus)
+	res$logdet<-as.numeric(Matrix::determinant(IrhoW2)$modulus)
 	res$mlik<-res$mlik+res$logdet/2
 
 	res$impacts<-FALSE
@@ -352,7 +357,7 @@ trIrhoWinv<-function(W, rho, offset=0, order=20, direct=TRUE, Df=diag(nrow(W)))
 	else
 	{
 		tr<-0
-		WW<-diag(nrow(W))
+		WW<-Matrix::diag(nrow(W))
 		if(offset>0)
 		{
 			for(i in 1:(offset))
@@ -361,7 +366,7 @@ trIrhoWinv<-function(W, rho, offset=0, order=20, direct=TRUE, Df=diag(nrow(W)))
 		WW=Df%*%WW
 		for(i in 0:order)
 		{
-			tr<-tr+sum(diag(WW))*(rho^i)
+			tr<-tr+sum(Matrix::diag(WW))*(rho^i)
 			WW<-WW%*%W
 		}
 	}

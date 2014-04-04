@@ -8,6 +8,7 @@ Maintainer: Virgilio Gomez Rubio <virgilio.gomez@uclm.es>
 Depends: R(>= 2.15.0), spdep, parallel
 Suggests: INLA
 Description: Spatial Econometrics models using Bayesian Model Averaging 
- on models fitted with INLA.
+ on models fitted with INLA. The INLA package can be obtained from 
+ http://www.r-inla.org .
 License: GPL (>= 2)
 

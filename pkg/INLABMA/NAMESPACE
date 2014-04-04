@@ -2,4 +2,4 @@ export(sem.inla, slm.inla, sdm.inla, leroux.inla)
 
 export(logprrho, rescalemarg)
 
-export(mysplinefun, BMArho, BMA2)
+export(mysplinefun, BMArho, INLABMA)

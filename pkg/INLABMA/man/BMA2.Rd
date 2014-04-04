@@ -1,5 +1,5 @@
-\name{BMA2}
-\alias{BMA2}
+\name{INLABMA}
+\alias{INLABMA}
 \title{
 Perform complete Bayesian Model Averaging on some Spatial Econometrics models
 }
@@ -9,7 +9,7 @@ different Spatial Econometrics models. These models have been computed
 under different values of the spatial autocorrelation parameter \code{rho}.
 }
 \usage{
-BMA2(models, rho, logrhoprior = rep(1, length(rho)), impacts = FALSE, usenormal = FALSE)
+INLABMA(models, rho, logrhoprior = rep(1, length(rho)), impacts = FALSE, usenormal = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

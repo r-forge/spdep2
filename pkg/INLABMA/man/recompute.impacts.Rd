@@ -14,7 +14,7 @@ recompute.impacts(obj, impacts = c("total", "direct", "indirect"))
 
 \arguments{
   \item{obj}{
-Object with a resulting model obtained by Bayesian MOdel Averaging with BMA2.
+Object with a resulting model obtained by Bayesian Model Averaging with INLABMA.
 }
   \item{impacts}{
 Types of impacts to recompute.
@@ -23,7 +23,7 @@ Types of impacts to recompute.
 \details{
 This function uses the impacts marginals to compute some summary statistics.
 By default, the summary of the impacts is obtained by weighting the different
-summaries used in Bayesian MOdel Averaging with function \code{BMA2}.
+summaries used in Bayesian MOdel Averaging with function \code{INLABMA}.
 }
 \value{
 Original object with the updated summary statistics of the impacts.
@@ -40,7 +40,7 @@ Virgilio Gómez-Rubio <virgilio.gomez@uclm.es>
 
 
 \seealso{
-\code{\link{BMA2}}
+\code{\link{INLABMA}}
 }
 %%\examples{
 %%}

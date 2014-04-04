@@ -227,7 +227,7 @@ BMArho<-function(models, rho, logrhoprior=rep(1, length(rho)) )
 #
 #
 #
-BMA2<-function(models, rho, logrhoprior=rep(1, length(rho)), impacts=FALSE, usenormal=FALSE )
+INLABMA<-function(models, rho, logrhoprior=rep(1, length(rho)), impacts=FALSE, usenormal=FALSE )
 {
 	mlik<-unlist(lapply(models, function(X){X$mlik[1]}))
 	post.func<-fitmarg(rho, mlik, logrhoprior, usenormal)
