@@ -85,8 +85,99 @@ Virgilio Gómez-Rubio <virgilio.gomez@uclm.es>
 \seealso{
 \code{\link{leroux.inla}}
 }
-%%\examples{
-%%}
+
+%Example taken from the spdep::columbus manual page
+\examples{
+
+require(spdep)
+require(parallel)
+
+data(columbus)
+
+lw <- nb2listw(col.gal.nb, style="W")
+
+#Maximum Likelihood (ML) estimation
+colsemml <- errorsarlm(CRIME ~ INC + HOVAL, data=columbus, lw, method="eigen", 
+	quiet=FALSE)
+colslmml <- lagsarlm(CRIME ~ INC + HOVAL, data=columbus, lw, method="eigen", 
+	type="lag", quiet=FALSE)
+colsdmml <- lagsarlm(CRIME ~ INC + HOVAL, data=columbus, lw, method="eigen", 
+	type="mixed", quiet=FALSE)
+
+#Define grid on rho
+rrho<-seq(-1, .95, length.out=40)
+
+#Adjacency matrix
+W <- as(as_dgRMatrix_listw(nb2listw(col.gal.nb)), "CsparseMatrix")
+#Index for spatial random effects
+columbus$idx<-1:nrow(columbus)
+
+#Formula
+form<- CRIME ~ INC + HOVAL
+
+zero.variance = list(prec=list(initial = 25, fixed=TRUE))
+
+seminla<-mclapply(rrho, function(rho){
+
+                sem.inla(form, d=columbus, W=W, rho=rho,
+                        family = "gaussian", impacts=FALSE,
+                        control.family = list(hyper = zero.variance),
+                        control.predictor=list(compute=TRUE),
+                        control.compute=list(dic=TRUE, cpo=TRUE),
+                        control.inla=list(print.joint.hyper=TRUE, 
+				tolerance=1e-20, h=1e-6),
+			verbose=FALSE
+                )
+
+})
+
+
+
+slminla<-mclapply(rrho, function(rho){
+
+                slm.inla(form, d=columbus, W=W, rho=rho,
+                        family = "gaussian", impacts=FALSE,
+                        control.family = list(hyper = zero.variance),
+                        control.predictor=list(compute=TRUE),
+                        control.compute=list(dic=TRUE, cpo=TRUE),
+                        control.inla=list(print.joint.hyper=TRUE, 
+				tolerance=1e-20, h=1e-6),
+			verbose=FALSE
+                )
+})
+
+
+sdminla<-mclapply(rrho, function(rho){
+
+                sdm.inla(form, d=columbus, W=W, rho=rho,
+                        family = "gaussian", impacts=FALSE,
+                        control.family = list(hyper = zero.variance),
+                        control.predictor=list(compute=TRUE),
+                        control.compute=list(dic=TRUE, cpo=TRUE),
+                        control.inla=list(print.joint.hyper=TRUE, 
+				tolerance=1e-20, h=1e-6),
+			verbose=FALSE
+                )
+})
+
+#BMA using a uniform prior (in the log-scale) and using a Gaussian 
+#approximation to the marginal
+sembma<-INLABMA(seminla, rrho, 0, usenormal=TRUE)
+slmbma<-INLABMA(slminla, rrho, 0, usenormal=TRUE)
+sdmbma<-INLABMA(sdminla, rrho, 0, usenormal=TRUE)
+
+#Display results
+plot(sembma$rho$marginal, type="l", ylim=c(0,5))
+lines(slmbma$rho$marginal, lty=2)
+lines(sdmbma$rho$marginal, lty=3)
+#Add ML estimates
+abline(v=colsemml$lambda, col="red")
+abline(v=colslmml$rho, col="red", lty=2)
+abline(v=colsdmml$rho, col="red", lty=3)
+#Legend
+legend(-1,5, c("SEM", "SLM", "SDM"), lty=1:3)
+
+}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
 \keyword{models}

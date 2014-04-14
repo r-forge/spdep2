@@ -10,7 +10,7 @@ which is often needed when computing impacts in some spatial econometrics
 models.
 }
 \usage{
-trIrhoWinv(W, rho, offset = 0, order = 20, direct = TRUE, Df = diag(nrow(W)))
+trIrhoWinv(W, rho, offset = 0, order = 20, direct = TRUE, Df = Diagonal(nrow(W)))
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
