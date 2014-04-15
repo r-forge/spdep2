@@ -2,7 +2,7 @@
 \alias{rescalemarg}
 
 \title{
-Re-scale marginal distribution to cpmpute the distribution of w*x
+Re-scale marginal distribution to compute the distribution of w*x
 }
 \description{
 This function takes a marginal distribution (represetend by a 2-column matrix)

@@ -13,7 +13,6 @@
 
 sem.inla<-function(formula, d, W, rho, improve=TRUE, impacts=FALSE, fhyper=NULL, probit=FALSE,...)
 {
-	require(Matrix)
 	require(INLA)
 
 	IrhoW<-Diagonal(nrow(W))-rho*W
@@ -91,7 +90,6 @@ sem.inla<-function(formula, d, W, rho, improve=TRUE, impacts=FALSE, fhyper=NULL,
 slm.inla<-function(formula, d, W, rho, mmatrix=NULL, improve=TRUE, 
    impacts=FALSE, fhyper=NULL, probit=FALSE,...)
 {
-	require(Matrix)
 	require(INLA)
 
 	IrhoW<-Diagonal(nrow(W))-rho*W
@@ -188,7 +186,6 @@ sdm.inla<-function(formula, d, W, rho, mmatrix=NULL, intercept=TRUE,
    impacts=FALSE, improve=TRUE, fhyper=NULL, probit=FALSE, ...)
 {
 
-	require(Matrix)
 	require(INLA)
 
 	IrhoW<-Diagonal(nrow(W))-rho*W

@@ -9,7 +9,8 @@ different Spatial Econometrics models. These models have been computed
 under different values of the spatial autocorrelation parameter \code{rho}.
 }
 \usage{
-INLABMA(models, rho, logrhoprior = rep(1, length(rho)), impacts = FALSE, usenormal = FALSE)
+INLABMA(models, rho, logrhoprior = rep(1, length(rho)), impacts = FALSE, 
+ usenormal = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
