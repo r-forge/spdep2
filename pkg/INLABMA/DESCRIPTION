@@ -10,6 +10,8 @@ Imports: Matrix, spdep
 Suggests: INLA
 Description: Spatial Econometrics models using Bayesian Model Averaging 
  on models fitted with INLA. The INLA package can be obtained from 
- http://www.r-inla.org .
+ http://www.r-inla.org . We recommend the testing version, which can be 
+ downloaded by running:
+  source("http://www.math.ntnu.no/inla/givemeINLA-testing.R")
 License: GPL (>= 2)
 

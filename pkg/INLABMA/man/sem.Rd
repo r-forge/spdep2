@@ -89,8 +89,7 @@ Virgilio Gómez-Rubio <virgilio.gomez@uclm.es>
 %Example taken from the spdep::columbus manual page
 \examples{
 
-require(spdep)
-require(parallel)
+\dontrun{require(spdep)
 
 data(columbus)
 
@@ -176,6 +175,7 @@ abline(v=colslmml$rho, col="red", lty=2)
 abline(v=colsdmml$rho, col="red", lty=3)
 #Legend
 legend(-1,5, c("SEM", "SLM", "SDM"), lty=1:3)
+}
 
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
