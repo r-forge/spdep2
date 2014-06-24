@@ -120,11 +120,11 @@ be required.
 Alternatively, the posterior distributions of the parameters may be
 approximated in some way. However, most models are highly multivariate and
 approximating the full posterior distribution may not be possible in practice.
-The Integrated Nested Laplace Approximation \citep[][INLA]{isi:000264374200002} focuses on
-the posterior marginals for latent Gaussian models. Although these models may seem
-a rather restricted, they appear in a fair number of fields. 
-This also means that INLA will be particularly useful when only
-marginal inference on the model parameters is needed.
+The Integrated Nested Laplace Approximation \citep[][INLA]{isi:000264374200002}
+focuses on the posterior marginals for latent Gaussian models. Although these
+models may seem rather restricted, they appear in a fair number of fields.
+This also means that INLA will be particularly useful when only marginal
+inference on the model parameters is needed.
 
 The \pkg{R-INLA} package \citep{rinla:2013} for the \proglang{R} programming
 language provides an interface to INLA (a free-standing programme) so that models can be fitted using
@@ -189,8 +189,9 @@ integrating out over the remaining set of parameters $\mathbf{x}_{-i}$.
 
 Let us assume that we have a set of $n$ observations 
 $\mathbf{y}=\{y_i\}_ {i=1}^n$, whose distribution is of the Exponential family.
-The mean of observation $i$ is $\mu_i$, which is modelled using a linear
-predictor $\eta_i$ as follows:
+The mean of observation $i$ is $\mu_i$ and it can depend on a linear predictor 
+$\eta_i$ via a link function. In turn, the linear
+predictor $\eta_i$ can be modelled as follows:
 
 \begin{equation}
 \eta_i=\alpha+\sum_{j=1}^{n_f} f^{(j)}(u_{ji})+\sum_{k=1}^{n_{\beta}}\beta_k z_{ki}+\varepsilon_i
@@ -220,19 +221,16 @@ of $\mathbf{x}$ being a GMRF.
 Following \citet{isi:000264374200002}, the posterior distribution of the model
 latent effects $\mathbf{x}$ and hyperparameters $\theta$ can be written as 
 
-\begin{equation}
+\begin{eqnarray}
 \pi(\mathbf{x}, \mathbf{\theta}|\mathbf{y}) \propto
 \pi(\mathbf{\theta}) \pi(\mathbf{x}|\mathbf{\theta})\prod_{i\in \mathcal{I}}\pi(y_i|x_i,\mathbf{\theta})
-\propto 
-\end{equation}
-
-\begin{equation}
-\pi(\mathbf{\theta}) |\mathbf{Q}(\mathbf{\theta})|^{n/2} \exp\{-\frac{1}{2}\mathbf{x}^T \mathbf{Q}(\mathbf{\theta}) \mathbf{x}+\sum_{i\in\mathcal{I}} \log(\pi(y_i|x_i, \mathbf{\theta}) \}
-\end{equation}
+\propto  \\ \nonumber
+\pi(\mathbf{\theta}) |\mathbf{Q}(\mathbf{\theta})|^{1/2} \exp\{-\frac{1}{2}\mathbf{x}^T \mathbf{Q}(\mathbf{\theta}) \mathbf{x}+\sum_{i\in\mathcal{I}} \log(\pi(y_i|x_i, \mathbf{\theta})) \}
+\end{eqnarray}
 \noindent
 $\mathcal{I}$ represents an index of observed data (from 1 to $n$),
-$\mathbf{Q}(\mathbf{\theta})$ is a variance-covariance matrix on some
-hyperparameters $\theta$ and $\log(\pi(y_i|x_i, \mathbf{\theta}) \}$ is
+$\mathbf{Q}(\mathbf{\theta})$ is a precision matrix on some
+hyperparameters $\theta$ and $\log(\pi(y_i|x_i, \mathbf{\theta}))$ is
 the log-likelihood of observation $y_i$.
 
 INLA allows different forms for the likelihood of the observations.  This
@@ -255,13 +253,13 @@ and $\mathbf{\theta}$ (i.e., latent effects and hyper-parameters) as
 %VIRGILIO: I have changed this to "the marginals of the elements". FIXED.
 
 \begin{equation}
-\pi(x_i|\mathbf{y}) \propto \int \pi(x_i|\mathbf{\theta}, \mathbf{y})  \pi(\mathbf{\theta}| \mathbf{y}) d\mathbf{\theta}
+\pi(x_i|\mathbf{y}) = \int \pi(x_i|\mathbf{\theta}, \mathbf{y})  \pi(\mathbf{\theta}| \mathbf{y}) d\mathbf{\theta}
 \end{equation}
 \noindent
 and
 
 \begin{equation}
-\pi(\theta_j|\mathbf{y}) \propto \int \pi(\mathbf{\theta}| \mathbf{y})  d\mathbf{\theta}_{-j} 
+\pi(\theta_j|\mathbf{y}) = \int \pi(\mathbf{\theta}| \mathbf{y})  d\mathbf{\theta}_{-j} 
 \end{equation}
 
 In order to estimate the previous marginals, we need 
@@ -287,8 +285,9 @@ to compute the marginal distribution of $x_i$ using numerical integration:
 \tilde\pi(\mathbf{\theta}_k|\mathbf{y})\times \Delta_k
 \end{equation}
 \noindent
-Here $\Delta_k$ are the weights associated with vector of values
-$\mathbf{\theta}_k$ in a grid for vector of hyperparameters .
+Here $\Delta_k$ are the weights associated with the ensemble of values
+$\mathbf{\theta}_k$, defined on a multidimentional grid over
+the space of hyperparameters.
 
 %\citet{isi:000264374200002}  also discuss how the approximation $\tilde\pi
 %(x_i|\mathbf{\theta}_k, \mathbf{y})$ should be in order to reduce numerical
@@ -600,7 +599,8 @@ R> boston$idx <- 1 : nrow(boston)
 R> form <- log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) +  
 +  AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)+
 +  f(idx, model = "besag", graph = adj )
-R> m1 <- inla(form, data = as.data.frame(boston),
+R> bdf<-as.data.frame(boston)
+R> m1 <- inla(form, data = bdf,
 +     control.predictor = list(compute = TRUE))
 \end{Sinput}
 \end{Schunk}
@@ -615,51 +615,55 @@ fitted values.
 A summary of the model can be obtained as
 follows:
 
+
 \begin{Schunk}
 \begin{Sinput}
 R> summary(m1)
 \end{Sinput}
 \begin{Soutput}
 Call:
-"inla(formula = form, data = as.data.frame(boston), control.predictor = list(compute = TRUE))"
+"inla(formula = form, data = bdf, control.predictor = list(compute = TRUE))"
 
 Time used:
  Pre-processing    Running inla Post-processing           Total 
-         3.9581          9.8648          0.6989         14.5218 
+         3.8354         11.6809          0.6209         16.1372 
 
 Fixed effects:
                mean     sd 0.025quant 0.5quant 0.975quant    mode kld
-(Intercept)  3.7927 0.1651     3.4682   3.7928     4.1165  3.7929   0
-CRIM        -0.0075 0.0011    -0.0096  -0.0075    -0.0054 -0.0075   0
-ZN           0.0003 0.0005    -0.0006   0.0003     0.0012  0.0003   0
-INDUS       -0.0006 0.0023    -0.0052  -0.0006     0.0040 -0.0006   0
-CHAS1       -0.0379 0.0300    -0.0970  -0.0379     0.0210 -0.0379   0
-I(NOX^2)    -0.4298 0.1420    -0.7086  -0.4299    -0.1509 -0.4300   0
-I(RM^2)      0.0100 0.0011     0.0079   0.0100     0.0121  0.0100   0
-AGE         -0.0012 0.0005    -0.0021  -0.0012    -0.0002 -0.0012   0
-log(DIS)    -0.1760 0.0693    -0.3123  -0.1759    -0.0402 -0.1758   0
-log(RAD)     0.0493 0.0205     0.0090   0.0493     0.0896  0.0493   0
+(Intercept)  3.7798 0.1661     3.4536   3.7798     4.1058  3.7798   0
+CRIM        -0.0073 0.0011    -0.0094  -0.0073    -0.0053 -0.0073   0
+ZN           0.0003 0.0005    -0.0006   0.0003     0.0013  0.0003   0
+INDUS       -0.0005 0.0024    -0.0051  -0.0005     0.0041 -0.0005   0
+CHAS1       -0.0443 0.0299    -0.1030  -0.0443     0.0144 -0.0443   0
+I(NOX^2)    -0.4209 0.1440    -0.7037  -0.4210    -0.1384 -0.4209   0
+I(RM^2)      0.0101 0.0011     0.0080   0.0101     0.0122  0.0101   0
+AGE         -0.0012 0.0005    -0.0022  -0.0012    -0.0003 -0.0012   0
+log(DIS)    -0.1806 0.0719    -0.3217  -0.1806    -0.0395 -0.1806   0
+log(RAD)     0.0483 0.0208     0.0076   0.0483     0.0891  0.0483   0
 TAX         -0.0003 0.0001    -0.0005  -0.0003     0.0000 -0.0003   0
-PTRATIO     -0.0159 0.0053    -0.0262  -0.0159    -0.0056 -0.0159   0
+PTRATIO     -0.0162 0.0053    -0.0265  -0.0162    -0.0058 -0.0162   0
 B            0.0006 0.0001     0.0003   0.0006     0.0008  0.0006   0
-log(LSTAT)  -0.2493 0.0226    -0.2936  -0.2493    -0.2049 -0.2494   0
+log(LSTAT)  -0.2434 0.0223    -0.2873  -0.2434    -0.1996 -0.2434   0
 
 Random effects:
 Name	  Model
  idx   Besags ICAR model 
 
 Model hyperparameters:
-                                        mean     sd       0.025quant
-Precision for the Gaussian observations  559.086  355.064  219.297  
-Precision for idx                         14.012    1.666   10.560  
-                                        0.5quant 0.975quant mode    
-Precision for the Gaussian observations  454.805 1501.348    324.608
-Precision for idx                         14.122   16.961     14.628
+                                        mean      sd       
+Precision for the Gaussian observations 1.626e+04 1.707e+04
+Precision for idx                       1.222e+01 7.817e-01
+                                        0.025quant 0.5quant 
+Precision for the Gaussian observations 7.582e+02  1.096e+04
+Precision for idx                       1.074e+01  1.220e+01
+                                        0.975quant mode     
+Precision for the Gaussian observations 6.180e+04  1.816e+03
+Precision for idx                       1.381e+01  1.216e+01
 
-Expected number of effective parameters(std dev): 425.15(36.74)
-Number of equivalent replicates : 1.19 
+Expected number of effective parameters(std dev): 501.85(5.348)
+Number of equivalent replicates : 1.008 
 
-Marginal Likelihood:  -214.42 
+Marginal Likelihood:  -212.85 
 Posterior marginals for linear predictor and fitted values computed
 \end{Soutput}
 \end{Schunk}
@@ -672,9 +676,9 @@ Laplace approximation to the marginal posterior densities. This provides
 information about the accuracy of the Gaussian approximation. 
 
 The marginal likelihood of the model is also reported and it is computed by
-integrating all the model parameters out. Hence, it is not the {\em
-predictive} marginal likelihood and it can be to perform model selection, for
-example.  The effictive number of parameters, as defined in
+integrating all the model parameters out. Hence, it is not the {\em predictive}
+marginal likelihood and it can be used to perform model selection, for example.
+The effictive number of parameters, as defined in
 \citet{Spiegelhalteretal:2002}, and the associated number of equivalent
 replicates. See \citet{isi:000284021400008} for more details on the
 \pkg{R-INLA} output.
@@ -691,7 +695,7 @@ deviation, mode and some quantiles (0.05, 0.5 and 0.975).
 
 \begin{figure}[h]
 \begin{center}
-\includegraphics{spatial_inla-009}
+\includegraphics{spatial_inla-010}
 \end{center}
 \caption{Marginals of the fixed effects, and the precisions of the error term 
 and spatial random effects, Boston housing data.}
@@ -726,7 +730,7 @@ R> spplot(boston, c("logCMEDV", "FTDlogCMEDV"),
 
 \begin{figure}[h!]
 \begin{center}
-\includegraphics{spatial_inla-013}
+\includegraphics{spatial_inla-014}
 \end{center}
 \caption{Observed and predicted median values, Boston housing data.}
 \label{fig:spplot}
@@ -770,9 +774,9 @@ R> qmap('boston',
 
 \begin{figure}[h!]
 \begin{center}
-\includegraphics{spatial_inla-016}
+\includegraphics{spatial_inla-017}
 \caption{Display of the Boston housing data set using \code{ggmap}
-and Google Maps\copyright.} 
+and Google Maps.} 
 %FIXME RSB 140204 is the data properly in register? we need to check
 \label{fig:ggmap}
 \end{center}
@@ -808,8 +812,8 @@ R> nrow <- 10
 R> ncol <- 10
 R> n <- nrow * ncol
 R> grd <- GridTopology(
-+     cellcentre.offset = c(0, 0),
-+     cellsize = c(1 / 9, 1 / 9), cells.dim = c(nrow, ncol)
++     cellcentre.offset = c(0.05, 0.05),
++     cellsize = c(1 / nrow, 1 / ncol), cells.dim = c(nrow, ncol)
 +  )
 \end{Sinput}
 \end{Schunk}
@@ -900,7 +904,7 @@ pattern using a smoothing method.
 
 \begin{figure}[h]
 \begin{center}
-\includegraphics{spatial_inla-023}
+\includegraphics{spatial_inla-024}
 \end{center}
 \caption{Estimation of the intensity of a point pattern with \pkg{R-INLA}, 
 Japanese black pine dataset.}
@@ -1111,7 +1115,7 @@ smoothed the observed values.
 
 \begin{figure}[h]
 \begin{center}
-\includegraphics{spatial_inla-032}
+\includegraphics{spatial_inla-033}
 \caption{Observed  and estimated radionuclide concentration
 in Rongelap island.}
 \label{fig:geos}
@@ -1170,7 +1174,7 @@ prior distributions.
 
 \begin{figure}[h]
 \begin{center}
-\includegraphics{spatial_inla-035}
+\includegraphics{spatial_inla-036}
 %FIXME RSB 140204 wrong data set, should be Japanese pines. YES, FIXED.
 \caption{Estimation of the intensity of a point pattern with \pkg{R-INLA} and \pkg{BayesX}, Japanese black pine dataset.}
 \label{fig:inlabayesx}
@@ -1360,7 +1364,7 @@ function (formula, d, W, lambda, improve = TRUE, fhyper = NULL,
 {
     W2 <- diag(apply(W, 1, sum)) - W
     Q <- (1 - lambda) * diag(nrow(W)) + lambda * W2
-    environment(formula) <- environment()
+    assign("Q", Q, environment(formula))
     if (is.null(fhyper)) {
         formula <- update(formula, . ~ . + f(idx, model = "generic0", 
             Cmatrix = Q))
@@ -1460,7 +1464,7 @@ different values of $\rho$.
 
 \begin{Schunk}
 \begin{Sinput}
-R> bmaleroux <- BMA2(lerouxmodels, rlambda, 0, impacts=FALSE)
+R> bmaleroux <- INLABMA(lerouxmodels, rlambda, 0, impacts=FALSE)
 \end{Sinput}
 \end{Schunk}
 
@@ -1508,8 +1512,8 @@ with MCMC. This may be due to the high correlation between these two parameters
 (-0.9, computed using the MCMC samples) which may cause some confunding in the
 model.
 
-% latex table generated in R 3.0.2 by xtable 1.7-1 package
-% Tue Feb  4 23:19:50 2014
+% latex table generated in R 3.1.0 by xtable 1.7-3 package
+% Tue Jun 24 17:30:48 2014
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrr}
@@ -1539,7 +1543,7 @@ model.
 
 \begin{figure}[h]
 \begin{center}
-\includegraphics{spatial_inla-050}
+\includegraphics{spatial_inla-051}
 \end{center}
 \caption{Comparisson between the posterior marginals of several parameters in 
 Leroux et al.'s model and fitted values with INLA (red) and MCMC (black).}
@@ -1579,7 +1583,7 @@ term.
 
 
 The adjacency matrix $W$ is often taken to be row-standardised \citep[see, for
-example,][]{Haining:2003} to ensure that $\rho$ in the interval $(-1, 1)$.
+example,][]{Haining:2003} to ensure that $\rho$ is in the interval $(-1, 1)$.
 Also, when $\rho$ is equal to zero there is no spatial dependence.
 
 This can be reformulated as
@@ -1767,7 +1771,7 @@ function to $\log(1)=0$.
 
 \begin{Schunk}
 \begin{Sinput}
-R> bmasem <- BMA2(semmodels, rrho1, 0 , impacts = FALSE)
+R> bmasem <- INLABMA(semmodels, rrho1, 0 , impacts = FALSE)
 \end{Sinput}
 \end{Schunk}
 
@@ -1805,7 +1809,7 @@ R>
 
 \begin{Schunk}
 \begin{Sinput}
-R> bmaslm <- BMA2(slmmodels, rrho2, 0 , impacts = FALSE)
+R> bmaslm <- INLABMA(slmmodels, rrho2, 0 , impacts = FALSE)
 \end{Sinput}
 \end{Schunk}
 
@@ -1840,7 +1844,7 @@ R> sdmmodels = mclapply(rrho3,
 
 \begin{Schunk}
 \begin{Sinput}
-R> bmasdm <- BMA2(sdmmodels, rrho3, 0 , impacts = FALSE)
+R> bmasdm <- INLABMA(sdmmodels, rrho3, 0 , impacts = FALSE)
 \end{Sinput}
 \end{Schunk}
 
@@ -1851,7 +1855,7 @@ $\rho$ can be found in Figure~\ref{fig:pmargrho}.
 
 \begin{figure}[h]
 \begin{center}
-\includegraphics{spatial_inla-066}
+\includegraphics{spatial_inla-067}
 \end{center}
 \caption{Posterior marginal of the spatial autocorrelation parameter $\rho$
 for different spatial econometrics models, Boston housing data.}
