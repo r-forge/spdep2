@@ -45,7 +45,7 @@ leroux.inla<-function(formula, d, W, lambda, improve=TRUE, fhyper=NULL, ...)
 		res<-inla.rerun(res)
 
 	#Compute log-determinat to correct the marginal-loglikelihood
-	res$logdet<-as.numeric(determinant(Q)$modulus)
+	res$logdet<-as.numeric(Matrix::determinant(Q)$modulus)
 	res$mlik<-res$mlik+res$logdet/2
 
 	return(res)

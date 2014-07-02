@@ -239,18 +239,26 @@ INLABMA<-function(models, rho, logrhoprior=rep(1, length(rho)), impacts=FALSE, u
 	mfit<-list(rho=list())
 	mfit$rho$marginal<-data.frame(x=seq(min(rho), max(rho), len=100))
 	mfit$rho$marginal$y<-post.func(mfit$rho$marginal$x)
-	mfit$rho$mean<-sum(mfit$rho$marginal$x*mfit$rho$marginal$y)*diff(mfit$rho$marginal$x)[1]
-	mfit$rho$sd<-sqrt(sum(((mfit$rho$marginal$x-mfit$rho$mean))^2*mfit$rho$marginal$y)*diff(mfit$rho$marginal$x)[1])
+	mfit$rho$marginal<-as.matrix(mfit$rho$marginal)
+
+#	mfit$rho$mean<-sum(mfit$rho$marginal$x*mfit$rho$marginal$y)*diff(mfit$rho$marginal$x)[1]
+#	mfit$rho$sd<-sqrt(sum(((mfit$rho$marginal$x-mfit$rho$mean))^2*mfit$rho$marginal$y)*diff(mfit$rho$marginal$x)[1])
 
 	#Compute some quantiles
-	fquant<-function(x, ff, qtile){integrate(ff, 0, x)$value-qtile}
-	qvect<-c(.025, .5, .975)
-	mfit$rho$quantiles<-sapply(qvect, 
-	   function(qtile){
-		uniroot(fquant, interval=c(min(rho),max(rho)), ff=post.func, qtile=qtile)$root
-	   }
-	)
-	names(mfit$rho$quantiles)<-as.character(qvect)
+	#fquant<-function(x, ff, qtile){integrate(ff, 0, x)$value-qtile}
+	#qvect<-c(.025, .5, .975)
+	#mfit$rho$quantiles<-sapply(qvect, 
+	#   function(qtile){
+	#	uniroot(fquant, interval=c(min(rho),max(rho)), ff=post.func, qtile=qtile)$root
+	#   }
+	#)
+	#names(mfit$rho$quantiles)<-as.character(qvect)
+
+	#Summary statistics
+	margsum<-inla.zmarginal(mfit$rho$marginal, TRUE)
+	mfit$rho$mean<-margsum$mean
+	mfit$rho$sd<-margsum$sd
+	mfit$rho$quantiles<-unlist(margsum[-c(1:2)])
 
 
 
