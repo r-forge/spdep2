@@ -42,7 +42,8 @@ Virgilio G\'omez-Rubio\\Universidad de\\ Castilla-La Mancha
 %        Second Author\\Plus Affiliation}
 }
 %\title{Extending the \pkg{R-INLA} Package for Spatial Statistics}
-\title{Some Spatial Statistical Extensions to \pkg{R-INLA}}
+%\title{Some Spatial Statistical Extensions to \pkg{R-INLA}}
+\title{Spatial Data Analysis with \pkg{R-INLA} with Some Extensions}
 
 %% for pretty printing and a nice hypersummary also set:
 \Plainauthor{Roger S. Bivand, Virgilio G\'omez-Rubio, H\r{a}vard Rue}
@@ -1436,10 +1437,13 @@ have used \code{mclapply} to parallelise the computations on operating systems s
 advantage of fitting these conditioned models compared with standard MCMC methods.
 
 <<keep.source=TRUE>>=
-rlambda <- seq(0.8, 0.99, length.out = 15)
+rlambda <- seq(0.8, 0.99, length.out = 30)
 
-fhyper = list(prec = list(prior = "loggamma", 
-   param = c(1,1), initial = log(1), fixed = FALSE))
+fhyper <- list(prec = list(prior = "loggamma", 
+   param = c(.001,.001), initial = log(1), fixed = FALSE))
+
+errorhyper <- list(prec = list(prior = "loggamma",
+   param = c(.001,.001), initial = log(1), fixed = FALSE))
 
 form2 <- log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) + 
     AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)
@@ -1449,9 +1453,10 @@ form2 <- log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) +
 lerouxmodels = mclapply(rlambda,
         function(lambda) {
                 leroux.inla(form2, d = as.data.frame(boston), 
-			W = boston.matB, lambda = lambda,
+			W = bmspB, lambda = lambda,
                         fhyper = fhyper, improve=TRUE,
                         family = "gaussian",
+			control.family = list(hyper=errorhyper),
                         control.predictor = list(compute = TRUE),
                         control.compute = list(dic = TRUE, cpo = TRUE),
                         control.inla = list(print.joint.hyper = TRUE)
@@ -1480,7 +1485,6 @@ leroux.inla(form2, d = as.data.frame(boston), W = boston.matB, lambda = lambda,
                 )
 
 @
-
 
 
 <<echo=FALSE>>=
@@ -1541,8 +1545,10 @@ library("CARBayes")
 <<carbayes, eval=FALSE>>=
 bostondf<-as.data.frame(boston)
 attach(bostondf)
-lcarbayes <-  gaussian.lerouxCAR (form2, W = as.matrix(bmspB), 
-   burnin = 500,  n.sample = 2500, thin = 5)
+#lcarbayes <-  gaussian.lerouxCAR (form2, W = boston.matB,
+#   burnin = 500,  n.sample = 2500, thin = 5)
+lcarbayes <-  lerouxCAR.re (form2, W = boston.matB, family="gaussian",
+   burnin = 500,  n.sample = 2500, thin = 5, prior.rho=rlambda)
 detach(bostondf)
 rm(bostondf)
 @
