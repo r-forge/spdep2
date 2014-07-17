@@ -15,12 +15,16 @@ options(prompt = "R> ", continue = "+  ", width = 70, useFancyQuotes = FALSE)
 
 
 <<echo=FALSE>>=
-#TRUE: Run all models
-#FALSE: Download results from author's website for Leroux and spatial 
+#TRUE: Run models
+#FALSE: Download results from author's website for Leroux, CARBayes and spatial 
 #	econometrics models
-runmodels<-FALSE
+runleroux <- FALSE
+runcarbayes <- FALSE
+runsem <- FALSE
+runslm <- FALSE
+runsdm <- FALSE
 
-#When runmodels==TRUE
+#When all these flags are TRUE
 #> system.time(  Sweave("spatial_inla.Rnw") )
 #  user  system elapsed 
 #779.976  41.545 536.349 
@@ -52,7 +56,7 @@ Virgilio G\'omez-Rubio\\Universidad de\\ Castilla-La Mancha
 
 %% an abstract and keywords
 \Abstract{
-The Integrated Nested Laplace Approximation (INLA) provides an interesting
+The integrated nested Laplace approximation (INLA) provides an interesting
 way of approximating the posterior marginals of a wide range of Bayesian
 hierarchical models. This approximation is based on conducting a 
 Laplace approximation of certain functions and numerical integration is
@@ -69,8 +73,9 @@ including its interaction with other \proglang{R} packages for data analysis.
 Secondly, we describe a novel method to extend the number of latent models
 available for the model parameters. Our approach is based on conditioning on
 one or several model parameters and fit these conditioned models with
-\pkg{R-INLA}.  Then these models are combined using Bayesian Models Averaging
-to provide the final approximations to the posterior marginals of the model.
+\pkg{R-INLA}.  Then these models are combined using Bayesian model averaging
+(BMA) to provide the final approximations to the posterior marginals of the
+model.
 
 Finally, we show some examples of the application of this technique
 in spatial statistics. It is worth noting that our approach can be extended
@@ -124,7 +129,7 @@ N-7491 Trondheim, Norway
 Bayesian inference has become very popular in spatial statistics in recent
 years. Part of this success is due to the availability of computation methods
 to tackle fitting of spatial models. \citet{besagetal:1991} proposed in their
-seminal paper an appropriate way of fitting a spatial model using Markov Chain
+seminal paper an appropriate way of fitting a spatial model using Markov chain
 Monte Carlo methods. This model has been extensively used and extended to
 consider different types of fixed and random effects for spatial and
 spatio-temporal analysis.
@@ -139,7 +144,7 @@ be required.
 Alternatively, the posterior distributions of the parameters may be
 approximated in some way. However, most models are highly multivariate and
 approximating the full posterior distribution may not be possible in practice.
-The Integrated Nested Laplace Approximation \citep[][INLA]{isi:000264374200002}
+The integrated nested Laplace approximation \citep[][INLA]{isi:000264374200002}
 focuses on the posterior marginals for latent Gaussian models. Although these
 models may seem rather restricted, they appear in a fair number of fields.
 This also means that INLA will be particularly useful when only marginal
@@ -169,12 +174,12 @@ This is why we also describe a way of extending the number of models that
 model can be fitted with \pkg{R-INLA}. What we are doing here is, in fact, to
 fit a model conditioned on the assigned values to the parameters. Then, we can
 assign different values to these parameters and combine the resulting models in
-some way to obtain a fit of the original model. We have used Bayesian Model
-Averaging and numerical integration techniques to combine these models \citep{Bivandetal:2014}.
+some way to obtain a fit of the original model. We have used Bayesian model
+averaging and numerical integration techniques to combine these models \citep{Bivandetal:2014}.
 
 
 This paper is organised as follows. Section~\ref{sec:INLA} describes the
-Integrated Nested Laplace Approximation.  In Section~\ref{sec:spmodels} the
+integrated nested Laplace approximation.  In Section~\ref{sec:spmodels} the
 different latent models for spatial statistics are described.  We describe how
 to extend \pkg{R-INLA} to fit new models in Section~\ref{sec:extINLA}. Some
 examples are provided in Section~\ref{sec:examples}.  Finally, we discuss why
@@ -207,7 +212,7 @@ $\pi(x_i|\mathbf{y})$ and it can be easily derived from the full posterior by
 integrating out over the remaining set of parameters $\mathbf{x}_{-i}$.
 
 Let us assume that we have a set of $n$ observations 
-$\mathbf{y}=\{y_i\}_ {i=1}^n$, whose distribution is of the Exponential family.
+$\mathbf{y}=\{y_i\}_ {i=1}^n$, whose distribution is of the exponential family.
 The mean of observation $i$ is $\mu_i$ and it can depend on a linear predictor 
 $\eta_i$ via a link function. In turn, the linear
 predictor $\eta_i$ can be modelled as follows:
@@ -227,14 +232,14 @@ dependence.
 $\mathbf{x}$ is modelled using a Gaussian distribution with zero mean and
 variance-covariance matrix $Q(\theta_1)$. Now, $\theta_1$ is a vector of
 hyperparameters. Furthermore, $\mathbf{x}$ is assumed to be a Gaussian Markov
-Random Field \citep[GMRF,][]{rueheld:2005}. This means that  $Q(\theta_1)$ will fulfil a number of
+random field \citep[GMRF,][]{rueheld:2005}. This means that  $Q(\theta_1)$ will fulfil a number of
 Markov properties. 
 %This will make $y_i$ independent given $x_i$ and $\theta$.
 
 The distribution of observations $y_i$ will depend on the latent effects
 $\mathbf{x}$ and, possibly, a number of hyperparameters $\theta_2$.  Taking
 the vector of hyperparameters $\theta=(\theta_1, \theta_2)$, observations
-$y_i$ will be independent of each other $x_i$ and $\theta$ because
+$y_i$ will be independent of each other given $x_i$ and $\theta$ because
 of $\mathbf{x}$ being a GMRF.
 
 Following \citet{isi:000264374200002}, the posterior distribution of the model
@@ -253,7 +258,7 @@ hyperparameters $\theta$ and $\log(\pi(y_i|x_i, \mathbf{\theta}))$ is
 the log-likelihood of observation $y_i$.
 
 INLA allows different forms for the likelihood of the observations.  This
-includes not only distributions from the Exponential family but also mixtures
+includes not only distributions from the exponential family but also mixtures
 of distributions. Also, INLA can handle observations with different likelihoods
 in the same model. Regarding the latent effects $\mathbf{x}$, different models
 can be used. We will describe some of these in more detail in
@@ -318,8 +323,8 @@ $\tilde\pi_G (x_i|\mathbf{\theta}_k, \mathbf{y})$, with mean $\mu_i(\theta)$
 and variance $\sigma^2_i(\theta)$, may be a good starting point but a better
 approximation may be required in other cases. \citet{isi:000264374200002}
 developed better approximations based on alternative approximation methods,
-such as the Laplace Approximation.  For example, they have used the Laplace
-Approximation to obtain:
+such as the Laplace approximation.  For example, they have used the Laplace
+approximation to obtain:
 
 \begin{equation}
 \tilde\pi_{LA}(x_i|\mathbf{\theta}, \mathbf{y}) \propto 
@@ -332,9 +337,9 @@ $\tilde\pi_{GG}(\mathbf{x}_{-i}|x_i, \mathbf{\theta}, \mathbf{y})$ is a
 Gaussian  approximation to $\mathbf{x}_{-i}|x_i, \mathbf{\theta}, \mathbf{y}$
 around its mode $\mathbf{x}^*_{-i}(x_i, \mathbf{\theta})$.
 
-\citet{isi:000264374200002} develop a Simplified Laplace Approximation to
+\citet{isi:000264374200002} develop a simplified Laplace approximation to
 improve $\tilde\pi_{LA}(x_i|\mathbf{\theta}, \mathbf{y})$ using a series
-expansion of the Laplace Approximation around $x_i$. This approximation is
+expansion of the Laplace approximation around $x_i$. This approximation is
 computationally less expensive, and it also corrects for location and
 skewness.
 
@@ -343,8 +348,8 @@ skewness.
 
 An interface to INLA has been provided as an \proglang{R} package called \pkg{R-INLA},
 which can be downloaded from \url{http://www.r-inla.org/}, together with the free-standing external INLA programme. \pkg{R-INLA}
-provides a user model interface similar to the one used to fit Generalised Additive
-Models with function \code{gam()} in the \pkg{mgcv} package \citep{Wood:2006}. %FIXME RSB reference? YES, FIXED.
+provides a user model interface similar to the one used to fit generalised additive
+models (GAM) with function \code{gam()} in the \pkg{mgcv} package \citep{Wood:2006}. %FIXME RSB reference? YES, FIXED.
 It can handle fixed effects, non-linear terms
 and random effects in a \code{formula} argument. The interface is flexible
 enough to allow for the specification of different priors and model fitting
@@ -416,7 +421,7 @@ u_i \sim N(0, \tau_u)
 \noindent
 where $\tau_u$ refers to the precision of the Gaussian distribution.  It should
 be noted that \pkg{R-INLA} assigns a prior to $\log(\tau_u)$ which, by default,
-is a log-Gamma  distribution. Although this model is not spatial, it can be
+is a log-gamma  distribution. Although this model is not spatial, it can be
 combined with other spatial models. Using $\log(\tau_u)$ instead
 of simply $\tau_u$ provides some advantages as $\log(\tau_u)$ is not
 constrained to be positive. This is particularly useful when optimising
@@ -427,7 +432,7 @@ In order to model spatial correlation, neighbourhoods must be defined among the
 study areas.  It is often considered that two areas are neighbours is they
 share a common boundary.  Spatial autocorrelation is modelled using a Gaussian
 distribution with zero mean and a precision matrix that will model
-correlation between neighbours. Given that latent effects are GMRF, 
+correlation between neighbours. Given that latent effects are a GMRF, 
 we can define the variance-covariance matrix of the random effects
 as
 
@@ -454,7 +459,7 @@ v_i|v_j,\tau_v \sim  N( \frac{1}{n_i}\sum_{i\sim j} v_j, \frac{1}{\tau_vn_i})\ \
 \end{equation}
 \noindent
 $\tau_v$ is the conditional precision of the random effects. As in the previous
-model, \pkg{R-INLA} uses a log-Gamma prior on $\log(\tau_v)$.
+model, \pkg{R-INLA} uses a log-gamma prior on $\log(\tau_v)$.
 
 In addition, a proper version of this model is available as well,
 for which the spatial random effects are distributed as
@@ -464,7 +469,7 @@ v_i|v_j,\tau_v \sim  N( \frac{1}{n_i+d}\sum_{i\sim j} v_j, \frac{1}{\tau_v(n_i+d
 \end{equation}
 \noindent
 $d$ is a positive quantity to make the distribution proper. By default,
-a log-Gamma distribution is assigned to $\log(d)$.
+a log-gamma distribution is assigned to $\log(d)$.
 
 A more general approach is obtained  with the following precision
 matrix:
@@ -475,8 +480,8 @@ Q = (I - \frac{\rho}{\lambda_{max}}C)
 \noindent
 Here $I$ is the identity matrix, $\rho$ a spatial autocorrelation parameter,
 $C$ an adjacency matrix and $\lambda_{max}$ the maximum eigenvalue of $C$.
-This specification ensures that $\rho$ takes values between 0 and 1.
 \pkg{R-INLA} assigns a Gaussian prior on $\log(\rho/(1-\rho))$.
+This specification ensures that $\rho$ takes values between 0 and 1.
 
 In the following example we use the Boston housing data, which is described in
 \citet{HarrisonRubinfeld:1978}, to develop an example on several spatial
@@ -498,7 +503,7 @@ since it supports a wider range of formats. This is the one we have used to
 load the Boston data set:
 
 <<echo=FALSE, eval=FALSE>>=
-library(maptools)
+library("maptools")
 boston<-readShapePoly(system.file("etc/shapes/boston_tracts.shp", 
    package="spdep")[1])
 #, ID="FIPSNO", proj4string=CRS("+proj=longlat +ellps=clrk66"))
@@ -506,13 +511,13 @@ boston<-readShapePoly(system.file("etc/shapes/boston_tracts.shp",
 @
 
 <<results=hide>>=
-library(rgdal)
+library("rgdal")
 boston<-readOGR( system.file("etc/shapes",package="spdep")[1], 
    "boston_tracts")
 @
 \noindent
 Here, \code{readOGR()} takes the directory where the layer (shapefile) is 
-located and the layer name, which is this case is the name of the shapefile,
+located and the layer name, which in this case is the name of the shapefile,
 as arguments and return an object of type \code{SpatialPolygonsDataFrame}.
 This data object is used to store the tract boundaries plus the associated
 data (tract name and other variables). 
@@ -524,7 +529,7 @@ boundaries and perform this operation to provide us with the adjacency structure
 of the Boston tracts as a \code{nb} object:
 
 <<>>=
-library(spdep)
+library("spdep")
 bostonadj<-poly2nb(boston, queen=FALSE)
 @
 \noindent
@@ -620,9 +625,9 @@ form <- log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) +
 AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)+
 f(idx, model = "besag", graph = adj )
 
-bdf<-as.data.frame(boston)
+btdf<-as.data.frame(boston)
 
-m1 <- inla(form, data = bdf,
+m1 <- inla(form, data = btdf,
    control.predictor = list(compute = TRUE))
 @
 
@@ -658,8 +663,8 @@ integrating all the model parameters out. Hence, it is not the {\em predictive}
 marginal likelihood and it can be used to perform model selection, for example.
 The effictive number of parameters, as defined in
 \citet{Spiegelhalteretal:2002}, and the associated number of equivalent
-replicates. See \citet{isi:000284021400008} for more details on the
-\pkg{R-INLA} output.
+replicates are also shown. See \citet{isi:000284021400008} for more details on
+the \pkg{R-INLA} output.
 
 Figure~\ref{fig:marg1} shows the estimated marginals of the coefficients
 of the fixed effects and the precisions of the
@@ -703,9 +708,13 @@ and spatial random effects, Boston housing data.}
 Fitted values can be easily displayed in a map. First, we need to add
 all the required values to the \code{SpatialPolygonsDataFrame}:
 
-<<>>=
-boston$logCMEDV<-log(boston$CMEDV)
-boston$FTDlogCMEDV<-m1$summary.fitted[,"mean"]
+<<keep.source=FALSE>>=
+#For some reason, having 'logCMEDV' and 'FTDlogCMEDV' in 'boston' clashes with
+#model fitting when log(CMEDV) is used in the response. We have renamed
+#these columns to using 'LOG' and not 'log'
+#
+boston$LOGCMEDV<-log(boston$CMEDV)
+boston$FTDLOGCMEDV<-m1$summary.fitted[,"mean"]
 @
 \noindent
 Note that we will represent values in the log-scale. 
@@ -714,8 +723,8 @@ predicted  values of house prices. In the following example, which
 can be seen in Figure~\ref{fig:spplot}, we have
 also used package \pkg{RColorBrewer} to define a suitable colour palette:
 <<eval=FALSE>>=
-library(RColorBrewer)
-spplot(boston, c("logCMEDV", "FTDlogCMEDV"),
+library("RColorBrewer")
+spplot(boston, c("LOGCMEDV", "FTDLOGCMEDV"),
    cuts=8, col.regions=brewer.pal(9,"Blues"),
    names.attr=c("Observed log-CMEDV", "Predicted log-CMEDV")
 )
@@ -724,8 +733,8 @@ spplot(boston, c("logCMEDV", "FTDlogCMEDV"),
 \begin{figure}[h!]
 \begin{center}
 <<fig=TRUE, results=hide, echo=FALSE, results=hide>>=
-library(RColorBrewer)
-print(spplot(boston, c("logCMEDV", "FTDlogCMEDV"),
+library("RColorBrewer")
+print(spplot(boston, c("LOGCMEDV", "FTDLOGCMEDV"),
    cuts=8, col.regions=brewer.pal(9,"Blues"),
    names.attr=c("Observed CMEDV", "Predicted CMEDV")
 ))
@@ -738,7 +747,7 @@ print(spplot(boston, c("logCMEDV", "FTDlogCMEDV"),
 To provide an alternative visualisation of the results, we have included a
 short example using function \code{qmap()} from the \pkg{ggmap} package
 \citep{KahleWickham:2013}.  First of all we will reproject our data to be
-WGS84. With \code{fortify()} the \code{boston} dataset is covnerted into a
+WGS84. With \code{fortify()} the \code{boston} dataset is converted into a
 suitable format to be used when plotting and then the log median values are
 added to the new data.
 
@@ -751,25 +760,28 @@ added to the new data.
 #Reproject
 bostonf<-spTransform(boston, CRS("+proj=longlat +datum=WGS84"))
 #Google Maps
-library(ggmap)
+library("ggmap")
 
 bostonf <- fortify(bostonf, region="TRACT")
 #Add data
 idx<-match(bostonf$id, as.character(boston$TRACT) )
-bostonf$logCMEDV<-boston$logCMEDV[idx]
+bostonf$LOGCMEDV<-boston$LOGCMEDV[idx]
 @
 \noindent
 \code{qmap()} is based on the the grammar of graphics implemented in the
 \pkg{ggplot2} package \citep{Wickham:2009}. In the next example,
-\code{ggmap()} is used to get satellite data from the Boston area,
+\code{qmap()} is used to get satellite data from the Boston area,
 whilst \code{geom_polygon()} adds the boundaries:
 
 <<ggmap, eval=FALSE>>=
 qmap('boston',
    zoom = 10, maptype = 'satellite') +
 geom_polygon(data=bostonf, aes(x = long, y = lat, group = group, 
-   fill=logCMEDV), colour = 'white', alpha = .8, size = .3)
+   fill=LOGCMEDV), colour = 'white', alpha = .8, size = .3)
 @
+\noindent
+The resulting map can be seen in Figure \ref{fig:ggmap}.
+
 
 \begin{figure}[h!]
 \begin{center}
@@ -783,9 +795,10 @@ and Google Maps.}
 \end{center}
 \end{figure}
 
+
 <<eval=FALSE, echo=FALSE>>=
 #OpenStreetMap
-library(osmar)
+library("osmar")
 
 src <- osmsource_api()
 
@@ -824,19 +837,19 @@ data("japanesepines")
 
 japd <- as.data.frame(japanesepines)
 
-nrow <- 10
-ncol <- 10
-n <- nrow * ncol
+Nrow <- 10
+Ncol <- 10
+n <- Nrow * Ncol
 
 grd <- GridTopology(
    cellcentre.offset = c(0.05, 0.05),
-   cellsize = c(1 / nrow, 1 / ncol), cells.dim = c(nrow, ncol)
+   cellsize = c(1 / Nrow, 1 / Ncol), cells.dim = c(Nrow, Ncol)
 )
 @
 
 
 After the creation of the grid, we have used function \code{over()} on
-the set of points and the newlydefined squares to find how many points can be
+the set of points and the newly defined squares to find how many points can be
 found in each square.
 
 <<>>=
@@ -889,7 +902,7 @@ japinlala <- inla(fpp,
    control.predictor = list(compute = TRUE)
 )
 
-japgrd$INLALA <-  japinlala$summary.fitted.values[, 1]
+japgrd$INLALA <-  japinlala$summary.fitted.values[, "mean"]
 @
 
 The former model is the one that we have employed with the Boston data set
@@ -909,7 +922,7 @@ japinlalarw2d <- inla(fpprw2d,
    control.predictor = list(compute = TRUE)
 )
 
-japgrd$INLALARW2D <-  japinlalarw2d$summary.fitted.values[, 1]
+japgrd$INLALARW2D <-  japinlalarw2d$summary.fitted.values[, "mean"]
 @
 
 \noindent
@@ -1030,17 +1043,17 @@ used to match these points to. The grid is defined to be of dimension
 $5\times 5$. 
 
 <<keep.source=TRUE>>=
-nrow <- 5
-ncol <- 5
-n <- nrow * ncol
+Nrow <- 5
+Ncol <- 5
+n <- Nrow * Ncol
 
 grdoffset <- c( min(rgldata$X1), min(rgldata$X2) )
-csize1 <- diff( range(rgldata$X1) ) / (nrow-1)
-csize2 <- diff( range(rgldata$X2) ) / (ncol-1)
+csize1 <- diff( range(rgldata$X1) ) / (Nrow-1)
+csize2 <- diff( range(rgldata$X2) ) / (Ncol-1)
 grd <- GridTopology(
    cellcentre.offset = grdoffset, 
    cellsize = c(csize1, csize2),
-   cells.dim = c(nrow, ncol)
+   cells.dim = c(Nrow, Ncol)
 )
 @
 \noindent
@@ -1053,7 +1066,7 @@ is added to be used in \code{f()} when defining the model. However,
 variable ordering will not be considered).
 
 <<>>=
-inla2sp <- inla.lattice2node.mapping(nrow, ncol)[ , ncol:1]
+inla2sp <- inla.lattice2node.mapping(Nrow, Ncol)[ , Ncol:1]
 inla2sp <- as.vector(inla2sp)
 
 spgrd <- SpatialGridDataFrame(grd, as.data.frame(rgldata[inla2sp, ]) )
@@ -1097,18 +1110,18 @@ Mat\'ern class. Note how we have fixed, for convenience,
 the value of the range and precision.
 
 <<keep.source=TRUE>>=
-formula <-  ratioag ~ 1 + f(spgrd$IDX, model = "matern2d", 
-   nrow = nrow, ncol = ncol,
+formula1 <-  ratioag ~ 1 + f(spgrd$IDX, model = "matern2d", 
+   nrow = Nrow, ncol = Ncol,
    hyper = list(range = list(initial = log(sqrt(8)/.5), fixed = TRUE),
             prec = list(initial = log(1), fixed = TRUE)))
                 
 
-rglinlala <- inla(formula, family = "poisson",
+rglinlala <- inla(formula1, family = "poisson",
    control.predictor = list(compute = TRUE),
    control.compute = list(dic = TRUE),
    data = as.data.frame(spgrd) )
 
-spgrd$INLALA <- rglinlala$summary.fitted.values[,1]
+spgrd$INLALA <- rglinlala$summary.fitted.values[,"mean"]
 @
 Similarly as in the point patterns example, here we have also used
 a two dimensional random walk for spatial smoothing.
@@ -1118,7 +1131,7 @@ a two dimensional random walk for spatial smoothing.
 
 <<keep.source=TRUE>>=
 formularw2d <-  ratioag ~ 1 + f(spgrd$IDX, model = "rw2d",
-   nrow = nrow, ncol = ncol,
+   nrow = Nrow, ncol = Ncol,
       hyper=list(prec=list(prior="loggamma", param=c(1, 1) )) )
 
 rglinlalarw2d <- inla(formularw2d, family = "poisson",
@@ -1126,7 +1139,7 @@ rglinlalarw2d <- inla(formularw2d, family = "poisson",
    control.compute = list(dic = TRUE),
    data = as.data.frame(spgrd) )
 
-spgrd$INLALARW2D <- rglinlalarw2d$summary.fitted.values[,1]
+spgrd$INLALARW2D <- rglinlalarw2d$summary.fitted.values[,"mean"]
 @
 
 
@@ -1159,7 +1172,7 @@ in Rongelap island.}
 modelling in the contect of disease mapping. We wil focus here in \pkg{R2BayesX}
 %\citep{Brezgeretal:2005} 
 %FIXME RSB 140204 no reference here - unfortunately, JSS-931 Structured Additive Regression Models: An R Interface to BayesX, Authors: Umlauf, Adler, Kneib, Lang, Zeileis is still in final screening. VIRGILIO: Ref. removed for now.
-because it provides way to defining spatial models as
+because it provides a way to defining spatial models as
 \pkg{R-INLA}.
 
 
@@ -1167,7 +1180,7 @@ For example, in order to reproduce the example on the Japanesse black pine
 data with \pkg{R2BayesX} we can do the following:
 
 <<>>=
-library(R2BayesX)
+library("R2BayesX")
 bayesxadj<-nb2gra(japnb)
 
 japbayesx<-bayesx(Ntrees ~ 1+sx(SPIDX, bs="re")+sx(SPIDX,bs="spatial", 
@@ -1193,7 +1206,8 @@ japgrd$BAYESX<-japbayesx$fitted.values[order(japbayesx$bayesx.setup$order),
 @
 \noindent
 Finally, we compare the fitted values obtained with \pkg{R-INLA} and
-\pkg{R2Bayes} in Figure~\ref{fig:inlabayesx}. Note that differences not only
+\pkg{R2Bayes} in Figure~\ref{fig:inlabayesx}. Note that differences appear
+not only
 because of the different models used but also because of the choice of
 prior distributions.
 
@@ -1234,7 +1248,8 @@ possible without adding to the code of the external INLA programme.
 \citet{Bivandetal:2014} describe a simple way of extending INLA to use other
 latent models.  In particular they focus on some latent models used in spatial
 econometrics that are not available as part of the \pkg{R-INLA} package at
-the moment.
+the moment. A new latent class has been added recently and it is
+described in \citet{GomezRubioetal:2014}.
 
 This approach is based on considering a model where one or several parameters have been
 fixed in a way that makes the conditioned model fittable with \pkg{R-INLA}.  If
@@ -1277,9 +1292,9 @@ expression in Equation~\ref{eq:postrho}.
 
 
 The posterior distribution of $\rho$ can be estimated by defining a fine grid
-of values $S=\{\rho_i\}_{i=1}^r$ so that $\pi(\rho_i|\mathbf{y}),\ i=\ldots,r$
-are computed.  Then $\pi(\rho|\mathbf{y})$ can be obtained by fitting and
-re-scaling a spline (or other non-linear function) to the previous values.
+of values $S=\{\rho_i\}_{i=1}^r$ so that $\pi(\rho_i|\mathbf{y}),\ i=1,
+\ldots,r$ are computed.  Then $\pi(\rho|\mathbf{y})$ can be obtained by fitting
+and re-scaling a spline (or other non-linear function) to the previous values.
 Using simple numerical integration techniques we can obtain an approximation to
 $\pi(\mathbf{x}, \mathbf{\theta}|\mathbf{y})$ as follows:
 
@@ -1317,7 +1332,7 @@ w_j = \pi(\rho_j|\mathbf{y})\Delta_j
 \end{equation}
 
 
-This is like carrying out Bayesian Model Averaging \citep{Hoetingetal:1999} on the
+This is like carrying out Bayesian model averaging \citep{Hoetingetal:1999} on the
 different conditioned models fitted with \pkg{R-INLA}. Altogether, this
 provides a way of combining simpler models to obtain our desired model. In
 Section~\ref{sec:examples} we show how to apply these ideas to different models
@@ -1341,7 +1356,7 @@ We have implemented this approach in an \pkg{R} package called \pkg{INLABMA},
 available from CRAN.
 %\url{http://R-forge.R-project.org} as part of the \code{spdep2} project.\footnote{For installation: \code{ install.packages("INLABMA", repos="http://R-Forge.R-project.org")}.} %FIXME RSB should link be to actual package? YES, FIXED.
 The package includes some
-general functions to conduct Bayesian Model Averaging of models fitted with
+general functions to conduct Bayesian model averaging of models fitted with
 INLA. In addition, we have included some wrapper functions to fit the models
 described in Section~\ref{sec:examples}.
 
@@ -1386,8 +1401,7 @@ is a multivariate Gaussian random effect with zero mean and precision matrix as
 in Equation~\ref{eq:leroux}.  We repeat this procedure for different values of
 $\lambda$ to obtain a list of fitted models to be combined later.
 
-Hence, we can write a similar wrapper function as in the previous example for
-the spatial econometrics models, which is included in package \pkg{INLABMA}:
+Hence, we have written a simple wrapper function which is included in package \pkg{INLABMA}:
 
 <<>>=
 library("INLABMA")
@@ -1395,20 +1409,21 @@ leroux.inla
 @
 
 
-In the previous code, the precision matrix \code{Q} is created using the adjacency
-matrix and the value of $\lambda$. Then the \code{generic0} model is added to the
-formula with the fixed effects. Finally we correct the marginal log-likelihood
-$\pi(\mathbf{y|\lambda})$ (conditioned on the value of $\lambda$) by adding half the log-determinant of $((1-\lambda)I_n+\lambda M)$.
+In the previous code, the precision matrix \code{Q} is created using the
+adjacency matrix \code{W} and the value of $\lambda$. Then the \code{generic0}
+model is added to the formula with the fixed effects. Finally we correct the
+marginal log-likelihood $\pi(\mathbf{y|\lambda})$ (conditioned on the value of
+$\lambda$) by adding half the log-determinant of $((1-\lambda)I_n+\lambda M)$.
 Note that, in principle, this is not needed to fit a single model and obtain
 the approximations to the posterior marginals as it is a constant. However, we
-are fitting and combining several models so we need to correct for this
-because this scaling factor will change with the value of $\lambda$.
-Argument \code{'...'} is used to pass any other options to \code{inla()}. 
-This can be used to tune and set a number of other options.
+are fitting and combining several models so we need to correct for this because
+this scaling factor will change with the value of $\lambda$.  Argument
+\code{'...'} is used to pass any other options to \code{inla()}.  This can be
+used to tune and set a number of other options.
 
-Similar wrapper functions can be written for other models. The functions
-included in package \pkg{INLABMA} are similar, but include further options
-\citep[see,][for details]{Bivandetal:2014}.
+%Similar wrapper functions can be written for other models. The functions
+%included in package \pkg{INLABMA} are similar, but include further options
+%\citep[see,][for details]{Bivandetal:2014}.
 
 %Note that here \code{zero.variance} is used to set
 %to zero the additional error term which is added by default by \pkg{R-INLA}.
@@ -1432,12 +1447,14 @@ Function \code{inla.leroux} is used in the example below to compute the fitted
 models for the Leroux et al. model.  In this case, we take $\lambda$ to be in
 the interval $(0.8,0.99)$ after previous assessment on where
 $\pi(\lambda|\mathbf{y})$ has its mode. Also, we define a prior for the
-precision of the random effects in variable \code{fhyper}.  In addition, we
-have used \code{mclapply} to parallelise the computations on operating systems supporting forking (not Windows). Note that this is an
-advantage of fitting these conditioned models compared with standard MCMC methods.
+precision of the random effects in variable \code{fhyper}.  The prior for the
+precision of the error term is defined in \code{errorhyper}. In addition, we
+have used \code{mclapply} to parallelise the computations on operating systems
+supporting forking (not Windows). Note that this is an advantage of fitting
+these conditioned models compared with standard MCMC methods.
 
 <<keep.source=TRUE>>=
-rlambda <- seq(0.8, 0.99, length.out = 30)
+rlambda <- seq(0.8, 0.99, length.out = 20)
 
 fhyper <- list(prec = list(prior = "loggamma", 
    param = c(.001,.001), initial = log(1), fixed = FALSE))
@@ -1449,17 +1466,20 @@ form2 <- log(CMEDV) ~ CRIM + ZN + INDUS + CHAS + I(NOX^2) + I(RM^2) +
     AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)
 @
 
+
+
 <<leroux, eval=FALSE>>=
 lerouxmodels = mclapply(rlambda,
         function(lambda) {
                 leroux.inla(form2, d = as.data.frame(boston), 
-			W = bmspB, lambda = lambda,
-                        fhyper = fhyper, improve=TRUE,
-                        family = "gaussian",
-			control.family = list(hyper=errorhyper),
-                        control.predictor = list(compute = TRUE),
-                        control.compute = list(dic = TRUE, cpo = TRUE),
-                        control.inla = list(print.joint.hyper = TRUE)
+		   W = bmspB, lambda = lambda,
+                   fhyper = fhyper, improve=TRUE,
+                   family = "gaussian",
+		   control.fixed = list(prec.intercept=.001, prec=.001),
+		   control.family = list(hyper=errorhyper),
+                   control.predictor = list(compute = TRUE),
+                   control.compute = list(dic = TRUE, cpo = TRUE),
+                   control.inla = list(print.joint.hyper = TRUE)
                 )
         })
 @
@@ -1488,7 +1508,7 @@ leroux.inla(form2, d = as.data.frame(boston), W = boston.matB, lambda = lambda,
 
 
 <<echo=FALSE>>=
-if(runmodels)
+if(runleroux)
 {
 <<leroux>>
 save(file="lerouxmodels.RData", list=c("lerouxmodels"))
@@ -1504,7 +1524,7 @@ save(file="lerouxmodels.RData", list=c("lerouxmodels"))
 
 Following this, we need to combine the different models to obtain the final
 model by Bayesian Model Averaging. We will take a uniform prior on $\rho$ and
-set the third argument in the following function to $log(1)=0$. Note that
+set the third argument in the following function to $\log(1)=0$. Note that
 another prior can be used here by giving the log-density of the prior at the
 different values of $\rho$.
 
@@ -1545,15 +1565,13 @@ library("CARBayes")
 <<carbayes, eval=FALSE>>=
 bostondf<-as.data.frame(boston)
 attach(bostondf)
-#lcarbayes <-  gaussian.lerouxCAR (form2, W = boston.matB,
-#   burnin = 500,  n.sample = 2500, thin = 5)
 lcarbayes <-  lerouxCAR.re (form2, W = boston.matB, family="gaussian",
-   burnin = 500,  n.sample = 2500, thin = 5, prior.rho=rlambda)
+   burnin = 1000,  n.sample = 6000, thin = 5, prior.rho=rlambda)
 detach(bostondf)
 rm(bostondf)
 @
-<<echo=FALSE>>=
-if(runmodels){
+<<echo=FALSE, results=hide>>=
+if(runcarbayes){
 <<carbayes>>
 save(file="lcarbayes.RData", list=c("lcarbayes"))
 } else{
@@ -1583,17 +1601,20 @@ fixed effects and parameter $\lambda$ (bottom line) in the model. It is clear
 that there are no significant differences between the estimates computed with
 MCMC and our method.  Furthermore, Figure~\ref{fig:leroux} shows the marginal
 distribution of $\lambda$ and it shows how our estimate is very close to that
-provided by MCMC. The slight difference that is observed may well be due to the
-fact that different priors have been used for the variances of the random
-effects and the error term. \pkg{CARBayes} uses uniform priors on the variances,
-whiles \pkg{R-INLA} assigns inverted Gamma distributions to the variances.
-
+provided by MCMC. 
 Figure~\ref{fig:leroux} also shows a good agreement between the posterior
-means of the fitted values. However, we have found that our estimates
-of the posterior marginals of the precisions differ from those obtained
-with MCMC. This may be due to the high correlation between these two parameters
-(-0.9, computed using the MCMC samples) which may cause some confunding in the
-model.
+means of the fitted values. 
+
+%The slight difference that is observed may well be due to the
+%fact that different priors have been used for the variances of the random
+%effects and the error term. \pkg{CARBayes} uses uniform priors on the variances,
+%whiles \pkg{R-INLA} assigns inverted Gamma distributions to the variances.
+
+%However, we have found that our estimates
+%of the posterior marginals of the precisions differ from those obtained
+%with MCMC. This may be due to the high correlation between these two parameters
+%(-0.9, computed using the MCMC samples) which may cause some confunding in the
+%model.
 
 <<echo=FALSE, results=tex>>=
 library("xtable")
@@ -1638,7 +1659,7 @@ plot(density(1/lcarbayes$samples$tau2 ),
 lines(bmaleroux$marginals.hyperpar[[2]], col="red")
 
 #Fitted values
-plot(lcarbayes$fitted.values[,1], bmaleroux$summary.fitted.values[,1],
+plot(lcarbayes$fitted.values[,1], bmaleroux$summary.fitted.values[,"mean"],
    main="Fitted values (posterior mean)", xlab="MCMC", ylab="INLA")
 abline(0,1)
 
@@ -1832,7 +1853,7 @@ A simple wrapper function can be defined as follows for the SEM model:
 semwr.inla <- function(formula, d, W, rho,...)
 {
         IrhoW <- diag(nrow(W)) - rho*W
-        IrhoW2 <- IrhoW %*% t(IrhoW)
+        IrhoW2 <- t(IrhoW) %*% IrhoW
 
         environment(formula) <- environment()
 
@@ -1882,6 +1903,8 @@ bmsp <- as(boston.mat, "CsparseMatrix")
 #index for sptial effect
 boston$idx <- 1 : nrow(boston)
 
+fform <- log(CMEDV) ~CRIM+ZN + INDUS + CHAS + I(NOX^2)+
+   I(RM^2) +  AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)
 @
 
 Next, we define a fine grid on the interval $(0,1)$ to give values
@@ -1890,9 +1913,6 @@ we have used \code{mclapply}  to speed up computations.
 
 
 <<>>=
-fform <- log(CMEDV) ~CRIM+ZN + INDUS + CHAS + I(NOX^2)+
-   I(RM^2) +  AGE + log(DIS) + log(RAD) + TAX + PTRATIO + B + log(LSTAT)
-
 rrho1 <- seq(0.5, 0.9, len = 20)
 @
 <<semmodels, eval=FALSE>>=
@@ -1908,7 +1928,7 @@ semmodels = mclapply(rrho1,
         })
 @
 <<echo=FALSE>>=
-if(runmodels){
+if(runsem){
 <<semmodels>>
 save(file="semmodels.RData", list=c("semmodels"))
 } else {
@@ -1960,7 +1980,7 @@ slmmodels = mclapply(rrho2,
 
 @
 <<echo=FALSE>>=
-if(runmodels){
+if(runslm){
 <<slmmodels>>
 save(file="slmmodels.RData", list=c("slmmodels"))
 } else {
@@ -2002,7 +2022,7 @@ sdmmodels = mclapply(rrho3,
         })
 @
 <<echo=FALSE>>=
-if(runmodels){
+if(runsdm){
 <<sdmmodels>>
 save(file="sdmmodels.RData", list=c("sdmmodels"))
 } else{
@@ -2042,29 +2062,15 @@ for different spatial econometrics models, Boston housing data.}
 \end{figure} 
 
 
-
-%\subsection{Model Selection with INLA and RJMCMC}
-
-%\subsubsection{Boston Housing Data}
-
-%\subsection{Spatio-temporal models}
-%
-%Spatio-temporal models can be easily fitted with \pkg{R-INLA} when the spatial
-%and temporal effects are separable. However, it may be a complex issue when 
-%
-%\subsubsection{Cancer in New Mexico}
-
-
-
 \section{Discussion} \label{sec:disc}
 
-The Integrated Nested Laplace Approximation has provided a new paradigm to
+The integrated nested Laplace approximation has provided a new paradigm to
 model fitting in Bayesian analysis. By focusing on the marginals and providing
-an interesting computational approach, it has provided a reasonable and faster
+an interesting computational approach, it has become a reasonable and faster
 alternative to MCMC. Furthermore, the \pkg{R-INLA} package makes model fitting
 in \proglang{R} a very simple task.  Although \pkg{R-INLA} implements some key
 models, there are some others that have not been implemented yet.
-In addition, it is not easy to implement completely new models within the
+In addition, it is not easy to implement completely new models within 
 \pkg{R-INLA}. Latent mixture models are an important example of models that
 cannot be fitted with \pkg{R-INLA}.
 
