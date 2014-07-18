@@ -628,7 +628,7 @@ Call:
 
 Time used:
  Pre-processing    Running inla Post-processing           Total 
-         4.0842         13.9544          0.6961         18.7346 
+         0.5980          2.3071          0.1317          3.0368 
 
 Fixed effects:
                mean     sd 0.025quant 0.5quant 0.975quant    mode kld
@@ -883,7 +883,7 @@ R> japgrd$INLALA <-  japinlala$summary.fitted.values[, "mean"]
 \end{Schunk}
 
 The former model is the one that we have employed with the Boston data set
-on an irregular lattice. Given that now we are cosidering a regular lattice
+on an irregular lattice. Given that now we are considering a regular lattice
 it is also possible to use a two-dimensional random walk for spatial
 smoothing:
 %FIXME in boston, besag was used, not bym
@@ -1503,7 +1503,7 @@ R> library("CARBayes")
 R> bostondf<-as.data.frame(boston)
 R> attach(bostondf)
 R> lcarbayes <-  lerouxCAR.re (form2, W = boston.matB, family="gaussian",
-+     burnin = 1000,  n.sample = 6000, thin = 5, prior.rho=rlambda)
++     burnin = 1000,  n.sample = 11000, thin = 5, prior.rho=rlambda)
 R> detach(bostondf)
 R> rm(bostondf)
 \end{Sinput}
@@ -1531,28 +1531,28 @@ means of the fitted values.
 %model.
 
 % latex table generated in R 3.1.0 by xtable 1.7-3 package
-% Thu Jul 17 04:31:51 2014
+% Fri Jul 18 13:07:31 2014
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrr}
   \hline
  & Mean (INLA) & SD (INLA) & Mean (MCMC) & SD (MCMC) \\ 
   \hline
-(Intercept) & 3.8055 & 0.1770 & 3.8322 & 0.1590 \\ 
-  CRIM & -0.0076 & 0.0011 & -0.0077 & 0.0010 \\ 
+(Intercept) & 3.8055 & 0.1770 & 3.7793 & 0.1673 \\ 
+  CRIM & -0.0076 & 0.0011 & -0.0076 & 0.0011 \\ 
   ZN & 0.0003 & 0.0005 & 0.0003 & 0.0005 \\ 
-  INDUS & -0.0006 & 0.0023 & -0.0008 & 0.0024 \\ 
-  CHAS1 & -0.0338 & 0.0302 & -0.0344 & 0.0285 \\ 
-  I(NOX\verb|^|2) & -0.4374 & 0.1412 & -0.4132 & 0.1472 \\ 
-  I(RM\verb|^|2) & 0.0099 & 0.0011 & 0.0098 & 0.0010 \\ 
+  INDUS & -0.0006 & 0.0023 & -0.0006 & 0.0023 \\ 
+  CHAS1 & -0.0338 & 0.0302 & -0.0325 & 0.0303 \\ 
+  I(NOX\verb|^|2) & -0.4374 & 0.1412 & -0.4196 & 0.1425 \\ 
+  I(RM\verb|^|2) & 0.0099 & 0.0011 & 0.0099 & 0.0011 \\ 
   AGE & -0.0011 & 0.0005 & -0.0011 & 0.0005 \\ 
-  log(DIS) & -0.1663 & 0.0616 & -0.1787 & 0.0553 \\ 
-  log(RAD) & 0.0506 & 0.0205 & 0.0534 & 0.0204 \\ 
+  log(DIS) & -0.1663 & 0.0616 & -0.1481 & 0.0586 \\ 
+  log(RAD) & 0.0506 & 0.0205 & 0.0515 & 0.0210 \\ 
   TAX & -0.0003 & 0.0001 & -0.0003 & 0.0001 \\ 
-  PTRATIO & -0.0164 & 0.0053 & -0.0170 & 0.0054 \\ 
-  B & 0.0006 & 0.0001 & 0.0005 & 0.0001 \\ 
-  log(LSTAT) & -0.2534 & 0.0227 & -0.2559 & 0.0219 \\ 
-  lambda & 0.9520 & 0.0315 & 0.9426 & 0.0326 \\ 
+  PTRATIO & -0.0164 & 0.0053 & -0.0164 & 0.0056 \\ 
+  B & 0.0006 & 0.0001 & 0.0006 & 0.0001 \\ 
+  log(LSTAT) & -0.2534 & 0.0227 & -0.2543 & 0.0224 \\ 
+  lambda & 0.9520 & 0.0315 & 0.9403 & 0.0338 \\ 
    \hline
 \end{tabular}
 \caption{Point estimates of fixed effects and $\lambda$ using INLA and MCMC.} 
@@ -1610,8 +1610,8 @@ This can be reformulated as
 y= \alpha+\beta X+\varepsilon'
 \end{equation}
 \noindent
-$\varepsilon '$ is now an error term with a Gaussian distribution with zero
-mean and variance-covariance matrix $\Sigma=\sigma^2((I_n-\rho W)(I_n-\rho W'))^{-1}$.
+$\varepsilon'$ is now an error term with a Gaussian distribution with zero
+mean and variance-covariance matrix $\Sigma=\sigma^2((I_n-\rho W)(I_n-\rho W^\top))^{-1}$.
 Note that this variance-covariance encodes spatial dependence in a particular
 way and that this is often referred to as Simultaneous Autoregressive (SAR)
 specification \citep[see, for example,][]{cressie:1993}.%FIXME RSB refer to Ripley 1981 or Cressie. YES, FIXED.
@@ -1628,11 +1628,11 @@ y= \alpha+\beta X+\rho W y +\varepsilon
 This model can be reformulated as
 
 \begin{equation}
-y = (I_n-\rho W)^{-1}(\alpha+\beta X)+\varepsilon ' 
+y = (I_n-\rho W)^{-1}(\alpha+\beta X)+\varepsilon' 
 \label{eq:slm}
 \end{equation}
 \noindent
-where $\varepsilon '$ is a Gaussian term with zero mean and
+where $\varepsilon'$ is a Gaussian term with zero mean and
 variance-covariance matrix with a SAR specification.
 
 In addition to the previous models, sometimes lagged covariates are 
@@ -1646,7 +1646,7 @@ y= \rho W y+ \alpha+\beta X+\gamma W X +\varepsilon
 which leads to
 
 \begin{equation}
-y= (I_n-\rho W)^{-1}(\alpha+\beta X+\gamma W X) +\varepsilon '
+y= (I_n-\rho W)^{-1}(\alpha+\beta X+\gamma W X) +\varepsilon'
 \end{equation}
 \noindent
 Note that this is like our previous model in Equation~\ref{eq:slm} using an extended
@@ -1730,7 +1730,7 @@ adjacency matrix and the value of $\rho$ and the \code{generic0} model is added
 to the formula after the fixed effects. As discussed with the Leroux model, the
 marginal log-likelihood $\pi(\mathbf{y|\rho})$  (note that now we are
 conditioning on $\rho$) is corrected by adding half the log-determinat of
-$(I_n-\rho W')(I_n-\rho W)$.  Argument \code{'...'} is used, again, to pass any other
+$(I_n-\rho W^\top)(I_n-\rho W)$.  Argument \code{'...'} is used, again, to pass any other
 options to \code{inla()}.
 
 Similar wrapper functions can be written for the other models. The functions
@@ -1770,7 +1770,7 @@ R> rrho1 <- seq(0.5, 0.9, len = 20)
 \begin{Sinput}
 R> semmodels = mclapply(rrho1,
 +          function(rho) {
-+                  sem.inla(fform, d = as.data.frame(boston), W = boston.mat, 
++                  sem.inla(fform, d = as.data.frame(boston), W = bmsp,
 +  			rho = rho, family = "gaussian", impacts = FALSE,
 +                          control.family = list(hyper = zero.variance),
 +                          control.predictor = list(compute = TRUE),
@@ -1813,7 +1813,7 @@ R> rrho2 <- seq(0.3, 0.6, len = 20)
 \begin{Sinput}
 R> slmmodels = mclapply(rrho2,
 +          function(rho) {
-+                  slm.inla(form, d = as.data.frame(boston), W = boston.mat, 
++                  slm.inla(form, d = as.data.frame(boston), W = bmsp,
 +  			rho = rho, mmatrix = mmatrix,
 +                          family = "gaussian", impacts = TRUE,
 +                          control.family = list(hyper = zero.variance),
@@ -1849,7 +1849,7 @@ R> rrho3 <- seq(0.4, 0.7, len = 20)
 \begin{Sinput}
 R> sdmmodels = mclapply(rrho3,
 +          function(rho) {
-+                  sdm.inla(form, d = as.data.frame(boston), W = boston.mat, 
++                  sdm.inla(form, d = as.data.frame(boston), W = bmsp,
 +  			rho = rho, mmatrix = mmatrixsdm,
 +                          family = "gaussian", impacts = TRUE,
 +                          control.family = list(hyper = zero.variance),

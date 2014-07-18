@@ -18,11 +18,11 @@ options(prompt = "R> ", continue = "+  ", width = 70, useFancyQuotes = FALSE)
 #TRUE: Run models
 #FALSE: Download results from author's website for Leroux, CARBayes and spatial 
 #	econometrics models
-runleroux <- FALSE
-runcarbayes <- FALSE
-runsem <- FALSE
-runslm <- FALSE
-runsdm <- FALSE
+runleroux <- TRUE
+runcarbayes <- TRUE
+runsem <- TRUE
+runslm <- TRUE
+runsdm <- TRUE
 
 #When all these flags are TRUE
 #> system.time(  Sweave("spatial_inla.Rnw") )
@@ -906,7 +906,7 @@ japgrd$INLALA <-  japinlala$summary.fitted.values[, "mean"]
 @
 
 The former model is the one that we have employed with the Boston data set
-on an irregular lattice. Given that now we are cosidering a regular lattice
+on an irregular lattice. Given that now we are considering a regular lattice
 it is also possible to use a two-dimensional random walk for spatial
 smoothing:
 %FIXME in boston, besag was used, not bym
@@ -1566,7 +1566,7 @@ library("CARBayes")
 bostondf<-as.data.frame(boston)
 attach(bostondf)
 lcarbayes <-  lerouxCAR.re (form2, W = boston.matB, family="gaussian",
-   burnin = 1000,  n.sample = 6000, thin = 5, prior.rho=rlambda)
+   burnin = 1000,  n.sample = 11000, thin = 5, prior.rho=rlambda)
 detach(bostondf)
 rm(bostondf)
 @
@@ -1750,8 +1750,8 @@ This can be reformulated as
 y= \alpha+\beta X+\varepsilon'
 \end{equation}
 \noindent
-$\varepsilon '$ is now an error term with a Gaussian distribution with zero
-mean and variance-covariance matrix $\Sigma=\sigma^2((I_n-\rho W)(I_n-\rho W'))^{-1}$.
+$\varepsilon'$ is now an error term with a Gaussian distribution with zero
+mean and variance-covariance matrix $\Sigma=\sigma^2((I_n-\rho W)(I_n-\rho W^\top))^{-1}$.
 Note that this variance-covariance encodes spatial dependence in a particular
 way and that this is often referred to as Simultaneous Autoregressive (SAR)
 specification \citep[see, for example,][]{cressie:1993}.%FIXME RSB refer to Ripley 1981 or Cressie. YES, FIXED.
@@ -1768,11 +1768,11 @@ y= \alpha+\beta X+\rho W y +\varepsilon
 This model can be reformulated as
 
 \begin{equation}
-y = (I_n-\rho W)^{-1}(\alpha+\beta X)+\varepsilon ' 
+y = (I_n-\rho W)^{-1}(\alpha+\beta X)+\varepsilon' 
 \label{eq:slm}
 \end{equation}
 \noindent
-where $\varepsilon '$ is a Gaussian term with zero mean and
+where $\varepsilon'$ is a Gaussian term with zero mean and
 variance-covariance matrix with a SAR specification.
 
 In addition to the previous models, sometimes lagged covariates are 
@@ -1786,7 +1786,7 @@ y= \rho W y+ \alpha+\beta X+\gamma W X +\varepsilon
 which leads to
 
 \begin{equation}
-y= (I_n-\rho W)^{-1}(\alpha+\beta X+\gamma W X) +\varepsilon '
+y= (I_n-\rho W)^{-1}(\alpha+\beta X+\gamma W X) +\varepsilon'
 \end{equation}
 \noindent
 Note that this is like our previous model in Equation~\ref{eq:slm} using an extended
@@ -1875,7 +1875,7 @@ adjacency matrix and the value of $\rho$ and the \code{generic0} model is added
 to the formula after the fixed effects. As discussed with the Leroux model, the
 marginal log-likelihood $\pi(\mathbf{y|\rho})$  (note that now we are
 conditioning on $\rho$) is corrected by adding half the log-determinat of
-$(I_n-\rho W')(I_n-\rho W)$.  Argument \code{'...'} is used, again, to pass any other
+$(I_n-\rho W^\top)(I_n-\rho W)$.  Argument \code{'...'} is used, again, to pass any other
 options to \code{inla()}.
 
 Similar wrapper functions can be written for the other models. The functions
@@ -1918,7 +1918,7 @@ rrho1 <- seq(0.5, 0.9, len = 20)
 <<semmodels, eval=FALSE>>=
 semmodels = mclapply(rrho1,
         function(rho) {
-                sem.inla(fform, d = as.data.frame(boston), W = boston.mat, 
+                sem.inla(fform, d = as.data.frame(boston), W = bmsp,
 			rho = rho, family = "gaussian", impacts = FALSE,
                         control.family = list(hyper = zero.variance),
                         control.predictor = list(compute = TRUE),
@@ -1968,7 +1968,7 @@ rrho2 <- seq(0.3, 0.6, len = 20)
 <<slmmodels, eval=FALSE>>=
 slmmodels = mclapply(rrho2,
         function(rho) {
-                slm.inla(form, d = as.data.frame(boston), W = boston.mat, 
+                slm.inla(form, d = as.data.frame(boston), W = bmsp,
 			rho = rho, mmatrix = mmatrix,
                         family = "gaussian", impacts = TRUE,
                         control.family = list(hyper = zero.variance),
@@ -2011,7 +2011,7 @@ rrho3 <- seq(0.4, 0.7, len = 20)
 <<sdmmodels, eval=FALSE, keep.source=TRUE>>=
 sdmmodels = mclapply(rrho3,
         function(rho) {
-                sdm.inla(form, d = as.data.frame(boston), W = boston.mat, 
+                sdm.inla(form, d = as.data.frame(boston), W = bmsp,
 			rho = rho, mmatrix = mmatrixsdm,
                         family = "gaussian", impacts = TRUE,
                         control.family = list(hyper = zero.variance),
