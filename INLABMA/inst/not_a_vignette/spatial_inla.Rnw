@@ -1515,7 +1515,7 @@ save(file="lerouxmodels.RData", list=c("lerouxmodels"))
 }else{
 	#Jpg extension used because of a server side restriction 
 	if(!file.exists("lerouxmodels.RData"))
-	download.file("http://www.uclm.es/profesorado/vgomez/JSSpaper/lerouxmodels.jpg", "lerouxmodels.RData")
+	download.file("http://www.uclm.es/profesorado/vgomez/JSS1171/lerouxmodels.jpg", "lerouxmodels.RData")
 
 	load("lerouxmodels.RData")
 }
@@ -1577,7 +1577,7 @@ save(file="lcarbayes.RData", list=c("lcarbayes"))
 } else{
 	#Jpg extension used becuase of a server side restriction 
 	if(!file.exists("lcarbayes.RData"))
-		download.file("http://www.uclm.es/profesorado/vgomez/JSSpaper/lcarbayes.jpg", "lcarbayes.RData")
+		download.file("http://www.uclm.es/profesorado/vgomez/JSS1171/lcarbayes.jpg", "lcarbayes.RData")
 
 	load("lcarbayes.RData")
 }
@@ -1934,7 +1934,7 @@ save(file="semmodels.RData", list=c("semmodels"))
 } else {
 	#Jpg extension used becuase of a server side restriction 
 	if(!file.exists("semmodels.RData"))
-		download.file("http://www.uclm.es/profesorado/vgomez/JSSpaper/semmodels.jpg", "semmodels.RData")
+		download.file("http://www.uclm.es/profesorado/vgomez/JSS1171/semmodels.jpg", "semmodels.RData")
 
 	load("semmodels.RData")
 }
@@ -1986,7 +1986,7 @@ save(file="slmmodels.RData", list=c("slmmodels"))
 } else {
 	#Jpg extension used becuase of a server side restriction 
 	if(!file.exists("slmmodels.RData"))
-		download.file("http://www.uclm.es/profesorado/vgomez/JSSpaper/slmmodels.jpg", "slmmodels.RData")
+		download.file("http://www.uclm.es/profesorado/vgomez/JSS1171/slmmodels.jpg", "slmmodels.RData")
 
 	load("slmmodels.RData")
 }
@@ -2028,7 +2028,7 @@ save(file="sdmmodels.RData", list=c("sdmmodels"))
 } else{
 	#Jpg extension used becuase of a server side restriction 
 	if(!file.exists("sdmmodels.RData"))
-		download.file("http://www.uclm.es/profesorado/vgomez/JSSpaper/sdmmodels.jpg", "sdmmodels.RData")
+		download.file("http://www.uclm.es/profesorado/vgomez/JSS1171/sdmmodels.jpg", "sdmmodels.RData")
 
 	load("sdmmodels.RData")
 }
@@ -2107,7 +2107,6 @@ We would like to thank Duncan Lee and Lola Ugarte for their help and comments
 on how to fit the Leroux model with \pkg{R-INLA}.
 
 
-%\bibliography{INLA_econometrics,RS_handbook_SpatStat_INLA,JSSpaper}
 \bibliography{biblio.bib}
 
 
