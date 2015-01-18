@@ -4,5 +4,7 @@ export(logprrho, rescalemarg)
 
 export(mysplinefun, BMArho, INLABMA)
 
+import(parallel)
+import(sp)
 import(spdep)
 

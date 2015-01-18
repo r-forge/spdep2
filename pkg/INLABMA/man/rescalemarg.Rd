@@ -43,7 +43,9 @@ Virgilio Gómez-Rubio <virgilio.gomez@uclm.es>
 \code{inla.tmarginal}
 }
 \examples{
-\dontrun{
+
+if(requireNamespace("INLA", quietly = TRUE)) {
+require(INLA)
 x<-seq(-3,3, by=.01)
 xx<-cbind(x, dnorm(x))
 

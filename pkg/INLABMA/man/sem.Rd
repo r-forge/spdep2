@@ -89,7 +89,11 @@ Virgilio Gómez-Rubio <virgilio.gomez@uclm.es>
 %Example taken from the spdep::columbus manual page
 \examples{
 
-\dontrun{require(spdep)
+\dontrun{
+
+if(requireNamespace("INLA", quietly = TRUE)) {
+require(INLA)
+require(spdep)
 
 data(columbus)
 
@@ -104,7 +108,7 @@ colsdmml <- lagsarlm(CRIME ~ INC + HOVAL, data=columbus, lw, method="eigen",
 	type="mixed", quiet=FALSE)
 
 #Define grid on rho
-rrho<-seq(-1, .95, length.out=40)
+rrho<-seq(0, .95, length.out=40)
 
 #Adjacency matrix
 W <- as(as_dgRMatrix_listw(nb2listw(col.gal.nb)), "CsparseMatrix")
@@ -115,6 +119,8 @@ columbus$idx<-1:nrow(columbus)
 form<- CRIME ~ INC + HOVAL
 
 zero.variance = list(prec=list(initial = 25, fixed=TRUE))
+
+
 
 seminla<-mclapply(rrho, function(rho){
 
@@ -175,6 +181,8 @@ abline(v=colslmml$rho, col="red", lty=2)
 abline(v=colsdmml$rho, col="red", lty=3)
 #Legend
 legend(-1,5, c("SEM", "SLM", "SDM"), lty=1:3)
+}
+
 }
 
 }
