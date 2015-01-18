@@ -48,9 +48,6 @@ The marginal log-likelihood is corrected to add half the log-determinant of the 
 \value{
 An INLA object.
 }
-\references{
-Lerout et al. 1999.
-}
 \author{
 Virgilio Gómez-Rubio <virgilio.gomez@uclm.es>
 }
@@ -65,9 +62,17 @@ Virgilio Gómez-Rubio <virgilio.gomez@uclm.es>
 %%}
 
 \references{
-  Roger S. Bivand, Virgilio Gomez-Rubio, Havard Rue (2015). Spatial
+  Leroux B, Lei X, Breslow N (1999). Estimation of Disease Rates in Small 
+  Areas: A New Mixed Model for Spatial Dependence. In M Halloran, D Berry 
+  (eds.), Statistical Models in Epidemiology, the Environment and Clinical
+  Trials, pp. 135-178. Springer-Verlag, New York.
+
+  Roger S. Bivand, Virgilio Gómez-Rubio, Håvard Rue (2014). Approximate 
+  Bayesian inference for spatial econometrics models. Spatial Statistics, 
+  Volume 9, 146-165.
+
+  Roger S. Bivand, Virgilio Gómez-Rubio, Håvard Rue (2015). Spatial
   Data Analysis with R-INLA with Some Extensions. Journal of
-  Statistical Software, 63(20), 1-31. URL
-  http://www.jstatsoft.org/v63/i20/.
+  Statistical Software, 63(20), 1-31. URL http://www.jstatsoft.org/v63/i20/.
 }
 \keyword{models}

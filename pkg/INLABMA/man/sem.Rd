@@ -73,7 +73,14 @@ the variance-covariance matrix of the error term or random effects.
 An \code{inla} object.
 }
 \references{
-Bivand et al. (2013).
+  Roger S. Bivand, Virgilio Gómez-Rubio, Håvard Rue (2014). Approximate 
+  Bayesian inference for spatial econometrics models. Spatial Statistics, 
+  Volume 9, 146-165.
+
+  Roger S. Bivand, Virgilio Gómez-Rubio, Håvard Rue (2015). Spatial
+  Data Analysis with R-INLA with Some Extensions. Journal of
+  Statistical Software, 63(20), 1-31. URL http://www.jstatsoft.org/v63/i20/.
+
 }
 \author{
 Virgilio Gómez-Rubio <virgilio.gomez@uclm.es>
