@@ -115,7 +115,7 @@ colsdmml <- lagsarlm(CRIME ~ INC + HOVAL, data=columbus, lw, method="eigen",
 	type="mixed", quiet=FALSE)
 
 #Define grid on rho
-rrho<-seq(0, .95, length.out=40)
+rrho<-seq(-1, .95, length.out=40)
 
 #Adjacency matrix
 W <- as(as_dgRMatrix_listw(nb2listw(col.gal.nb)), "CsparseMatrix")
@@ -136,8 +136,8 @@ seminla<-mclapply(rrho, function(rho){
                         control.family = list(hyper = zero.variance),
                         control.predictor=list(compute=TRUE),
                         control.compute=list(dic=TRUE, cpo=TRUE),
-                        control.inla=list(print.joint.hyper=TRUE, 
-				tolerance=1e-20, h=1e-6),
+                        control.inla=list(print.joint.hyper=TRUE), 
+				#tolerance=1e-20, h=1e-6),
 			verbose=FALSE
                 )
 
@@ -152,8 +152,8 @@ slminla<-mclapply(rrho, function(rho){
                         control.family = list(hyper = zero.variance),
                         control.predictor=list(compute=TRUE),
                         control.compute=list(dic=TRUE, cpo=TRUE),
-                        control.inla=list(print.joint.hyper=TRUE, 
-				tolerance=1e-20, h=1e-6),
+                        control.inla=list(print.joint.hyper=TRUE), 
+				#tolerance=1e-20, h=1e-6),
 			verbose=FALSE
                 )
 })
@@ -166,8 +166,8 @@ sdminla<-mclapply(rrho, function(rho){
                         control.family = list(hyper = zero.variance),
                         control.predictor=list(compute=TRUE),
                         control.compute=list(dic=TRUE, cpo=TRUE),
-                        control.inla=list(print.joint.hyper=TRUE, 
-				tolerance=1e-20, h=1e-6),
+                        control.inla=list(print.joint.hyper=TRUE), 
+				#tolerance=1e-20, h=1e-6),
 			verbose=FALSE
                 )
 })
