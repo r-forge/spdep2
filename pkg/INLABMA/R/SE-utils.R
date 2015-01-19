@@ -15,7 +15,7 @@ sem.inla<-function(formula, d, W, rho, improve=TRUE, impacts=FALSE, fhyper=NULL,
 {
 	#require(INLA)
 
-	IrhoW<-Diagonal(nrow(W))-rho*W
+	IrhoW<-Matrix::Diagonal(nrow(W))-rho*W
 	#IrhoW2<-t(IrhoW)%*%IrhoW
 	IrhoW2<-Matrix::crossprod(IrhoW)
 
@@ -37,10 +37,10 @@ sem.inla<-function(formula, d, W, rho, improve=TRUE, impacts=FALSE, fhyper=NULL,
 	}
 
 
-	res<-inla(formula, data=d, ...)
+	res<-INLA::inla(formula, data=d, ...)
 
 	if(improve)
-		res<-inla.rerun(res)#inla.hyperpar(res, diff.logdens=20)
+		res<-INLA::inla.rerun(res)#inla.hyperpar(res, diff.logdens=20)
 
 	#Compute log-determinat to correct the marginal-loglikelihood
 	res$logdet<-as.numeric(Matrix::determinant(IrhoW2)$modulus)
@@ -63,7 +63,7 @@ sem.inla<-function(formula, d, W, rho, improve=TRUE, impacts=FALSE, fhyper=NULL,
 
 			mm<-lapply(res$impacts$marginals.impacts,
 			function(X){
-	inla.tmarginal(function(x){Dfm*x}, X)
+	INLA::inla.tmarginal(function(x){Dfm*x}, X)
 			})
 
 	names(mm)<-names(res$impacts$marginals.impacts)
@@ -92,7 +92,7 @@ slm.inla<-function(formula, d, W, rho, mmatrix=NULL, improve=TRUE,
 {
 	#require(INLA)
 
-	IrhoW<-Diagonal(nrow(W))-rho*W
+	IrhoW <- Matrix::Diagonal(nrow(W))-rho*W
 	#IrhoW2<-t(IrhoW)%*%IrhoW
 	IrhoW2<-Matrix::crossprod(IrhoW)
 
@@ -121,11 +121,11 @@ slm.inla<-function(formula, d, W, rho, mmatrix=NULL, improve=TRUE,
 	fmla<-as.formula(fmla)
 
 
-	res<-inla(fmla, data=d2, ...)
+	res <- INLA::inla(fmla, data=d2, ...)
 
 
 	if(improve)
-		res<-inla.rerun(res)#inla.hyperpar(res, diff.logdens=20)
+		res <- INLA::inla.rerun(res)#inla.hyperpar(res, diff.logdens=20)
 
 	#Compute log-determinat to correct the marginal-loglikelihood
 	res$logdet<-as.numeric(Matrix::determinant(IrhoW2)$modulus)
@@ -145,7 +145,7 @@ slm.inla<-function(formula, d, W, rho, mmatrix=NULL, improve=TRUE,
 		{
 		Df<-dnorm(res$summary.linear.predictor[,1])
 		wtotal<-mean(Df)*1/(1-rho)
-		wdirect<-trIrhoWinv(W, rho, Df=Diagonal(x=Df))/nrow(W)
+		wdirect<-trIrhoWinv(W, rho, Df = Matrix::Diagonal(x=Df))/nrow(W)
 		}
 		windirect<-wtotal-wdirect
 
@@ -188,7 +188,7 @@ sdm.inla<-function(formula, d, W, rho, mmatrix=NULL, intercept=TRUE,
 
 	#require(INLA)
 
-	IrhoW<-Diagonal(nrow(W))-rho*W
+	IrhoW <- MAtrix::Diagonal(nrow(W))-rho*W
 	#IrhoW2<-t(IrhoW)%*%IrhoW
 	IrhoW2<-Matrix::crossprod(IrhoW)
 
@@ -246,7 +246,7 @@ sdm.inla<-function(formula, d, W, rho, mmatrix=NULL, intercept=TRUE,
 		#FIXME: Update the following code
 		Df<-dnorm(res$summary.linear.predictor[,1])
                 wtotal<-mean(Df)*rep(1/(1-rho), 2)
-                wdirect<-c(trIrhoWinv(W, rho, Df=Diagonal(x=Df)), trIrhoWinv(W, rho, 1, Df=Diagonal(x=Df)))/nrow(W)
+                wdirect<-c(trIrhoWinv(W, rho, Df = Matrix::Diagonal(x=Df)), trIrhoWinv(W, rho, 1, Df = Matrix::Diagonal(x=Df)))/nrow(W)
 		}
                 windirect<-wtotal-wdirect
 
@@ -256,7 +256,7 @@ sdm.inla<-function(formula, d, W, rho, mmatrix=NULL, intercept=TRUE,
 		lc.total.impacts<-lapply(1:ncov, function(X){
 			lc<-list(a=wtotal[1], b=wtotal[2])
 			names(lc)<-xnam[1+c(X, X+ncov)]
-			inla.make.lincomb(lc)
+			INLA::inla.make.lincomb(lc)
 		})
 		lc.total.impacts<-do.call(c, lc.total.impacts)
 		names(lc.total.impacts)<-paste("totalimp.", xnam[1+1:ncov], sep="")
@@ -266,7 +266,7 @@ sdm.inla<-function(formula, d, W, rho, mmatrix=NULL, intercept=TRUE,
 		lc.direct.impacts<-lapply(1:ncov, function(X){
 			lc<-list(a=wdirect[1], b=wdirect[2])
 			names(lc)<-xnam[1+c(X, X+ncov)]
-			inla.make.lincomb(lc)
+			INLA::inla.make.lincomb(lc)
 		})
 		lc.direct.impacts<-do.call(c, lc.direct.impacts)
 		names(lc.direct.impacts)<-paste("directimp.", xnam[1+1:ncov], sep="")
@@ -275,7 +275,7 @@ sdm.inla<-function(formula, d, W, rho, mmatrix=NULL, intercept=TRUE,
 		lc.indirect.impacts<-lapply(1:ncov, function(X){
 			lc<-list(a=windirect[1], b=windirect[2])
 			names(lc)<-xnam[1+c(X, X+ncov)]
-			inla.make.lincomb(lc)
+			INLA::inla.make.lincomb(lc)
 		})
 		lc.indirect.impacts<-do.call(c, lc.indirect.impacts)
 		names(lc.indirect.impacts)<-paste("indirectimp.", xnam[1+1:ncov], sep="")
@@ -287,17 +287,17 @@ sdm.inla<-function(formula, d, W, rho, mmatrix=NULL, intercept=TRUE,
 		#names(lc)<-xnam[-1]
 		#lc.impacts = inla.make.lincomb(lc=lc)
 
-		res<-inla(fmla, data=d2, lincomb=lc.impacts, ...)
+		res <- INLA::inla(fmla, data=d2, lincomb=lc.impacts, ...)
 	}
 	else
 	{
-		res<-inla(fmla, data=d2, ...)
+		res <- INLA::inla(fmla, data=d2, ...)
 	}
 
 
 
 	if(improve)
-		res<-inla.rerun(res)#inla.hyperpar(res, diff.logdens=20)
+		res <- INLA::inla.rerun(res)#inla.hyperpar(res, diff.logdens=20)
 
 	#Compute log-determinat to correct the marginal-loglikelihood
 	res$logdet<-as.numeric(Matrix::determinant(IrhoW2)$modulus)
@@ -348,7 +348,7 @@ logprrho<-function(rho)
 #direct: User direct method, i.e., matrix multiplication, etc.
 #Df:Diagonal matrix used to compute the impacts in the Probit model
 #      only used if direct=TRUE.
-trIrhoWinv<-function(W, rho, offset=0, order=20, direct=TRUE, Df=Diagonal(nrow(W)))
+trIrhoWinv<-function(W, rho, offset=0, order=20, direct=TRUE, Df = Matrix::Diagonal(nrow(W)))
 {
 	if(!direct)
 	{
@@ -361,7 +361,7 @@ trIrhoWinv<-function(W, rho, offset=0, order=20, direct=TRUE, Df=Diagonal(nrow(W
 	else
 	{
 		tr<-0
-		WW<-Diagonal(nrow(W))
+		WW <- Matrix::Diagonal(nrow(W))
 		if(offset>0)
 		{
 			for(i in 1:(offset))
@@ -388,7 +388,7 @@ rescalemarg<-function(xx, w)
 #	xx[,1]<-xx[,1]*w
 #	xx[,2]<-xx[,2]/w
 	#USe inla.marginal.transform
-	xx<-inla.tmarginal(function(x){w*x}, xx)
+	xx <- INLA::inla.tmarginal(function(x){w*x}, xx)
 
 	return(xx)
 }
@@ -413,8 +413,8 @@ recompute.impacts<-function(obj, impacts=c("total", "direct", "indirect"))
 		stab<-obj[[sumname]]
 		for(i in 1:nrow(stab))
 		{
-	xmean<-inla.emarginal(function(x){x}, obj[[margname]][[i]])
-	xsd<-sqrt(inla.emarginal(function(x){(x-xmean)^2}, obj[[margname]][[i]]))
+	xmean <- INLA::inla.emarginal(function(x){x}, obj[[margname]][[i]])
+	xsd<-sqrt(INLA::inla.emarginal(function(x){(x-xmean)^2}, obj[[margname]][[i]]))
 
 		stab[i,1:2]<-c(xmean, xsd)
 		}

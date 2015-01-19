@@ -38,11 +38,11 @@ leroux.inla<-function(formula, d, W, lambda, improve=TRUE, fhyper=NULL, ...)
 	}
 
 
-	res<-inla(formula, data=d, ...)
+	res <- INLA::inla(formula, data=d, ...)
 
 
 	if(improve)
-		res<-inla.rerun(res)
+		res <- INLA::inla.rerun(res)
 
 	#Compute log-determinat to correct the marginal-loglikelihood
 	res$logdet<-as.numeric(Matrix::determinant(Q)$modulus)
