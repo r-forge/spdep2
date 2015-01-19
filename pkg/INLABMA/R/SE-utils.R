@@ -188,7 +188,7 @@ sdm.inla<-function(formula, d, W, rho, mmatrix=NULL, intercept=TRUE,
 
 	#require(INLA)
 
-	IrhoW <- MAtrix::Diagonal(nrow(W))-rho*W
+	IrhoW <- Matrix::Diagonal(nrow(W))-rho*W
 	#IrhoW2<-t(IrhoW)%*%IrhoW
 	IrhoW2<-Matrix::crossprod(IrhoW)
 
