@@ -628,7 +628,7 @@ Call:
 
 Time used:
  Pre-processing    Running inla Post-processing           Total 
-         0.5950          2.3543          0.1345          3.0838 
+         0.4900          1.5133          0.0951          2.0984 
 
 Fixed effects:
                mean     sd 0.025quant 0.5quant 0.975quant    mode kld
@@ -653,19 +653,19 @@ Name	  Model
 
 Model hyperparameters:
                                         mean      sd       
-Precision for the Gaussian observations 1.626e+04 1.707e+04
-Precision for idx                       1.222e+01 7.817e-01
+Precision for the Gaussian observations 1.638e+04 1.724e+04
+Precision for idx                       1.222e+01 7.818e-01
                                         0.025quant 0.5quant 
-Precision for the Gaussian observations 7.582e+02  1.096e+04
+Precision for the Gaussian observations 7.689e+02  1.103e+04
 Precision for idx                       1.074e+01  1.220e+01
                                         0.975quant mode     
-Precision for the Gaussian observations 6.180e+04  1.816e+03
+Precision for the Gaussian observations 6.239e+04  1.847e+03
 Precision for idx                       1.381e+01  1.216e+01
 
-Expected number of effective parameters(std dev): 501.85(5.348)
+Expected number of effective parameters(std dev): 501.86(5.316)
 Number of equivalent replicates : 1.008 
 
-Marginal Likelihood:  -212.85 
+Marginal Likelihood:  -212.86 
 Posterior marginals for linear predictor and fitted values computed
 \end{Soutput}
 \end{Schunk}
@@ -1530,29 +1530,29 @@ means of the fitted values.
 %(-0.9, computed using the MCMC samples) which may cause some confunding in the
 %model.
 
-% latex table generated in R 3.1.0 by xtable 1.7-3 package
-% Fri Jul 18 13:30:11 2014
+% latex table generated in R 3.1.1 by xtable 1.7-3 package
+% Sun Aug 17 19:27:10 2014
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrr}
   \hline
  & Mean (INLA) & SD (INLA) & Mean (MCMC) & SD (MCMC) \\ 
   \hline
-(Intercept) & 3.8055 & 0.1770 & 3.7879 & 0.1611 \\ 
-  CRIM & -0.0076 & 0.0011 & -0.0076 & 0.0011 \\ 
+(Intercept) & 3.8056 & 0.1770 & 3.7933 & 0.1699 \\ 
+  CRIM & -0.0076 & 0.0011 & -0.0077 & 0.0010 \\ 
   ZN & 0.0003 & 0.0005 & 0.0003 & 0.0004 \\ 
-  INDUS & -0.0006 & 0.0023 & -0.0003 & 0.0023 \\ 
-  CHAS1 & -0.0338 & 0.0302 & -0.0323 & 0.0300 \\ 
-  I(NOX\verb|^|2) & -0.4374 & 0.1412 & -0.4219 & 0.1406 \\ 
+  INDUS & -0.0006 & 0.0023 & -0.0009 & 0.0024 \\ 
+  CHAS1 & -0.0338 & 0.0302 & -0.0335 & 0.0302 \\ 
+  I(NOX\verb|^|2) & -0.4374 & 0.1412 & -0.4201 & 0.1419 \\ 
   I(RM\verb|^|2) & 0.0099 & 0.0011 & 0.0099 & 0.0011 \\ 
-  AGE & -0.0011 & 0.0005 & -0.0011 & 0.0005 \\ 
-  log(DIS) & -0.1663 & 0.0616 & -0.1620 & 0.0597 \\ 
-  log(RAD) & 0.0506 & 0.0205 & 0.0512 & 0.0195 \\ 
+  AGE & -0.0011 & 0.0005 & -0.0012 & 0.0005 \\ 
+  log(DIS) & -0.1663 & 0.0616 & -0.1497 & 0.0608 \\ 
+  log(RAD) & 0.0506 & 0.0205 & 0.0501 & 0.0197 \\ 
   TAX & -0.0003 & 0.0001 & -0.0003 & 0.0001 \\ 
-  PTRATIO & -0.0164 & 0.0053 & -0.0163 & 0.0054 \\ 
+  PTRATIO & -0.0164 & 0.0053 & -0.0166 & 0.0052 \\ 
   B & 0.0006 & 0.0001 & 0.0006 & 0.0001 \\ 
-  log(LSTAT) & -0.2534 & 0.0227 & -0.2525 & 0.0234 \\ 
-  lambda & 0.9520 & 0.0315 & 0.9423 & 0.0326 \\ 
+  log(LSTAT) & -0.2534 & 0.0227 & -0.2542 & 0.0227 \\ 
+  lambda & 0.9519 & 0.0317 & 0.9410 & 0.0339 \\ 
    \hline
 \end{tabular}
 \caption{Point estimates of fixed effects and $\lambda$ using INLA and MCMC.} 
