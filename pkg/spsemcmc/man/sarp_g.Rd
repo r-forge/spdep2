@@ -85,14 +85,12 @@ a structure:
 \source{
 Spatial Econometrics Toolbox, Matlab
 }
-\reference{
+\references{
 LeSage and Pace (2009) Chapter 10 on Bayesian estimation 
              of spatial probit regression models.
 }
 
-\seealso {
-}
 \examples{
-see test_sarp
+#see test_sarp
 }
 \keyword{Spatial,Econometrics,Bayesian}

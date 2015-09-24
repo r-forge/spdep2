@@ -81,15 +81,13 @@ a structure:
 \source{
 Spatial Econometrics Toolbox, Matlab
 }
-\reference{
+\references{
 James P. LeSage, "Bayesian Estimation of Limited Dependent
              variable Spatial Autoregressive Models", 
              Geographical Analysis, 2000, Vol. 32, pp. 19-35.
 }
 
-\seealso {
-}
 \examples{
-see test_semt
+#see test_semt
 }
 \keyword{Spatial,Econometrics,Bayesian}

@@ -74,13 +74,11 @@ a structure:
 \source{
 Spatial Econometrics Toolbox, Matlab
 }
-\reference{
+\references{
 LeSage and Pace (2009) 
 }
 
-\seealso {
-}
 \examples{
-see test_sart
+#see test_sart
 }
 \keyword{Spatial,Econometrics,Bayesian}

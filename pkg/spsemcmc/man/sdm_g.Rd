@@ -100,14 +100,12 @@ a structure:
 \source{
 Spatial Econometrics Toolbox, Matlab
 }
-\reference{
+\references{
 LeSage and Pace (2009) Introduction to Spatial Econometrics
  Chapter 5 on Bayesian spatial regression models.
 }
 
-\seealso {
-}
 \examples{
-see test_sdm
+#see test_sdm
 }
 \keyword{Spatial,Econometrics,Bayesian}

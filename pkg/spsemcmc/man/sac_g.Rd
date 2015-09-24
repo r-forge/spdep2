@@ -98,15 +98,13 @@ a structure:
 \source{
 Spatial Econometrics Toolbox, Matlab
 }
-\reference{
+\references{
 James P. LeSage, `Bayesian Estimation of Spatial Autoregressive
              Models',  International Regional Science Review, 1997 
              Volume 20, number 1\&2, pp. 113-129.
 }
 
-\seealso {
-}
 \examples{
-see test_sac
+#see test_sac
 }
 \keyword{Spatial,Econometrics,Bayesian}
