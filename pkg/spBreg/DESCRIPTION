@@ -1,0 +1,12 @@
+Package: spBreg
+Version: 0.0-1
+Date: 2016-01-26
+Title: Bayesian spatial regression
+Authors@R:c(person("Roger", "Bivand", role = c("cre", "aut"), email = "Roger.Bivand@nhh.no"), person("Abhirup", "Mallik", role = "aut"), person("Virgilio", "Gómez-Rubio", role = "aut"))
+Depends: R(>= 3.2.0), spdep
+Imports: coda
+Suggests: R.matlab
+Description: Bayesian spatial regression with sparse matrices is a package
+ to complement existing model fitting functions in spdep.
+License: GPL (>= 2)
+
