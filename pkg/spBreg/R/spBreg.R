@@ -1,75 +1,14 @@
-#sar_parse <- function(prior,k){
-##% set defaults
-#
-#eflag = 0;    # % default to not computing eigenvalues
-#ldetflag = 1;  #% default to 1999 Pace and Barry MC determinant approx
-#mflag = 1;     #% default to compute log marginal likelihood
-#order = 50;    #% there are parameters used by the MC det approx
-#iter = 30;     #% defaults based on Pace and Barry recommendation
-#rmin = -1;     #% use -1,1 rho interval as default
-#rmax = 1;
-#detval = 0;    #% just a flag
-#rho = 0.5;
-#sige = 1.0;
-#rval = 4;
-#mm = 0;
-#kk = 0;
-#nu = 0;
-#d0 = 0;
-#a1 = 1.01;
-#a2 = 1.01;
-#c_beta = matrix(rep(0,k),k,1); #defuse prior for beta
-#Tbeta = diag(k)*1e+12; ## Abhirup: ??
-#prior_beta = 0;   #% flag for diffuse prior on beta
-#novi_flag = 0; #% do vi-estimates
-#inform_flag = 0;
-#
-## check with user input
-#if(length(prior$novi)!=0) novi_flag=prior$novi
-#if(length(prior$nu)!=0) nu=prior$nu
-#if(length(prior$d0)!=0) d0=prior$d0
-#if(length(prior$rval)!=0) rval=prior$rval
-#if(length(prior$a1)!=0) a1=prior$a1
-#if(length(prior$a2)!=0) a2=prior$a2
-#if(length(prior$m)!=0){ 
-#	mm=prior$m
-#	kk=prior$k
-#	rval=rgamma(1,mm,1/kk)
-#	}
-#if(length(prior$m)!=0){ 
-#	c=prior$beta
-#	inform_flag=1
-#	}
-#if(length(prior$rmin)!=0) {
-#	rmin=prior$rmin
-#	eflag=0
-#	}
-#if(length(prior$rmax)!=0) {
-#	rmin=prior$rmax
-#	eflag=0
-#	}
-#if(length(prior$lndet)!=0){
-#	detval = prior$lndet;
-#	ldetflag = -1;
-#	eflag = 0;
-#	rmin = detval; ##detval[1,1]
-#	nr = length(detval);
-#	rmax = detval[nr]; ###detval[nr,1]
-#	}
-#if(length(prior$lflag)!=0){
-#	tst = prior$lflag;
-#        if (tst == 0)        ldetflag = 0; 
-#        if (tst == 1)        ldetflag = 1; 
-#        if (tst == 2)        ldetflag = 2;
-#	}
-#if(length(prior$order)!=0) order=prior$order
-#if(length(prior$iter)!=0) iter=prior$iter
-#if(length(prior$eig)!=0) eflag=prior$eig
-#return (c(nu,d0,rval,mm,kk,rho,sige,rmin,rmax,detval,ldetflag,eflag,order,iter,novi_flag,c,Tbeta,inform_flag,a1,a2))
-#}
+spBreg_lag <- function(formula, data, listw, control=list()) {
+#control
+#create_WX
+#bounds
+#homoskedastic
+#ldets handling
+#dflag MH/integration
 
-#### start sar_g #####
-sar_g <- function(y,x,W,ndraw,nomit,prior){
+#run loop(s)
+
+#sar_g <- function(y,x,W,ndraw,nomit,prior){
 
 
 #% error checking on inputs
@@ -81,93 +20,19 @@ n2=nrow(W)
 n4=ncol(W)
 
 
-#time1 = 0
-#time2 = 0
-#time3 = 0
-#time4 = 0
 results <-list()
 results$nobs  = n;
 results$nvar  = k;
 results$y = y; 
   
-#if nargin == 5
-#    prior.lflag = 1;
-#end;
-
-#[nu,d0,rval,mm,kk,rho,sige,rmin,rmax,detval,ldetflag, ...
-#eflag,order,iter,novi_flag,c,Tbeta,inform_flag,a1,a2] = sar_parse(prior,k);
     
-#temp=sar_parse(prior,k)
 pprior=prior_parse(prior,k)
 attach(pprior)
-#nu=temp[1]
-#d0=temp[2]
-#rval=temp[3]
-#mm=temp[4]
-#kk=temp[5]
-#rho=temp[6]
-#sige=temp[7]
-#rmin=temp[8]
-#rmax=temp[9]
-#detval=temp[10]
-#ldetflag=temp[11]
-#eflag=temp[12]
-#order=temp[13]
-#iter=temp[14]
-#novi_flag=temp[15]
-#c=temp[16]
-#Tbeta=temp[17]
-#inform_flag=temp[18]
-#a1=temp[19]
-#a2=temp[20]
-
-# check if the user handled the intercept term okay
-#FIXME: We may change this later using the formula, for example
 n = nrow(y)
-if (sum(x[,1]) != n)
-{
-	tst = apply(x, 2, sum);#we may have no intercept term
-
-	ind = which(tst == n);#we do have an intercept term
-	if(length(ind) > 0)
-	{
-		stop('sar_g: intercept term must be in first column of the x-matrix');
-	}
-	else
-	{
-		if(length(ind) == 0)# case of no intercept term
-		{
-			cflag = 0;
-			p = ncol(x);
-		}
-	}
-}
-else
-{
-	if(sum(x[,1]) == n)# % we have an intercept in the right place
-	{
-		cflag = 1;
-		p = ncol(x)-1;
-	}
-}
      
 results$cflag = cflag;
 results$p = p;
     
-if(n1!=n2)
-{
-	stop('sar_g: wrong size weight matrix W');
-}
-else
-{
-	if(n1!=n)
-		stop('sar_g: wrong size weight matrix W');
-}
-
-#    [nchk junk] = size(y);
-nchk <- nrow(y)
-if(nchk!=n)
-	stop('sar_g: wrong size y vector input');
 
 results$order = order;
 results$iter = iter;
@@ -509,5 +374,10 @@ results$rdraw = 0;
 
 detach(pprior)
 return(results)
-}#### end of sar_g
+#### end of sar_g
 
+
+#output mcmc object
+#do impacts externally
+#do summary externally
+}
