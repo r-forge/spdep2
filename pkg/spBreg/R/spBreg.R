@@ -1,9 +1,65 @@
-spBreg_lag <- function(formula, data, listw, control=list()) {
+spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
+    zero.policy=NULL, control=list()) {
+    timings <- list()
+    .ptime_start <- proc.time()
+# FIXME
 #control
+    con <- list(tol.opt=.Machine$double.eps^0.5, ldet_method="eigen",
+        Imult=2, cheb_q=5, MC_p=16L, MC_m=30L, super=NULL, spamPivot="MMD",
+        in_coef=0.1, type="MC", correct=TRUE, trunc=TRUE,
+        SE_method="LU", nrho=200, interpn=2000, SElndet=NULL, LU_order=FALSE,
+        pre_eig=NULL, interval=c(-1, 1))
+    nmsC <- names(con)
+    con[(namc <- names(control))] <- control
+    if (length(noNms <- namc[!namc %in% nmsC])) 
+        warning("unknown names in control: ", paste(noNms, collapse = ", "))
+    if (is.null(zero.policy))
+        zero.policy <- get.ZeroPolicyOption()
+    stopifnot(is.logical(zero.policy))
+    if (class(formula) != "formula") formula <- as.formula(formula)
+    mt <- terms(formula, data = data)
+    mf <- lm(formula, data, na.action=na.action,  method="model.frame")
+    na.act <- attr(mf, "na.action")
+    if (!inherits(listw, "listw")) stop("No neighbourhood list")
+    can.sim <- FALSE
+    if (listw$style %in% c("W", "S")) can.sim <- can.be.simmed(listw)
+    if (!is.null(na.act)) {
+        subset <- !(1:length(listw$neighbours) %in% na.act)
+        listw <- subset(listw, subset, zero.policy=zero.policy)
+    }
+    y <- model.extract(mf, "response")
+    x <- model.matrix(mt, mf)
+    n <- nrow(x)
+    if (n != length(listw$neighbours))
+        stop("Input data and weights have different dimensions")
+    xcolnames <- colnames(x)
+    wy <- lag.listw(listw, y, zero.policy=zero.policy)
+    if (anyNA(wy)) stop("NAs in lagged dependent variable")
 #create_WX
+    if (type == "Durbin") {
+        WX <- create_WX(x, listw, zero.policy=zero.policy, prefix="lag")
+        x <- cbind(x, WX)
+        rm(WX)
+    } else if (type != "lag") stop("No such type:", type)
+    m <- ncol(x)
+    lm.base <- lm(y ~ x - 1)
+    aliased <- is.na(coefficients(lm.base))
+    cn <- names(aliased)
+    names(aliased) <- substr(cn, 2, nchar(cn))
+    if (any(aliased)) {
+        nacoef <- which(aliased)
+        x <- x[,-nacoef]
+    }
+    m <- ncol(x)
+    timings[["set_up"]] <- proc.time() - .ptime_start
+    .ptime_start <- proc.time()
+
+
+
 #bounds
-#homoskedastic
 #ldets handling
+
+#homoskedastic
 #dflag MH/integration
 
 #run loop(s)
@@ -26,9 +82,9 @@ results$nvar  = k;
 results$y = y; 
   
     
-pprior=prior_parse(prior,k)
-attach(pprior)
-n = nrow(y)
+# FIXME pprior=prior_parse(prior,k)
+# FIXME attach(pprior)
+#n = nrow(y)
      
 results$cflag = cflag;
 results$p = p;
@@ -372,8 +428,8 @@ results$rdraw = 0;
 }
 
 
-detach(pprior)
-return(results)
+# FIXME detach(pprior)
+# FIXME return(results)
 #### end of sar_g
 
 
