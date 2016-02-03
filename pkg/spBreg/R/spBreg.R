@@ -4,7 +4,7 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
     .ptime_start <- proc.time()
 # FIXME
 #control
-    con <- list(tol.opt=.Machine$double.eps^0.5, ldet_method="eigen",
+    con <- list(tol.opt=.Machine$double.eps^0.5, ldet_method="SE_classic",
         Imult=2, cheb_q=5, MC_p=16L, MC_m=30L, super=NULL, spamPivot="MMD",
         in_coef=0.1, type="MC", correct=TRUE, trunc=TRUE,
         SE_method="LU", nrho=200, interpn=2000, SElndet=NULL, LU_order=FALSE,
@@ -52,6 +52,34 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
     }
     m <- ncol(x)
     timings[["set_up"]] <- proc.time() - .ptime_start
+    .ptime_start <- proc.time()
+
+    env <- new.env()
+    assign("can.sim", can.sim, envir=env)
+    assign("listw", listw, envir=env)
+    assign("similar", FALSE, envir=env)
+    assign("n", n, envir=env)
+    interval <- spdep::jacobianSetup(con$ldet_method, env, con,
+        pre_eig=con$pre_eig, interval=con$interval)
+    nmsC <- names(con)
+    con[(namc <- names(control))] <- control
+    if (length(noNms <- namc[!namc %in% nmsC])) 
+        warning("unknown names in control: ", paste(noNms, collapse = ", "))
+    if (is.null(zero.policy))
+        zero.policy <- get.ZeroPolicyOption()
+    stopifnot(is.logical(zero.policy))
+    if (class(formula) != "formula") formula <- as.formula(formula)
+    mt <- terms(formula, data = data)
+    mf <- lm(formula, data, na.action=na.action,  method="model.frame")
+    na.act <- attr(mf, "na.action")
+    if (!inherits(listw, "listw")) stop("No neighbourhood list")
+    can.sim <- FALSE
+    if (listw$style %in% c("W", "S")) can.sim <- can.be.simmed(listw)
+    if (!is.nullcon$interval=interval)
+    assign("interval", interval, envir=env)
+
+    nm <- paste(con$ldet_method, "set_up", sep="_")
+    timings[[nm]] <- proc.time() - .ptime_start
     .ptime_start <- proc.time()
 
 
