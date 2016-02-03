@@ -22,7 +22,7 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
     na.act <- attr(mf, "na.action")
     if (!inherits(listw, "listw")) stop("No neighbourhood list")
     can.sim <- FALSE
-    if (listw$style %in% c("W", "S")) can.sim <- can.be.simmed(listw)
+    if (listw$style %in% c("W", "S")) can.sim <- spdep::can.be.simmed(listw)
     if (!is.null(na.act)) {
         subset <- !(1:length(listw$neighbours) %in% na.act)
         listw <- subset(listw, subset, zero.policy=zero.policy)
@@ -61,21 +61,6 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
     assign("n", n, envir=env)
     interval <- spdep::jacobianSetup(con$ldet_method, env, con,
         pre_eig=con$pre_eig, interval=con$interval)
-    nmsC <- names(con)
-    con[(namc <- names(control))] <- control
-    if (length(noNms <- namc[!namc %in% nmsC])) 
-        warning("unknown names in control: ", paste(noNms, collapse = ", "))
-    if (is.null(zero.policy))
-        zero.policy <- get.ZeroPolicyOption()
-    stopifnot(is.logical(zero.policy))
-    if (class(formula) != "formula") formula <- as.formula(formula)
-    mt <- terms(formula, data = data)
-    mf <- lm(formula, data, na.action=na.action,  method="model.frame")
-    na.act <- attr(mf, "na.action")
-    if (!inherits(listw, "listw")) stop("No neighbourhood list")
-    can.sim <- FALSE
-    if (listw$style %in% c("W", "S")) can.sim <- can.be.simmed(listw)
-    if (!is.nullcon$interval=interval)
     assign("interval", interval, envir=env)
 
     nm <- paste(con$ldet_method, "set_up", sep="_")
