@@ -53,15 +53,15 @@ c_rho <- function(rho,y,sige,W,detval,vi,a1,a2){
 #a1, a2 parameters for beta prior on rho
 
 
-draw_rho <-function(detval,epe0,eped,epe0d,n,k,rho,a1=1.01,a2=1.01){
+draw_rho <- function(detval, epe0, eped, epe0d, n, k, rho, a1=1.01, a2=1.01){
 
 	nmk = (n-k)/2
 	nrho = length(detval[,1])
-	iota = matrix(rep(1,nrho),nrho,1);
+	iota = matrix(rep(1,nrho),nrho,1)
 
-	z = epe0[1,1]*iota - 2*detval[,1]*epe0d[1,1] + detval[,1]*detval[,1]*eped[1,1];
+	z = epe0[1,1]*iota - 2*detval[,1]*epe0d[1,1] + detval[,1]*detval[,1]*eped[1,1]
 	den = detval[,2] - nmk*log(z)
-	bprior = dbeta(detval[,1],a1,a2)#VIRGILIO: Changed this
+	bprior = dbeta(detval[,1], a1, a2)#VIRGILIO: Changed this
 	den = den + log(bprior)
 
 	n = length(den)
@@ -80,11 +80,44 @@ draw_rho <-function(detval,epe0,eped,epe0d,n,k,rho,a1=1.01,a2=1.01){
 	ind = which(den <= rnd)
 	idraw = max(ind)
 	if (idraw > 0 & idraw < nrho) 
-		rho = detval[idraw,1]#FIXME: This sometimes fail...
+		rho = detval[idraw, 1]#FIXME: This sometimes fail...
 
 	return(rho)
 }	
 
+
+draw_rho_env <- function(env, epe0, eped, epe0d, n, k, rho){
+
+        detval1 <- get("detval1", envir=env)[,1]
+	nmk = (n-k)/2
+	nrho = length(detval1)
+#	iota = matrix(rep(1,nrho),nrho,1)
+
+	z = epe0 - 2*detval1*epe0d + detval1*detval1*eped
+	den = get("detval1", envir=env)[,2] - nmk*log(z)
+#	bprior = dbeta(detval[,1], a1, a2)#VIRGILIO: Changed this
+	den = den + log(get("bprior", envir=env))
+
+	n = length(den)
+	y = detval1
+	adj = max(den)
+	den = den - adj
+	x = exp(den)
+
+	## trapezoid rule
+	#isum = sum((y[2:n,1] + y[1:n-1,1])*(x[2:n,1] - x[1:n-1,1])/2)
+	isum = sum((y[2:n] + y[1:(n-1)])*(x[2:n] - x[1:(n-1)])/2)#VIRGILIO:FIXED
+	z = abs(x/isum)
+	den = cumsum(z)
+
+	rnd = runif(1)*sum(z)
+	ind = which(den <= rnd)
+	idraw = max(ind)
+	if (idraw > 0 & idraw < nrho) 
+		rho = detval1[idraw]#FIXME: This sometimes fail...
+
+	return(rho)
+}	
 
 #Compute eigenvalues (range) for the weight matrix
 #
