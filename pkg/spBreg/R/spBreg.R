@@ -71,7 +71,7 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
     W <- as(listw, "CsparseMatrix")
     assign("W", W, envir=env)
 
-    interval <- spdep::jacobianSetup(con$ldet_method, env, con,
+    con$interval <- spdep::jacobianSetup(con$ldet_method, env, con,
         pre_eig=con$pre_eig, interval=con$interval)
     bprior <-  dbeta(get("detval1", envir=env)[,1], con$prior$a1, con$prior$a2)
     assign("bprior", bprior, envir=env)
@@ -160,7 +160,60 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
     timings[["finalise"]] <- proc.time() - .ptime_start
     attr(res, "timings") <- do.call("rbind", timings)
     attr(res, "control") <- con
+    attr(res, "type") <- type
+    attr(res, "listw_style") <- listw$style
+    class(res) <- c("MCMC_sar_g", class(res))
     res
 
 #output mcmc object
+}
+
+
+impacts.MCMC_sar_g <- function(obj, ..., tr=NULL, listw=NULL, Q=NULL) {
+    if (is.null(listw) && !is.null(attr(obj, "listw_style")) && 
+        attr(obj, "listw_style") != "W")
+        stop("Only row-standardised weights supported")
+    means <- summary(obj)$statistics[,1]
+    irho <- length(means)-1
+    drop2beta <- irho:length(means)
+    rho <- means[irho]
+    s2 <- means[length(means)]
+    beta <- means[1:(length(means)-2)]
+    icept <- grep("(Intercept)", names(beta))
+    iicept <- length(icept) > 0L
+    samples <- as.matrix(obj)
+    interval <- attr(obj, "control")$interval
+    if (attr(obj, "type") == "lag") {
+      if (iicept) {
+        P <- matrix(beta[-icept], ncol=1)
+        bnames <- names(beta[-icept])
+      } else {
+        P <- matrix(beta, ncol=1)
+        bnames <- names(beta)
+      }
+      p <- length(beta)
+    } else if (obj$type == "mixed") {
+      if (iicept) {
+        b1 <- beta[-icept]
+      } else {
+        b1 <- beta
+      }
+      p <- length(b1)
+      if (p %% 2 != 0) stop("non-matched coefficient pairs")
+      P <- cbind(b1[1:(p/2)], b1[((p/2)+1):p])
+      bnames <- names(b1[1:(p/2)])
+    }
+    if (is.null(tr) && !is.null(listw)) n <- length(listw$neighbours)
+    else if (!is.null(tr)) n <- attr(tr, "n")
+    else stop("either tr or listw must be given")
+    R <- nrow(samples)
+
+    res <- spdep::intImpacts(rho=rho, beta=beta, P=P, n=n, mu=NULL, Sigma=NULL,
+        irho=irho, drop2beta=drop2beta, bnames=bnames, interval=interval,
+        type=attr(obj, "type"), tr=tr, R=R, listw=listw, tol=NULL,
+        empirical=NULL, Q=Q, icept=icept, iicept=iicept, p=p, samples=samples)
+    attr(res, "iClass") <- class(obj)
+    res
+
+
 }

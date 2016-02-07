@@ -119,23 +119,41 @@ require(R.matlab)
 sar_gd_data <- readMat("inst/sar_gd/sar_gd_data.mat")
 y <- sar_gd_data$y
 x <- sar_gd_data$x
+colnames(x) <- c("(Intercept)", "INC", "HOVAL")
 W <- sar_gd_data$W
 library(MASS)
-t0 <- sar_g(y, x, W, 2500, 500, prior=list(ldetflag=0, novi_flag=1,inform_flag=0))
+system.time(t0 <- sar_g(y, x, W, 2500, 500, prior=list(ldetflag=0, novi_flag=1,inform_flag=0)))
 t0$beta
 t0$rho
+t0imp <- vector(mode="list", length=3)
+for (j in c("direct", "indirect", "total")) {
+ t0imp[[j]] <- apply(sapply(1:t0$p, function(i) apply(t0[[j]][,i,], 1,
+ sum)), 2, mean)
+}
+t(do.call("rbind", t0imp))
 results2 <- readMat("inst/sar_gd/sar_gd_results2.mat")$results2
 names(results2) <- attr(results2, "dimnames")[[1]]
+str(results2$time)
 results2$beta
 results2$rho
+r2imp <- vector(mode="list", length=3)
+for (j in c("direct", "indirect", "total")) {
+ r2imp[[j]] <- apply(sapply(1:results2$p, function(i)
+ apply(results2[[j]][,i,], 1, sum)), 2, mean)
+}
+t(do.call("rbind", r2imp))
 library(spdep)
 lw <- mat2listw(W, style="W")
 ml0 <- lagsarlm(y ~ x -1, listw=lw)
 ml0
+tr <- trW(W)
+summary(impacts(ml0, tr=tr, R=2000), short=TRUE, zstats=TRUE)
 source("R/spBreg.R")
 library(coda)
 res <- spBreg_lag(y ~ x -1, listw=lw)
+attr(res, "timings")
 summary(res)
+summary(impacts(res, tr=tr), short=TRUE, zstats=TRUE)
 library(INLA)
 idx <- 1:nrow(y)
 zero.variance = list(prec=list(initial = 25, fixed=TRUE))
