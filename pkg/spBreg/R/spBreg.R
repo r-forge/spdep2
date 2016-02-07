@@ -73,8 +73,9 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
 
     con$interval <- spdep::jacobianSetup(con$ldet_method, env, con,
         pre_eig=con$pre_eig, interval=con$interval)
-    bprior <-  dbeta(get("detval1", envir=env)[,1], con$prior$a1, con$prior$a2)
-    assign("bprior", bprior, envir=env)
+    detval1 <- get("detval1", envir=env)[,1]
+    detval2 <- get("detval1", envir=env)[,2]
+    bprior <-  dbeta(detval1, con$prior$a1, con$prior$a2)
 
     nm <- paste(con$ldet_method, "set_up", sep="_")
     timings[[nm]] <- proc.time() - .ptime_start
@@ -106,18 +107,19 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
     TI = solve(con$prior$Tbeta); # see eq 5.29, p. 140
     TIc = TI%*%con$prior$c_beta;
            
-    iter = 1;
     xpx = crossprod(x)
     xpy = crossprod(x, y)
     Wy = W %*% y
     xpWy = crossprod(x, Wy)
-    nu1 = n + 2*con$prior$nu 
-
+    nu1 = n + 2*con$prior$nu
+    nrho = length(detval1)
+    rho_out = 0
+ 
     timings[["complete_setup"]] <- proc.time() - .ptime_start
     .ptime_start <- proc.time()
 
 
-    while (iter <= con$ndraw) { #% start sampling;
+    for (iter in 1:con$ndraw) { #% start sampling;
                   
           ##% update beta   
         AI = solve((xpx + sige*TI))#,diag(rep(1,k)));        
@@ -144,10 +146,31 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
         epe0 = as.vector(crossprod(e0))
         eped = as.vector(crossprod(ed))
         epe0d = as.vector(crossprod(ed, e0))
-        rho = draw_rho_env(env, epe0, eped, epe0d, n, k, rho)
-        psave[iter] = as.vector(rho)
+	nmk = (n-k)/2
+	z = epe0 - 2*detval1*epe0d + detval1*detval1*eped
+	den = detval2 - nmk*log(z)
+	den = den + bprior
 
-        iter = iter + 1
+	nd = length(den)
+	adj = max(den)
+	den = den - adj
+	xd = exp(den)
+
+	## trapezoid rule
+	isum = sum((detval1[2:nd] + detval1[1:(nd-1)])*(xd[2:nd]
+            - xd[1:(nd-1)])/2)#VIRGILIO:FIXED
+	zd = abs(xd/isum)
+	den = cumsum(zd)
+
+	rnd = runif(1)*sum(zd)
+	ind = which(den <= rnd)
+	idraw = max(ind)
+	if (idraw > 0 & idraw < nrho) 
+	    rho = detval1[idraw]#FIXME: This sometimes fail...
+        else
+            rho_out = rho_out+1
+
+        psave[iter] = as.vector(rho)
 
     }
 ### % end of sampling loop
@@ -161,6 +184,7 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
     attr(res, "timings") <- do.call("rbind", timings)
     attr(res, "control") <- con
     attr(res, "type") <- type
+    attr(res, "rho_out") <- rho_out
     attr(res, "listw_style") <- listw$style
     class(res) <- c("MCMC_sar_g", class(res))
     res
