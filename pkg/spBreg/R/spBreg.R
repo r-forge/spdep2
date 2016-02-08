@@ -109,11 +109,13 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
            
     xpx = crossprod(x)
     xpy = crossprod(x, y)
-    Wy = W %*% y
-    xpWy = crossprod(x, Wy)
+    xpWy = crossprod(x, wy)
     nu1 = n + 2*con$prior$nu
     nrho = length(detval1)
     rho_out = 0
+#    nano_1 = 0
+#    nano_2 = 0
+#    nano_3 = 0
  
     timings[["complete_setup"]] <- proc.time() - .ptime_start
     .ptime_start <- proc.time()
@@ -122,27 +124,32 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
     for (iter in 1:con$ndraw) { #% start sampling;
                   
           ##% update beta   
+#        nano_p <- microbenchmark::get_nanotime()
         AI = solve((xpx + sige*TI))#,diag(rep(1,k)));        
-        ys = y - rho*Wy          
+        ys = y - rho*wy          
         b = crossprod(x, ys) + sige*TIc
-        b0 = solve((xpx + sige*TI), b)# see eq 5.29, p. 140
+        b0 = AI %*% b # see eq 5.29, p. 140
         bhat = MASS::mvrnorm(1, b0, sige*AI) #norm_rnd(sige*AI) + b0;  
-        xb = x%*%bhat
         bsave[iter, 1:k] = as.vector(bhat)
+#        nano_1 <- nano_1 + microbenchmark::get_nanotime() - nano_p
           
           ##% update sige
+#        nano_p <- microbenchmark::get_nanotime()
+        xb = x %*% bhat
         e = (ys - xb)
         d1 = 2*con$prior$d0 + crossprod(e)
         chi = rchisq(1, nu1) #chi = chis_rnd(1,nu1);
         sige = as.numeric(d1/chi) # see eq 5.30, p. 141
         ssave[iter] = as.vector(sige)
+#        nano_2 <- nano_2 + microbenchmark::get_nanotime() - nano_p
           
           ###% update rho using griddy Gibbs
+#        nano_p <- microbenchmark::get_nanotime()
         AI = solve((xpx + sige*TI))
-        b0 = solve((xpx + sige*TI),(xpy + sige*TIc))
-        bd = solve((xpx + sige*TI),(xpWy + sige*TIc))
+        b0 = AI %*% (xpy + sige*TIc)
+        bd = AI %*% (xpWy + sige*TIc)
         e0 = y - x%*%b0
-        ed = Wy - x%*%bd
+        ed = wy - x%*%bd
         epe0 = as.vector(crossprod(e0))
         eped = as.vector(crossprod(ed))
         epe0d = as.vector(crossprod(ed, e0))
@@ -171,6 +178,7 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
             rho_out = rho_out+1
 
         psave[iter] = as.vector(rho)
+#        nano_3 <- nano_3 + microbenchmark::get_nanotime() - nano_p
 
     }
 ### % end of sampling loop
@@ -182,6 +190,7 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
     res <- coda::mcmc(mat, start=con$nomit+1, end=con$ndraw, thin=con$thin)
     timings[["finalise"]] <- proc.time() - .ptime_start
     attr(res, "timings") <- do.call("rbind", timings)
+#    attr(res, "nano") <- c(nano_1, nano_2, nano_3)
     attr(res, "control") <- con
     attr(res, "type") <- type
     attr(res, "rho_out") <- rho_out
@@ -208,6 +217,7 @@ impacts.MCMC_sar_g <- function(obj, ..., tr=NULL, listw=NULL, Q=NULL) {
     samples <- as.matrix(obj)
     interval <- attr(obj, "control")$interval
     if (attr(obj, "type") == "lag") {
+      type <- "lag"
       if (iicept) {
         P <- matrix(beta[-icept], ncol=1)
         bnames <- names(beta[-icept])
@@ -216,7 +226,8 @@ impacts.MCMC_sar_g <- function(obj, ..., tr=NULL, listw=NULL, Q=NULL) {
         bnames <- names(beta)
       }
       p <- length(beta)
-    } else if (obj$type == "mixed") {
+    } else if (attr(obj, "type") == "Durbin") {
+      type <- "mixed"
       if (iicept) {
         b1 <- beta[-icept]
       } else {
@@ -234,7 +245,7 @@ impacts.MCMC_sar_g <- function(obj, ..., tr=NULL, listw=NULL, Q=NULL) {
 
     res <- spdep::intImpacts(rho=rho, beta=beta, P=P, n=n, mu=NULL, Sigma=NULL,
         irho=irho, drop2beta=drop2beta, bnames=bnames, interval=interval,
-        type=attr(obj, "type"), tr=tr, R=R, listw=listw, tol=NULL,
+        type=type, tr=tr, R=R, listw=listw, tol=NULL,
         empirical=NULL, Q=Q, icept=icept, iicept=iicept, p=p, samples=samples)
     attr(res, "iClass") <- class(obj)
     res
