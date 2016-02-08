@@ -122,7 +122,7 @@ x <- sar_gd_data$x
 colnames(x) <- c("(Intercept)", "INC", "HOVAL")
 W <- sar_gd_data$W
 library(MASS)
-system.time(t0 <- sar_g(y, x, W, 2500, 500, prior=list(ldetflag=0, novi_flag=1,inform_flag=0)))
+system.time(t0 <- sar_g(y, x, W, 2500, 500, prior=list(ldetflag=0, novi_flag=1, inform_flag=0)))
 t0$beta
 t0$rho
 t0imp <- vector(mode="list", length=3)
@@ -150,12 +150,14 @@ tr <- trW(W)
 summary(impacts(ml0, tr=tr, R=2000), short=TRUE, zstats=TRUE)
 source("R/spBreg.R")
 library(coda)
-library(microbenchmark)
 res <- spBreg_lag(y ~ x -1, listw=lw)
 attr(res, "timings")
-attr(res, "nano")/1e+9
 summary(res)
 summary(impacts(res, tr=tr), short=TRUE, zstats=TRUE)
+res1 <- spBreg_lag(y ~ x -1, listw=lw, type="Durbin")
+attr(res1, "timings")
+summary(res1)
+summary(impacts(res1, tr=tr), short=TRUE, zstats=TRUE)
 library(INLA)
 idx <- 1:nrow(y)
 zero.variance = list(prec=list(initial = 25, fixed=TRUE))
@@ -171,6 +173,5 @@ slmm1 <- inla(y ~ -1 + f(idx, model="slm", args.slm=list(rho.min = t0$rmin,
 slmm1$summary.random$idx[nrow(y)+1:3,2]
 ff<-function(z){z*(t0$rmax-t0$rmin)+t0$rmin}
 ff(slmm1$summary.hyper[2,c(1,3,5)])
-#) {}
 }
 \keyword{Spatial,Econometrics,Bayesian}

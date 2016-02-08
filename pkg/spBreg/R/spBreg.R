@@ -43,6 +43,10 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
     wy <- lag.listw(listw, y, zero.policy=zero.policy)
     if (anyNA(wy)) stop("NAs in lagged dependent variable")
 #create_WX
+    if (type == "mixed") {
+        type <- "Durbin"
+        warning("type \"mixed\" deprecated, changed to \"Durbin\"")
+    }
     if (type == "Durbin") {
         WX <- create_WX(x, listw, zero.policy=zero.policy, prefix="lag")
         x <- cbind(x, WX)
