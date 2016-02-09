@@ -146,6 +146,7 @@ library(spdep)
 lw <- mat2listw(W, style="W")
 ml0 <- lagsarlm(y ~ x -1, listw=lw)
 ml0
+logLik(ml0)
 tr <- trW(W)
 summary(impacts(ml0, tr=tr, R=2000), short=TRUE, zstats=TRUE)
 source("R/spBreg.R")
