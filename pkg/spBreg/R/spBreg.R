@@ -72,6 +72,7 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
     assign("n", n, envir=env)
     assign("verbose", con$verbose, envir=env)
     assign("family", "SAR", envir=env)
+    assign("method", con$ldet_method, envir=env)
     W <- as(listw, "CsparseMatrix")
     assign("W", W, envir=env)
 
@@ -104,6 +105,7 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
     bsave <- matrix(0, nrow=con$ndraw, ncol=k)
     psave <- numeric(con$ndraw)
     ssave <- numeric(con$ndraw)
+    lsave <- numeric(con$ndraw)
 
 #% ====== initializations
 #% compute this stuff once to save time
@@ -181,7 +183,14 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
         else
             rho_out = rho_out+1
 
+        z = epe0 - 2*rho*epe0d + rho*rho*eped
+	if (idraw > 0 & idraw < nrho) 
+	    ldet = detval2[idraw]
+        s2 <- z/n
+        ll_iter <- (ldet - ((n/2)*log(2*pi)) - (n/2)*log(s2)
+            - (1/(2*s2))*z)
         psave[iter] = as.vector(rho)
+        lsave[iter] <- as.vector(ll_iter)
 #        nano_3 <- nano_3 + microbenchmark::get_nanotime() - nano_p
 
     }
@@ -192,6 +201,18 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
     mat <- cbind(bsave, psave, ssave)
     colnames(mat) <- c(colnames(x), "rho", "sige")
     res <- coda::mcmc(mat, start=con$nomit+1, end=con$ndraw, thin=con$thin)
+    means <- summary(res)$statistics[,1]
+    beta <- means[1:(length(means)-2)]
+    rho <- means[(length(means)-1)]
+    xb = x %*% beta
+    ys = y - rho*wy
+    e = (ys - xb)
+    sse <- crossprod(e)
+    s2 <- sse/n
+    ldet <- do_ldet(rho, env)
+    ll_mean <- (ldet - ((n/2)*log(2*pi)) - (n/2)*log(s2)
+        - (1/(2*s2))*sse)
+
     timings[["finalise"]] <- proc.time() - .ptime_start
     attr(res, "timings") <- do.call("rbind", timings)
 #    attr(res, "nano") <- c(nano_1, nano_2, nano_3)
@@ -199,6 +220,8 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
     attr(res, "type") <- type
     attr(res, "rho_out") <- rho_out
     attr(res, "listw_style") <- listw$style
+    attr(res, "lsave") <- lsave
+    attr(res, "ll_mean") <- ll_mean
     class(res) <- c("MCMC_sar_g", class(res))
     res
 
