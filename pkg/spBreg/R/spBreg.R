@@ -221,7 +221,7 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
     attr(res, "rho_out") <- rho_out
     attr(res, "listw_style") <- listw$style
     attr(res, "lsave") <- lsave
-    attr(res, "ll_mean") <- ll_mean
+    attr(res, "ll_mean") <- as.vector(ll_mean)
     class(res) <- c("MCMC_sar_g", class(res))
     res
 
