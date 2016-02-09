@@ -176,5 +176,6 @@ slmm1 <- inla(y ~ -1 + f(idx, model="slm", args.slm=list(rho.min = t0$rmin,
 slmm1$summary.random$idx[nrow(y)+1:3,2]
 ff<-function(z){z*(t0$rmax-t0$rmin)+t0$rmin}
 ff(slmm1$summary.hyper[2,c(1,3,5)])
+slmm1$dic$dic
 }
 \keyword{Spatial,Econometrics,Bayesian}
