@@ -157,6 +157,9 @@ summary(res)
 #DIC ??
 mean(attr(res, "lsave"))
 attr(res, "ll_mean")
+plot(density(attr(res, "lsave")))
+abline(v=attr(res, "ll_mean"))
+abline(v=mean(attr(res, "lsave")), lty=2)
 
 mean(attr(res, "lsave")) - attr(res, "ll_mean")
 

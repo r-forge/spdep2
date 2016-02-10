@@ -176,12 +176,15 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
 	den = cumsum(zd)
 
 	rnd = runif(1)*sum(zd)
-	ind = which(den <= rnd)
-	idraw = max(ind)
-	if (idraw > 0 & idraw < nrho) 
-	    rho = detval1[idraw]#FIXME: This sometimes fail...
-        else
+        cond <- den <= rnd
+        if (any(cond)) {
+#	ind = which(den <= rnd)
+	    idraw = which.min(cond) - 1 #max(ind)
+#	    if (idraw > 0 & idraw < nrho) 
+            rho = detval1[idraw]#FIXME: This sometimes fail...
+        } else {
             rho_out = rho_out+1
+        }
 
         z = epe0 - 2*rho*epe0d + rho*rho*eped
 	if (idraw > 0 & idraw < nrho) 
@@ -212,6 +215,8 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
     ldet <- do_ldet(rho, env)
     ll_mean <- (ldet - ((n/2)*log(2*pi)) - (n/2)*log(s2)
         - (1/(2*s2))*sse)
+    lsave <- as.vector(coda::mcmc(matrix(lsave, ncol=1), start=con$nomit+1,
+        end=con$ndraw, thin=con$thin)[,1])
 
     timings[["finalise"]] <- proc.time() - .ptime_start
     attr(res, "timings") <- do.call("rbind", timings)
