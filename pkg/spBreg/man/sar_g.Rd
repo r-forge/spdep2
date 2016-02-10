@@ -157,6 +157,19 @@ summary(res)
 #DIC ??
 mean(attr(res, "lsave"))
 attr(res, "ll_mean")
+
+mean(attr(res, "lsave")) - attr(res, "ll_mean")
+
+#Start: Saturated model
+sat.cov <- data.frame(diag(1, 49))
+f.sat <- as.formula(paste0("y ~ -1 + ", paste(names(sat.cov), collapse = "+")))
+d.sat <- cbind(y = y, sat.cov)
+res.sat <- spBreg_lag(f.sat, data = d.sat, listw=lw)
+
+mean(attr(res.sat, "lsave"))
+attr(res.sat, "ll_mean")
+#End: Saturated model
+
 summary(impacts(res, tr=tr), short=TRUE, zstats=TRUE)
 res1 <- spBreg_lag(y ~ x -1, listw=lw, type="Durbin")
 attr(res1, "timings")
