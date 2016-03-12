@@ -34,6 +34,8 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
         listw <- subset(listw, subset, zero.policy=zero.policy)
     }
     y <- model.extract(mf, "response")
+#MatrixModels::model.Matrix()
+#    x <- Matrix::sparse.model.matrix(mt, mf)
     x <- model.matrix(mt, mf)
     n <- nrow(x)
     if (n != length(listw$neighbours))
@@ -43,6 +45,7 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
     wy <- lag.listw(listw, y, zero.policy=zero.policy)
     if (anyNA(wy)) stop("NAs in lagged dependent variable")
 #create_WX
+# check for dgCMatrix
     if (type == "mixed") {
         type <- "Durbin"
         warning("type \"mixed\" deprecated, changed to \"Durbin\"")
@@ -53,7 +56,7 @@ spBreg_lag <- function(formula, data = list(), listw, na.action, type="lag",
         rm(WX)
     } else if (type != "lag") stop("No such type:", type)
     m <- ncol(x)
-    lm.base <- lm(y ~ x - 1)
+    lm.base <- lm(y ~ x - 1) # doesn't like dgCMatrix
     aliased <- is.na(coefficients(lm.base))
     cn <- names(aliased)
     names(aliased) <- substr(cn, 2, nchar(cn))
