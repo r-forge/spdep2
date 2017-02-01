@@ -86,7 +86,8 @@ for(i in 1:n.sim.tot) {
    }
 
    if(verbose) {
-    if(i %% 100 ==0) {cat("Iteration ", i, "completed.\n")}
+    if(i %% 100 ==0) {cat("Iteration ", i, "completed. Time:", 
+      as.character(Sys.time()), "\n")}
    }
 
   }#Try-error
