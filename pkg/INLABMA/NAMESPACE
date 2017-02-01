@@ -1,8 +1,10 @@
-export(sem.inla, slm.inla, sdm.inla, leroux.inla)
+export(sem.inla, slm.inla, sdm.inla, sac.inla, leroux.inla)
 
 export(logprrho, rescalemarg)
 
 export(mysplinefun, BMArho, INLABMA)
+
+export(INLAMH)
 
 import(parallel)
 import(sp)

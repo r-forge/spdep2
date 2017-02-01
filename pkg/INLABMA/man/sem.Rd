@@ -2,6 +2,7 @@
 \alias{sem.inla}
 \alias{slm.inla}
 \alias{sdm.inla}
+\alias{sac.inla}
 \title{
 Fit spatial econometrics models with INLA
 }
@@ -19,6 +20,8 @@ slm.inla(formula, d, W, rho, mmatrix = NULL, improve = TRUE, impacts = FALSE,
    fhyper = NULL, probit = FALSE, ...)
 sdm.inla(formula, d, W, rho, mmatrix = NULL, intercept = TRUE, impacts = FALSE,
    improve = TRUE, fhyper = NULL, probit = FALSE, ...)
+sac.inla(formula, d, W.rho, W.lambda, rho, lambda, mmatrix = NULL, 
+   improve = TRUE, impacts = FALSE, fhyper = NULL, probit = FALSE, ...)
 
 }
 %- maybe also 'usage' for other objects documented here.
@@ -34,8 +37,21 @@ Data.frame with the data.
 Adjacency matrix.
 }
   \item{rho}{
-Value of the spatial autocorrelation paramter.
+Value of the spatial autocorrelation parameter. For the SAC model, spatial
+autocorrelation term on the response.
 }
+  \item{W.rho}{
+For the SAC model, adjacency matrix associated to the autocorrelation on the
+response.
+}
+  \item{W.lambda}{
+For the SAC model, adjacency matrix associated to the autocorrelation on the
+error term.
+}
+\item{lambda}{
+For the SAC model, spatial autocorrelation of the error term.
+}
+
   \item{mmatrix}{
 Design matrix of fixed effects.
 }
@@ -80,6 +96,8 @@ An \code{inla} object.
   Roger S. Bivand, Virgilio Gómez-Rubio, Håvard Rue (2015). Spatial
   Data Analysis with R-INLA with Some Extensions. Journal of
   Statistical Software, 63(20), 1-31. URL http://www.jstatsoft.org/v63/i20/.
+
+  Virgilio Gómez-Rubio and Francisco-Palmí Perales (2016).  Spatial Models with the Integrated Nested Laplace Approximation within Markov Chain Monte Carlo. Submitted.
 
 }
 \author{
