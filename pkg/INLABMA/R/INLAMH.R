@@ -43,6 +43,13 @@ for(i in 1:n.sim.tot) {
    model.new <- try(fit.inla(d, b.new))
 
    if(class(model.new) == "try-error") {
+     #Update number of errors
+     n.err.idx <- n.err.idx + 1
+
+     if(verbose) {
+        cat("INLA error number ", n.err.idx", at iteration ", i, "\n")
+     }
+
      if(n.err.idx > n.errors) {
        stop("INLA failed too many times to fit a model.")
      }
@@ -57,8 +64,7 @@ for(i in 1:n.sim.tot) {
        stop("INLA failed early in the sampling process.")
      }
 
-     #Update number of errors
-     n.err.idx <- n.err.idx + 1
+     #Set number of iterations in loop to minus one
      i <- i - 1 #Set to previous step #FIXME: Find a better solution
 
   } else {
