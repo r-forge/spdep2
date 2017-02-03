@@ -48,7 +48,7 @@ while (i <= n.sim.tot) {
      n.err.idx <- n.err.idx + 1
 
      if(verbose) {
-        cat("INLA error number ", n.err.idx", at iteration ", i, "\n")
+        cat("INLA error number ", n.err.idx, " at iteration ", i, ".\n")
      }
 
      if(n.err.idx > n.errors) {
