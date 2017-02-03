@@ -35,7 +35,8 @@ n.sim.tot <- n.burnin + n.thin * n.sim
 #Set number of errors to zero
 n.err.idx <- 0
 
-for(i in 1:n.sim.tot) {
+i <- 1
+while (i <= n.sim.tot) {
 
    #Sample new proposal
    b.new <- rq(b.cur)
@@ -64,8 +65,7 @@ for(i in 1:n.sim.tot) {
        stop("INLA failed early in the sampling process.")
      }
 
-     #Set number of iterations in loop to minus one
-     i <- i - 1 #Set to previous step #FIXME: Find a better solution
+     #DO NOT incrase 'i'
 
   } else {
 
@@ -96,6 +96,8 @@ for(i in 1:n.sim.tot) {
       as.character(Sys.time()), "\n")}
    }
 
+   #INCREASE 'i'
+   i <- i + 1 
   }#Try-error
 
 }
