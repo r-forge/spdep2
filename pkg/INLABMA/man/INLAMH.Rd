@@ -68,9 +68,6 @@ Virgilio Gómez-Rubio and Håvard Rue (2017).  Markov Chain Monte Carlo with the I
 \author{
 Virgilio Gómez-Rubio.
 }
-\note{
-%%  ~~further notes~~
-}
 
 \seealso{
 See also \code{\link{inla}}.
