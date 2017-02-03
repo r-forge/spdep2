@@ -10,7 +10,8 @@ calls to R-INLA to fint conditional model on the current state of the
 MCMC simulations.
 }
 \usage{
-INLAMH(d, fit.inla, b.init, rq, dq, prior, n.sim = 200, n.burnin = 100, n.thin = 1, n.errors = 20, verbose = FALSE)
+INLAMH(d, fit.inla, b.init, rq, dq, prior, n.sim = 200, n.burnin = 100,
+  n.thin = 1, n.errors = 20, verbose = FALSE)
 }
 
 \arguments{
@@ -67,10 +68,6 @@ Virgilio Gómez-Rubio and Håvard Rue (2017).  Markov Chain Monte Carlo with the I
 }
 \author{
 Virgilio Gómez-Rubio.
-}
-
-\seealso{
-See also \code{\link{inla}}.
 }
 
 %%\examples{
