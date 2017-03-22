@@ -83,15 +83,15 @@ fitmargBMA<-function(margs, ws, len=100)
 
 	ws<-ws/sum(ws)
 
-	xmin<-max(unlist(lapply(margs, function(X){min(X[,1])})))
-	xmax<-min(unlist(lapply(margs, function(X){max(X[,1])})))
+	xmin <- quantile((unlist(lapply(margs, function(X){min(X[,1])}))), 0.25)
+	xmax <- quantile(unlist(lapply(margs, function(X){max(X[,1])})), 0.75)
 
 
 	xx<-seq(xmin, xmax, len=len)
 
 
 	margsws<-lapply(1:length(margs), function(i){
-		func<-fitmarg(margs[[i]][,1], margs[[i]][,2])
+		func<-fitmarg(margs[[i]][,1], log(margs[[i]][,2]))
 		ws[i]*func(xx)
 	})
 
@@ -189,7 +189,7 @@ BMArho<-function(models, rho, logrhoprior=rep(1, length(rho)) )
 {
 	mlik<-unlist(lapply(models, function(X){X$mlik[1]}))
 
-	post.func<-fitmarg(rho, mlik, logrhoprior)
+	post.func <- fitmarg(rho, mlik, logrhoprior)
 
 #	mlik.func = splinefun(rho, mlik - max(mlik))
 #
@@ -233,7 +233,7 @@ INLABMA<-function(models, rho, logrhoprior=rep(1, length(rho)), impacts=FALSE, u
 	#require(INLA)
 
 	mlik<-unlist(lapply(models, function(X){X$mlik[1]}))
-	post.func<-fitmarg(rho, mlik, logrhoprior, usenormal)
+	post.func <- fitmarg(rho, mlik, logrhoprior, usenormal)
 
 	#Weights for BMA
 	ws<-(post.func(rho))
