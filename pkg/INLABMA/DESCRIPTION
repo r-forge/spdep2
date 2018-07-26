@@ -12,4 +12,5 @@ Description: Fit Spatial Econometrics models using Bayesian model averaging
   on models fitted with INLA. The INLA package can be obtained from 
   <http://www.r-inla.org>. 
 License: GPL (>= 2)
-Additional_repositories:  https://inla.r-inla-download.org/R/stable
+Additional_repositories: https://inla.r-inla-download.org/R/stable
+RoxygenNote: 6.0.1
